@@ -82,7 +82,8 @@ func TestLSPFramingRequestsAndLineOffsets(t *testing.T) {
 		default:
 		}
 	}
-	status, err := manager.Start("tab", root, "$a->", core.Settings{PHPBinary: "php", PhpactorPath: server})
+	manager.PhpactorPath = server
+	status, err := manager.Start("tab", root, "$a->", core.Settings{PHPBinary: "php"})
 	if err != nil || status.Mode != "phpactor" {
 		t.Fatalf("%+v %v", status, err)
 	}
@@ -119,7 +120,8 @@ func TestRealPhpactorCompletionHoverAndSignature(t *testing.T) {
 	manager := NewManager(root)
 	defer manager.Close()
 	code := "<?php\n$date = new \\DateTimeImmutable();\n$date->"
-	status, err := manager.Start("real", root, code, core.Settings{PHPBinary: "php", PhpactorPath: server})
+	manager.PhpactorPath = server
+	status, err := manager.Start("real", root, code, core.Settings{PHPBinary: "php"})
 	if err != nil || status.Mode != "phpactor" {
 		t.Fatalf("%+v %v", status, err)
 	}

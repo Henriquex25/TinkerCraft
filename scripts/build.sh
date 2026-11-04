@@ -37,4 +37,9 @@ case "$selected_webkit" in
     ;;
   *) echo 'TINKERCRAFT_WEBKIT deve ser auto, 4.0 ou 4.1.' >&2; exit 1 ;;
 esac
+if [[ -f .tools/phpactor.phar ]]; then
+  phpactor_sha="$(awk '{print $1}' scripts/phpactor.sha256)"
+  printf '%s  %s\n' "$phpactor_sha" .tools/phpactor.phar | sha256sum --check --status
+  install -m 644 .tools/phpactor.phar build/bin/phpactor.phar
+fi
 printf '\nAplicativo: %s/build/bin/tinkercraft\n' "$project_root"

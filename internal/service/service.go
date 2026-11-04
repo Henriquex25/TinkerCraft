@@ -78,27 +78,7 @@ func New(dir string) (*Service, error) {
 			}
 		}
 	}()
-	if state.Settings.PhpactorPath == "" || missingPhpactor(state.Settings.PhpactorPath) {
-		candidates := []string{os.Getenv("TINKERCRAFT_PHPACTOR"), os.Getenv("LUME_PHPACTOR")}
-		if executable, e := os.Executable(); e == nil {
-			candidates = append(candidates, filepath.Join(filepath.Dir(executable), "phpactor.phar"), filepath.Join(filepath.Dir(executable), "..", "..", ".tools", "phpactor.phar"))
-		}
-		candidates = append(candidates, filepath.Join(".tools", "phpactor.phar"))
-		for _, path := range candidates {
-			if path == "" {
-				continue
-			}
-			if info, e := os.Stat(path); e == nil && !info.IsDir() {
-				absolute, e := filepath.Abs(path)
-				if e == nil {
-					if e = store.Update(func(st *core.State) error { st.Settings.PhpactorPath = absolute; return nil }); e != nil {
-						return nil, e
-					}
-					break
-				}
-			}
-		}
-	}
+	s.Language.PhpactorPath = bundledPhpactor()
 	if len(state.Tabs) == 0 {
 		playground := filepath.Join(dir, "playground")
 		if err = os.MkdirAll(playground, 0700); err != nil {
@@ -193,15 +173,22 @@ func (s *Service) SaveWorkspace(tabs []core.Tab, active string) error {
 	return s.Store.Update(func(state *core.State) error { state.Tabs = tabs; state.ActiveTab = active; return nil })
 }
 func (s *Service) SaveSettings(settings core.Settings) error {
+	if rules := settings.Formatting; rules != nil {
+		if rules.TabWidth < 1 || rules.TabWidth > 8 {
+			return fmt.Errorf("Indentation must be between 1 and 8 spaces.")
+		}
+		if rules.PrintWidth < 40 || rules.PrintWidth > 240 {
+			return fmt.Errorf("Line width must be between 40 and 240 characters.")
+		}
+		if rules.BraceStyle != "per-cs" && rules.BraceStyle != "1tbs" {
+			return fmt.Errorf("Brace style must be per-cs or 1tbs.")
+		}
+	}
 	if settings.Language == "" {
 		settings.Language = "en"
 	}
 	if settings.Language != "en" && settings.Language != "pt-BR" {
 		return fmt.Errorf("Unsupported interface language")
-	}
-	settings.UpdateSource = strings.TrimSpace(settings.UpdateSource)
-	if _, _, err := updates.SourceURL(settings.UpdateSource); err != nil {
-		return err
 	}
 	if len(settings.Shortcuts) > 128 {
 		return fmt.Errorf("Limite de 128 atalhos")
@@ -219,9 +206,6 @@ func (s *Service) SaveSettings(settings core.Settings) error {
 	}
 	if settings.PHPBinary == "" || strings.HasPrefix(settings.PHPBinary, "-") || strings.ContainsAny(settings.PHPBinary, "\x00\r\n") {
 		return fmt.Errorf("Executável PHP inválido")
-	}
-	if len(settings.PhpactorPath) > 4096 {
-		return fmt.Errorf("Caminho do Phpactor inválido")
 	}
 	return s.Store.Update(func(state *core.State) error {
 		settings.StarPromptDismissed = settings.StarPromptDismissed || state.Settings.StarPromptDismissed
@@ -442,9 +426,5 @@ func (s *Service) Health() Health {
 	}
 	_, docker := exec.LookPath("docker")
 	_, ssh := exec.LookPath("ssh")
-	actor := settings.PhpactorPath
-	if actor == "" {
-		actor, _ = exec.LookPath("phpactor")
-	}
-	return Health{PHP: version, Docker: docker == nil, SSH: ssh == nil, Phpactor: actor, DataDir: s.Dir}
+	return Health{PHP: version, Docker: docker == nil, SSH: ssh == nil, Phpactor: s.Language.PhpactorPath, DataDir: s.Dir}
 }

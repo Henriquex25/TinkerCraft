@@ -87,16 +87,20 @@ class App:
     def __init__(self, directory):
         self.log = tempfile.TemporaryFile()
         binary = Path(os.environ.get('TINKERCRAFT_NATIVE_BINARY', ROOT / 'build/bin/tinkercraft'))
+        if not (directory / 'workspace.json').exists():
+            (directory / 'workspace.json').write_text(json.dumps({'version': 1, 'settings': {'phpBinary': 'php', 'checkUpdatesOnStartup': False}}))
         self.process = subprocess.Popen([str(binary)], cwd=os.environ.get('TINKERCRAFT_NATIVE_CWD', ROOT),
             env={**os.environ, 'TINKERCRAFT_DATA_DIR': str(directory), 'LIBGL_ALWAYS_SOFTWARE': '1', 'XDG_CACHE_HOME': str(directory / 'os-cache'), 'XDG_DATA_HOME': str(directory / 'os-data'), 'XDG_CONFIG_HOME': str(directory / 'os-config'), 'TINKERCRAFT_RELEASE_SOURCE': '', 'TINKERCRAFT_PHPACTOR': '', 'LUME_PHPACTOR': ''}, stdout=self.log, stderr=self.log)
         try:
             self.window_id = wait_for(lambda: window_for(self.process.pid))
-            if (binary.parent / 'phpactor.phar').is_file():
-                assert Path(state_at(directory)['settings']['phpactorPath']) == binary.parent / 'phpactor.phar'
+            assert 'phpactorPath' not in state_at(directory)['settings']
+            assert 'updateSource' not in state_at(directory)['settings']
             self.action('windowfocus', '--sync', self.window_id)
             self.directory = directory
             self.accessible = wait_for(self.accessible_app)
             self.wait_control(lambda node: node.get_role() == Atspi.Role.PUSH_BUTTON and node.get_name().startswith(('Run', 'Executar')), 'main interface ready')
+            if (binary.parent / 'phpactor.phar').is_file():
+                self.wait_control(lambda node: node.get_role() == Atspi.Role.PUSH_BUTTON and node.get_name() in ('Completion ready', 'Autocomplete pronto'), 'bundled Phpactor ready')
         except BaseException:
             self.cleanup()
             raise
@@ -238,7 +242,7 @@ with accessibility_session():
             time.sleep(.5)
             app.action('mousemove', '--window', app.window_id, '350', '300', 'click', '1')
             app.key('ctrl+shift+p')
-            time.sleep(.8)
+            app.wait_control(lambda node: node.get_name() == 'Search commands', 'command palette visible after Ctrl+Shift+P')
             app.screenshot('tinkercraft-native-commands.png')
             app.close_dialog()
             app.command('Configure shortcuts')
@@ -275,6 +279,16 @@ with accessibility_session():
                 time.sleep(4)
                 app.screenshot('tinkercraft-native-language-' + language + '.png')
             print('PASS: native language selection persisted English and Portuguese through interface reloads.')
+            app.key('alt+1')
+            app.key('ctrl+a')
+            app.type('21*2')
+            wait_for(lambda: state_at(directory).get('tabs', [{}])[0].get('code') == '21*2')
+            app.key('alt+shift+f')
+            wait_for(lambda: state_at(directory).get('tabs', [{}])[0].get('code') == '21 * 2;\n')
+            app.key('ctrl+z')
+            wait_for(lambda: state_at(directory).get('tabs', [{}])[0].get('code') == '21*2')
+            assert len(state_at(directory)['history']) == 1
+            print('PASS: native inline worker formats tag-free PHP through the keyboard and preserves undo without execution.')
             app.key('F2')
             app.type('Retomar no dia seguinte')
             app.key('Return')

@@ -50,6 +50,7 @@ try {
         [
           "run",
           "-buildvcs=false",
+          "-ldflags=-X tinkercraft/internal/buildinfo.ReleaseSource=",
           "./cmd/tinkercraft-devserver",
           "-addr",
           "127.0.0.1:0",

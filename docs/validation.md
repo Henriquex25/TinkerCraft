@@ -112,6 +112,22 @@ Passaram TypeScript/Vite, build Wails WebKit 4.0, renderização React, `npm run
 
 Não foi executado novo workflow remoto, nem houve commit, push, alteração da versão `0.2.0`, instalação ou publicação. A confirmação no runner do GitHub depende do envio destas alterações pelo mantenedor.
 
+## Preferências internas e formatação PHP — 4 de novembro de 2026
+
+O input da paleta recebeu padding próprio; a versão do build aparece discretamente no rodapé. Foram removidos das preferências e do contrato JSON os campos de fonte de atualização e caminho do Phpactor, incluindo as ações de selecionar/instalar o servidor pela interface. Preferências antigas são ignoradas e descartadas no próximo salvamento. O updater usa a fonte embutida no build, sem override por ambiente em runtime. Pacotes usam apenas o Phpactor adjacente; o build verifica o pin e inclui esse arquivo em `build/bin`. Caminho do PHP local, cache, idioma, atalhos, formatação e consulta automática continuam configuráveis.
+
+A formatação usa Prettier 3.9.10 e o plugin PHP 0.26.0 embutidos num worker inline, sem executar PHP, ler regras de projetos ou usar a conexão selecionada. Funciona por Alt+Shift+F, botão, paleta e comando do Monaco; preserva undo e rejeita resultados se o código foi alterado durante a tarefa. Limites: 1 MiB e dez segundos por formatação. O padrão é quatro espaços, largura preferida de 80 caracteres, aspas simples, vírgulas finais e PER-CS; o teste verifica que uma cadeia Laravel longa recebe alinhamento vertical. Essas escolhas se inspiram nas convenções PHP-FIG e não significam conformidade integral com Pint ou PSR-12.
+
+Preferências → Formatação permite ajustar opções ou importar JSON de até 64 KiB com allowlist de campos escalares. Os valores são copiados para o workspace ao salvar; o arquivo original não é modificado nem observado. Plugins, parser externo, PHP/JavaScript, tipos inválidos e valores fora dos limites são rejeitados. Arquivos de configuração do Pint/PHP-CS-Fixer não são compatíveis.
+
+Passaram `./scripts/check.sh` com Phpactor real e dependências da fixture Laravel, a suíte WebKit completa, testes específicos de formatação e testes Go com race detector de serviço/linguagem. Os testes de formatação comparam ASTs antes/depois, preservam comentários, strings, Unicode, heredocs e nowdocs, verificam idempotência e tratamento de expressões sem tags/sem ponto e vírgula. A interface validou worker real, atalho, botão, paleta, undo, rascunho persistido, PHP inválido intacto, ausência de execução implícita, importação segura, indentação personalizada, persistência após reload e restauração do padrão. O teste de serviço reproduz um workspace antigo e ambiente com overrides maliciosos: não altera a fonte nem inicia o script Phpactor fornecido pelo workspace.
+
+O pacote `build/dist/tinkercraft_0.2.0_linux_amd64_webkit40.deb` foi reconstruído e extraído em uma pasta temporária. Foram conferidos metadados, SHA-256, pin do Phpactor, licenças dos novos componentes e fonte oficial mesmo com variável de ambiente adversarial. Seu executável passou a suíte nativa Xvfb a partir de `/tmp`: Phpactor incluído pronto, troca de idiomas, formatação por worker, undo, nenhuma execução implícita, fechamento/restauração e convites. Também passaram Prettier, sintaxe Bash/Python, actionlint, `git diff --check` e auditoria npm das dependências de produção sem vulnerabilidades conhecidas reportadas.
+
+Uma repetição da suíte WebKit encontrou um timeout intermitente na sugestão manual `format` do Phpactor, após a sugestão automática já ter funcionado. O diagnóstico de falhas agora inclui o tooltip de status do autocomplete; não foram removidas as asserções nem ampliados os timeouts. A repetição isolada completa passou. Essa ocorrência não comprova uma correção adicional do autocomplete e deve ser investigada se voltar a ocorrer.
+
+Não houve instalação no sistema, commit, push, mudança da versão `0.2.0` ou publicação. O rascunho já existente no GitHub contém o build anterior e precisa ser reconstruído com o novo commit antes de ser publicado. A variante WebKit 4.1 e a confirmação remota destas mudanças continuam pendentes.
+
 ## Evidências anteriores por área
 
 | Área | Evidência |

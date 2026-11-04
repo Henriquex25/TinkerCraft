@@ -131,7 +131,7 @@ Do not replace the assets of a version users already installed, move a published
 
 ## How the installed app updates
 
-The app queries the repository's latest published stable release. It compares versions, selects the matching CPU/WebKit package, and requires a valid SHA-256 before offering installation. `checksums.txt` and the GitHub asset digest support that verification; `manifest.json` also supports direct-manifest hosting.
+The app queries the build's embedded repository for its latest published stable release. Preferences and runtime environment variables cannot change the publisher; only startup checks can be disabled. It compares versions, selects the matching CPU/WebKit package, and requires a valid SHA-256 before offering installation. `checksums.txt` and the GitHub asset digest support that verification; `manifest.json` also supports direct-manifest hosting.
 
 The user explicitly downloads the update and opens the system installer. OS authorization/install and restarting remain user actions. This is an update notification and assisted-installation flow, not silent self-replacement. Committing source or uploading a temporary Actions artifact does not create an available update.
 

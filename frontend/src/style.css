@@ -2804,12 +2804,32 @@ button > .action-shortcut {
 }
 .command-search input {
   flex: 1;
+  padding: 10px 12px;
+  line-height: 1.5;
   color: #eee;
   background: transparent;
   border: 0;
   outline: 0;
   min-width: 0;
   font-size: 16px;
+}
+.app-version {
+  color: var(--text-muted, #aaa);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.settings-formatting {
+  display: grid;
+  gap: 18px;
+}
+.settings-formatting .field,
+.settings-formatting .checkbox-field {
+  margin: 0;
+}
+.formatting-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 .command-options {
   max-height: min(55vh, 440px);

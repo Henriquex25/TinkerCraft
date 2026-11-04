@@ -5,6 +5,8 @@ import type { Tab } from "./types";
 import * as monaco from "./monaco";
 import * as php from "monaco-editor/languages/definitions/php/php.js";
 import EditorWorker from "monaco-editor/editor/editor.worker.js?worker&inline";
+import { requestPHPFormat } from "./formatter";
+import { defaultFormatting, type FormattingRules } from "./formatting-rules";
 const PHP_LANGUAGE = "tinkercraft-php";
 let focusedEditor: any;
 export function editorAction(action: string) {
@@ -16,6 +18,7 @@ let loader: Promise<any> | undefined;
 const models = new Map<string, any>();
 const modelTabs = new Map<string, string>();
 const viewStates = new Map<string, any>();
+const modelRules = new Map<string, FormattingRules>();
 const getLatestCode = (id: string) => models.get(id)?.getValue() ?? "";
 const range = (r: any) =>
   r && {
@@ -38,6 +41,34 @@ function loadMonaco() {
     monaco.languages.setMonarchTokensProvider(PHP_LANGUAGE, {
       ...php.language,
       start: "phpRoot",
+    });
+    monaco.languages.registerDocumentFormattingEditProvider(PHP_LANGUAGE, {
+      async provideDocumentFormattingEdits(model, _options, token) {
+        const version = model.getVersionId();
+        try {
+          const text = await requestPHPFormat(
+            model.getValue(),
+            modelRules.get(model.uri.toString()) ?? defaultFormatting,
+            token,
+          );
+          if (
+            text === undefined ||
+            token.isCancellationRequested ||
+            model.isDisposed() ||
+            model.getVersionId() !== version
+          )
+            return [];
+          return [{ range: model.getFullModelRange(), text }];
+        } catch (error) {
+          if (!token.isCancellationRequested)
+            window.dispatchEvent(
+              new CustomEvent("tinkercraft:format-error", {
+                detail: tr("Could not format PHP: {0}", [errorText(error)]),
+              }),
+            );
+          return [];
+        }
+      },
     });
     monaco.editor.defineTheme("tinkercraft", {
       base: "vs-dark",
@@ -280,6 +311,7 @@ export function releaseModel(id: string) {
   const model = models.get(id);
   if (model) {
     modelTabs.delete(model.uri.toString());
+    modelRules.delete(model.uri.toString());
     model.dispose();
     models.delete(id);
     viewStates.delete(id);
@@ -287,10 +319,12 @@ export function releaseModel(id: string) {
 }
 export function CodeEditor({
   tab,
+  formatting = defaultFormatting,
   onChange,
   onPosition,
 }: {
   tab: Tab;
+  formatting?: FormattingRules;
   onChange: (code: string) => void;
   onPosition: (line: number, column: number) => void;
 }) {
@@ -430,6 +464,15 @@ export function CodeEditor({
     }
     if (model.getValue() !== tab.code) model.setValue(tab.code);
   }, [tab.id, tab.code]);
+  useEffect(() => {
+    const model = models.get(tab.id);
+    if (!model) return;
+    modelRules.set(model.uri.toString(), formatting);
+    model.updateOptions({
+      tabSize: formatting.tabWidth,
+      insertSpaces: !formatting.useTabs,
+    });
+  }, [ready, tab.id, formatting]);
   return (
     <div className="code-editor" ref={host}>
       {!ready && !error && (

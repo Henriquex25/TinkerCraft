@@ -42,6 +42,7 @@ try {
     [
       "run",
       "-buildvcs=false",
+      "-ldflags=-X tinkercraft/internal/buildinfo.ReleaseSource=",
       "./cmd/tinkercraft-devserver",
       "-addr",
       "127.0.0.1:0",
@@ -139,6 +140,152 @@ try {
   await page.getByLabel("Search commands").fill("Dismiss GitHub invitation");
   await page.keyboard.press("Enter");
   await page.locator(".repository-prompt").waitFor({ state: "detached" });
+  assert.equal(await page.locator(".app-version").textContent(), "v0.2.0");
+  const initialWorkspace = JSON.parse(
+    await readFile(path.join(data, "workspace.json"), "utf8"),
+  );
+  async function savedCode(expected) {
+    const until = Date.now() + 15000;
+    while (Date.now() < until) {
+      const workspace = JSON.parse(
+        await readFile(path.join(data, "workspace.json"), "utf8"),
+      );
+      if (
+        workspace.tabs.find((tab) => tab.id === workspace.activeTab)?.code ===
+        expected
+      )
+        return;
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+    throw new Error("Expected editor draft was not persisted: " + expected);
+  }
+  async function replaceCode(code) {
+    await page.keyboard.press("Alt+1");
+    await page.keyboard.press(`${modifier}+a`);
+    await page.keyboard.insertText(code);
+  }
+  const compactPHP = "$items=[1,2];foreach($items as $item){echo $item;}";
+  const formattedPHP =
+    "$items = [1, 2];\nforeach ($items as $item) {\n    echo $item;\n}\n";
+  await replaceCode(compactPHP);
+  await page.keyboard.press("Alt+Shift+f");
+  await savedCode(formattedPHP);
+  await page.keyboard.press(`${modifier}+z`);
+  await savedCode(compactPHP);
+  await page.keyboard.press("F1");
+  await page
+    .getByLabel("Search commands", { exact: true })
+    .fill("Format PHP code");
+  await mkdir(path.join(root, "test-results"), { recursive: true });
+  await page.screenshot({
+    path: path.join(root, "test-results/tinkercraft-command-palette.png"),
+    fullPage: true,
+  });
+  await page.keyboard.press("Enter");
+  await savedCode(formattedPHP);
+  await replaceCode("$invalid = ;");
+  await page
+    .getByRole("button", { name: "Format PHP code", exact: true })
+    .click();
+  await page
+    .locator(".toast")
+    .filter({ hasText: "Could not format PHP:" })
+    .waitFor();
+  await savedCode("$invalid = ;");
+  await page.getByTitle("Dismiss notification", { exact: true }).click();
+  const formattedWorkspace = JSON.parse(
+    await readFile(path.join(data, "workspace.json"), "utf8"),
+  );
+  assert.equal(
+    formattedWorkspace.history.length,
+    initialWorkspace.history.length,
+  );
+  await page.keyboard.press(`${modifier}+,`);
+  assert.equal(
+    await page
+      .getByText("path to phpactor.phar or PHP script", { exact: true })
+      .count(),
+    0,
+  );
+  await page.keyboard.press("Alt+4");
+  assert.equal(
+    await page.getByLabel("Indentation width", { exact: true }).inputValue(),
+    "4",
+  );
+  await page
+    .getByLabel("Formatting rules file", { exact: true })
+    .setInputFiles({
+      name: "unsafe.json",
+      mimeType: "application/json",
+      buffer: Buffer.from('{"plugins":["untrusted"]}'),
+    });
+  await page
+    .getByRole("alert")
+    .filter({ hasText: "Unsupported formatting option: plugins" })
+    .waitFor();
+  assert.equal(
+    await page.getByLabel("Indentation width", { exact: true }).inputValue(),
+    "4",
+  );
+  const chooser = page.waitForEvent("filechooser");
+  await page
+    .getByRole("button", { name: "Import JSON rules", exact: true })
+    .click();
+  await (
+    await chooser
+  ).setFiles({
+    name: "my-style.json",
+    mimeType: "application/json",
+    buffer: Buffer.from('{"tabWidth":2,"printWidth":80}'),
+  });
+  await page
+    .getByText("Imported my-style.json. Save preferences to apply.", {
+      exact: true,
+    })
+    .waitFor();
+  await page.getByRole("tab", { name: /^Formatting/ }).scrollIntoViewIfNeeded();
+  await mkdir(path.join(root, "test-results"), { recursive: true });
+  await page.screenshot({
+    path: path.join(
+      root,
+      "test-results/tinkercraft-formatting-preferences.png",
+    ),
+    fullPage: true,
+  });
+  await page.keyboard.press(`${modifier}+s`);
+  await page.getByRole("dialog").waitFor({ state: "hidden" });
+  await replaceCode(compactPHP);
+  await page.keyboard.press("Alt+Shift+f");
+  await savedCode(formattedPHP.replace("    echo", "  echo"));
+  await page.reload();
+  await page.locator(".monaco-editor textarea").waitFor();
+  await page.keyboard.press(`${modifier}+,`);
+  await page.keyboard.press("Alt+4");
+  assert.equal(
+    await page.getByLabel("Indentation width", { exact: true }).inputValue(),
+    "2",
+  );
+  await page
+    .getByRole("button", { name: "Restore default formatting", exact: true })
+    .click();
+  await page.keyboard.press(`${modifier}+s`);
+  await page.getByRole("dialog").waitFor({ state: "hidden" });
+  console.log(
+    "PASS: safe JSON rule import, rejected plugins, custom indentation, preference persistence across reloads, and restoring defaults.",
+  );
+  const restoredDraft = await page.request.post(new URL("/api", address).href, {
+    headers: { "X-TinkerCraft-Token": token },
+    data: {
+      method: "SaveWorkspace",
+      args: [initialWorkspace.tabs, initialWorkspace.activeTab],
+    },
+  });
+  assert(restoredDraft.ok());
+  await page.reload();
+  await page.locator(".monaco-editor textarea").waitFor();
+  console.log(
+    "PASS: offline PHP formatting through worker, shortcut, palette and button; undo, draft persistence, invalid-code preservation, and no implicit execution.",
+  );
   const editorWidth = (await page.locator(".editor-panel").boundingBox()).width;
   await page.getByRole("button", { name: "Hide output", exact: true }).click();
   await page.locator(".output-panel").waitFor({ state: "hidden" });
@@ -540,7 +687,7 @@ try {
     installerOpens = 0;
   const releaseBuild = {
     version: "0.2.0",
-    releaseSource: "",
+    releaseSource: "https://github.com/Henriquex25/TinkerCraft",
     distribution: "deb",
     platform: "linux",
     architecture: "amd64",
@@ -552,7 +699,8 @@ try {
   await page.route("**/api", async (route) => {
     const request = route.request().postDataJSON();
     let result;
-    if (request.method === "CheckUpdates")
+    if (request.method === "BuildInfo") result = releaseBuild;
+    else if (request.method === "CheckUpdates")
       result = {
         build: releaseBuild,
         configured: true,
@@ -583,9 +731,10 @@ try {
   });
   await page.keyboard.press(`${modifier}+,`);
   await page.keyboard.press("Alt+3");
-  await page
-    .getByLabel("Fonte de atualizações", { exact: true })
-    .fill("https://github.com/example/tinkercraft");
+  assert.equal(
+    await page.getByLabel("Fonte de atualizações", { exact: true }).count(),
+    0,
+  );
   await page
     .getByLabel("Verificar atualizações ao iniciar", { exact: true })
     .uncheck();
@@ -596,10 +745,14 @@ try {
   await page.keyboard.press(`${modifier}+,`);
   await page.keyboard.press("Alt+3");
   assert.equal(
+    await page.getByLabel("Fonte de atualizações", { exact: true }).count(),
+    0,
+  );
+  assert.equal(
     await page
-      .getByLabel("Fonte de atualizações", { exact: true })
-      .inputValue(),
-    "https://github.com/example/tinkercraft",
+      .getByLabel("Verificar atualizações ao iniciar", { exact: true })
+      .isChecked(),
+    false,
   );
   await page
     .getByLabel("Verificar atualizações ao iniciar", { exact: true })
@@ -711,6 +864,9 @@ try {
         editor: document.querySelector(".view-lines")?.textContent,
         error: document.querySelector(".error-card")?.textContent,
         toast: document.querySelector(".toast")?.textContent,
+        completion: document
+          .querySelector(".language-status")
+          ?.getAttribute("title"),
         focus: document.activeElement?.outerHTML.slice(0, 500),
       })),
     );

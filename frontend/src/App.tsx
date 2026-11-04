@@ -27,6 +27,7 @@ import {
   Square,
   Terminal,
   PanelRight,
+  Wand2,
   X,
 } from "lucide-react";
 import { api, errorText, uid } from "./api";
@@ -181,14 +182,13 @@ export default function App() {
     }
   }, []);
   const updateSourceKey = JSON.stringify([
-    state?.settings.updateSource,
     state?.settings.checkUpdatesOnStartup,
     buildInfo?.releaseSource,
   ]);
   useEffect(() => {
     if (!state || !buildInfo || state.settings.checkUpdatesOnStartup === false)
       return;
-    const source = state.settings.updateSource || buildInfo.releaseSource;
+    const source = buildInfo.releaseSource;
     if (!source) return;
     const timer = setTimeout(() => {
       checkUpdates();
@@ -259,6 +259,13 @@ export default function App() {
   );
   const shortcutKey = JSON.stringify(state?.settings.shortcuts ?? {});
   useEffect(() => {
+    const listener = (event: Event) =>
+      notify((event as CustomEvent<string>).detail);
+    window.addEventListener("tinkercraft:format-error", listener);
+    return () =>
+      window.removeEventListener("tinkercraft:format-error", listener);
+  }, [notify]);
+  useEffect(() => {
     commandSystem.setBindings(state?.settings.shortcuts ?? {});
   }, [shortcutKey]);
   useEffect(() => {
@@ -321,10 +328,7 @@ export default function App() {
         }));
     }
   }, []);
-  const settingsKey = JSON.stringify([
-    state?.settings.phpBinary,
-    state?.settings.phpactorPath,
-  ]);
+  const settingsKey = JSON.stringify([state?.settings.phpBinary]);
   const profileKey = JSON.stringify(profile);
   useEffect(() => {
     if (!tab) return;
@@ -610,6 +614,7 @@ export default function App() {
     }
   }
   useCommandActions({
+    formatPHP: () => editorAction("editor.action.formatDocument"),
     toggleOutput,
     "community.support": supportProject,
     checkUpdates: () => checkUpdates(true),
@@ -1024,6 +1029,14 @@ export default function App() {
           <div className="tabs-spacer" />
           <button
             className="icon-button"
+            aria-label={tr("Format PHP code")}
+            title={hints.title("formatPHP")}
+            onClick={() => editorAction("editor.action.formatDocument")}
+          >
+            <Wand2 size={16} />
+          </button>
+          <button
+            className="icon-button"
             aria-label={tr("Toggle output visibility")}
             aria-pressed={outputVisible}
             title={hints.title(
@@ -1077,6 +1090,7 @@ export default function App() {
           <section className="editor-panel">
             <CodeEditor
               tab={tab}
+              formatting={state.settings.formatting}
               onChange={(code) => updateTab(tab.id, { code })}
               onPosition={(line, column) => setPosition({ line, column })}
             />
@@ -1187,6 +1201,17 @@ export default function App() {
             <span>
               Ln {position.line}, Col {position.column}
             </span>
+            {buildInfo?.version && (
+              <>
+                <span className="status-divider" />
+                <span
+                  className="app-version"
+                  aria-label={tr("Version {0}", [buildInfo.version])}
+                >
+                  v{buildInfo.version}
+                </span>
+              </>
+            )}
           </div>
         </footer>
       </main>

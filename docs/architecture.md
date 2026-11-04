@@ -84,10 +84,16 @@ O backend usa contexts com deadline e grupos de processos POSIX. Cancelar mata o
 
 ### Distribuição e atualizações
 
-`VERSION` e ldflags alimentam `buildinfo.Info`: versão, commit, data, arquitetura, distribuição e ABI WebKit. O `.env` do checkout é lido como dados por `scripts/config.py`, com allowlist e prioridade das variáveis de ambiente. A fonte de releases é embutida no build; o app instalado pode sobrescrevê-la nas preferências. Não lê `.env` de projetos PHP para configurar o updater.
+`VERSION` e ldflags alimentam `buildinfo.Info`: versão, commit, data, arquitetura, distribuição e ABI WebKit. O `.env` do checkout é lido como dados por `scripts/config.py`, com allowlist e prioridade das variáveis de ambiente. A fonte de releases é embutida no build e não pode ser sobrescrita pelas preferências ou pelo ambiente de execução. O Phpactor empacotado é resolvido somente ao lado do executável, sem usar campos do workspace, PATH ou overrides de desenvolvimento. Não lê `.env` de projetos PHP para configurar o updater.
 
 `updates.Manager` consulta a API pública de releases estáveis GitHub ou um manifesto HTTPS de schema 1. A verificação tem deadline de 20 segundos, limite de resposta e rejeição de redirecionamento para HTTP. O comparador de versões evita downgrade; a seleção exige variante exata, nome previsível, tamanho até 512 MiB e SHA-256. O download usa streaming para arquivo privado temporário, valida tamanho/hash e formato Debian, e renomeia somente ao concluir. Antes de abrir o instalador, revalida o arquivo e o vínculo com a fonte/versão verificadas. Uma soma de integridade não substitui confiança na conta que publica o release.
 
 O frontend consulta após iniciar sem bloquear o editor, mostra um indicador e oferece consulta manual, notas, download e abertura do instalador. Erros de rede não interrompem a execução PHP. A instalação fica com o aplicativo do sistema associado a `.deb`, iniciado com argv separado via `xdg-open`. O app não executa comandos com privilégios nem instala silenciosamente. O usuário fecha e reabre após concluir a instalação.
 
 O `.deb` contém o binário, Phpactor adjacente, launcher, entrada desktop, ícones e licenças; dependências nativas são calculadas com `dpkg-shlibdeps`. Nenhum caminho do checkout é necessário em runtime. Dados pessoais ficam fora do pacote. O workflow produz variantes WebKit 4.0/4.1 em distribuições-base distintas e cria somente um rascunho no GitHub. Detalhes operacionais e compatibilidade em [releases.md](releases.md).
+
+## Formatação PHP
+
+Prettier 3.9.10 e o plugin PHP 0.26.0 são incluídos em um worker inline compatível com `wails://`. A ação explícita de formatação usa o provider do Monaco, suporta undo e só aplica o resultado se o model não tiver sido alterado durante a tarefa. Cancelamento ou prazo de dez segundos encerram o worker. O limite de entrada é 1 MiB; PHP inválido não altera o editor. Não há execução, dependência de conexão, envio de código ou leitura da configuração do projeto.
+
+O padrão usa quatro espaços, largura preferida de 80 caracteres, aspas simples quando possível, vírgulas finais e chaves no estilo PER-CS. A versão PHP 8.2 orienta escolhas de impressão compatíveis com o mínimo do app, sem converter sintaxe mais recente. As preferências persistem somente opções escalares validadas. A importação aceita JSON de até 64 KiB com allowlist; plugins, parsers externos e configurações executáveis não são aceitos. Regras são copiadas para o workspace; o arquivo original não é observado nem alterado.

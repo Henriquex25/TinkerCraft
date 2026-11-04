@@ -9,9 +9,11 @@
     "preview": "vite preview --host 127.0.0.1"
   },
   "dependencies": {
+    "@prettier/plugin-php": "0.26.0",
     "dompurify": "3.4.17",
     "lucide-react": "1.42.0",
     "monaco-editor": "0.57.0",
+    "prettier": "3.9.10",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },

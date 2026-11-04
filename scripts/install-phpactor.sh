@@ -13,4 +13,4 @@ printf '%s  %s\n' "$expected_sha" "$download_file" | sha256sum --check --status
 php "$download_file" --version
 mv "$download_file" "$tools_dir/phpactor.phar"
 sha256sum "$tools_dir/phpactor.phar" > "$tools_dir/phpactor.sha256"
-printf '\nPhpactor %s instalado em:\n%s/phpactor.phar\n\nO TinkerCraft detecta este arquivo ao iniciar pela pasta do projeto.\nTambém é possível selecioná-lo em Preferências > Phpactor.\n' "$phpactor_release" "$tools_dir"
+printf '\nPhpactor %s instalado em:\n%s/phpactor.phar\n\nO build inclui este componente automaticamente ao lado do executável.\n' "$phpactor_release" "$tools_dir"

@@ -17,6 +17,7 @@ Inspired by [Tinkerwell](https://tinkerwell.app), TinkerCraft is an independent 
 ## What you can do
 
 - **Write PHP comfortably.** Monaco editor, automatic completion, hover information, signature help, and diagnostics through Phpactor. PHP opening and closing tags are optional in the editor.
+- **Format your snippets.** Press **Alt+Shift+F**, use the editor button, or find **Format PHP code** in the command palette. Formatting runs offline, supports undo, and never executes your PHP. Customize the style or import JSON rules in **Preferences → Formatting**.
 - **Work in your application's context.** Bootstrap Laravel or Composer, use plain PHP, or provide a custom bootstrap file.
 - **Run where your project lives.** Local PHP, local Docker containers, SSH servers, and Docker containers over SSH.
 - **Read the result.** Expand arrays and objects, inspect Eloquent models and Collections, switch to JSON or a table, and export the inspected data as CSV.
@@ -75,6 +76,8 @@ go install github.com/wailsapp/wails/v2/cmd/wails@v2.15.0
 On Ubuntu 24.04, use `libwebkit2gtk-4.1-dev` instead. The build selects the installed WebKit variant; `TINKERCRAFT_WEBKIT=4.0` or `4.1` overrides the selection. Build a `.deb` with `./scripts/package-linux.sh`.
 
 The Phpactor installer verifies the pinned checksum **before executing the download**. Settings, tabs, and history are stored locally in `~/.config/tinkercraft`, with compatibility for earlier Lume workspaces. Set `TINKERCRAFT_DATA_DIR` to use an isolated workspace.
+
+Official installers manage Phpactor and the update repository internally. These components are not editable in Preferences; legacy overrides are ignored. You can configure the installed local PHP executable, cache retention, language, keyboard shortcuts, formatting, and startup update checks.
 
 ## Connect a project
 

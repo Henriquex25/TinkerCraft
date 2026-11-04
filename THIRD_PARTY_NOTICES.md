@@ -14,6 +14,9 @@ TinkerCraft's own code is distributed under the MIT license. Dependencies retain
 | TypeScript | 5.9.3 | Apache-2.0; build tooling | https://github.com/microsoft/TypeScript |
 | Playwright Core | 1.58.2 | Apache-2.0; tests only | https://github.com/microsoft/playwright |
 | Prettier | 3.9.10 | MIT; formatting only | https://github.com/prettier/prettier |
+| Prettier PHP plugin | 0.26.0 | MIT | https://github.com/prettier/plugin-php |
+| PHP parser for JavaScript | 3.7.0 | BSD-3-Clause | https://github.com/glayzzle/php-parser |
+| linguist-languages | 9.5.0 | MIT | https://github.com/ikatyang-collab/linguist-languages |
 
 Monaco now comes from the official npm package, with its identity and dependencies pinned by `frontend/package-lock.json`. Earlier development used an open Monaco bundle from another editor distribution; that bundle is no longer shipped. The editor's ESM API and selected contributions are bundled locally. No editor scripts or workers are fetched from a CDN at runtime.
 

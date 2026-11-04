@@ -23,7 +23,7 @@ Se já instalou a versão 0.2.0 anterior, aplique este pacote reconstruído com 
 
 ## Configurar o repositório do build — apenas para o mantenedor
 
-Quem instala o `.deb` **não precisa criar `.env` nem informar a URL do repositório**. Os pacotes publicados recebem a URL embutida durante a compilação; o workflow GitHub a obtém automaticamente de `github.repository`. O `.env` é apenas uma configuração local de quem gera o pacote e não é incluído nele. A preferência de fonte no aplicativo é uma opção para sobrescrever o canal configurado no build.
+Quem instala o `.deb` **não precisa criar `.env` nem informar a URL do repositório**. Os pacotes publicados recebem a URL embutida durante a compilação; o workflow GitHub a obtém automaticamente de `github.repository`. O `.env` é apenas uma configuração local de quem gera o pacote e não é incluído nele. A fonte é interna: preferências antigas e variáveis de ambiente em runtime não podem sobrescrever o canal do build.
 
 O `.env` foi criado na raiz e está ignorado pelo Git. Use uma URL pública de repositório, sem `/releases`:
 
@@ -33,12 +33,12 @@ TINKERCRAFT_VERSION=""
 TINKERCRAFT_MAINTAINER="TinkerCraft <seu-email>"
 ```
 
-Deixe a URL vazia enquanto o repositório não existir. Não há um destino fictício embutido. `.env.example` documenta os campos; para outro checkout, copie-o para `.env`. O parser lê esses campos como dados, sem executar comandos ou interpolar o shell. Variáveis exportadas no ambiente têm prioridade. Esse arquivo pertence ao TinkerCraft; ele não é o `.env` Laravel dos projetos.
+O destino padrão é o repositório oficial `https://github.com/Henriquex25/TinkerCraft`. O mantenedor pode definir outro destino ao compilar um fork. `.env.example` documenta os campos; para outro checkout, copie-o para `.env`. O parser lê esses campos como dados, sem executar comandos ou interpolar o shell. Variáveis exportadas no ambiente têm prioridade. Esse arquivo pertence ao TinkerCraft; ele não é o `.env` Laravel dos projetos.
 
-- `scripts/start.sh` lê a fonte do `.env` ao abrir a versão do checkout.
+- `scripts/start.sh` abre o executável já compilado; não redefine a fonte ao iniciar.
 - `scripts/build.sh` embute a fonte no executável; `TINKERCRAFT_VERSION` vazio usa `VERSION`.
-- A versão **instalada** usa a fonte embutida no build. Alterar o `.env` do checkout não reconfigura um pacote já instalado: preencha **Preferências → Atualizações → Fonte de atualizações** ou gere outro pacote.
-- Uma fonte salva nas preferências tem prioridade sobre a fonte do build. Campo vazio volta à fonte do build. Para desabilitar consultas, desmarque **Verificar atualizações ao iniciar**.
+- A versão **instalada** usa exclusivamente a fonte embutida no build. Alterar o `.env` do checkout não reconfigura um pacote já instalado; alterações do mantenedor exigem recompilação.
+- Para desabilitar consultas automáticas, desmarque **Verificar atualizações ao iniciar**. Não há campo de URL nas preferências; valores antigos são ignorados e descartados no próximo salvamento.
 
 Não é necessário token para consultar releases públicos. Se o repositório ainda não tiver um release publicado, a API pode responder 404; o editor e a execução continuam funcionando.
 
@@ -54,7 +54,7 @@ Se não houver instalador gráfico, o pacote verificado fica em `<workspace>/upd
 
 Todos os novos comandos estão na paleta e aceitam remapeamento. Dentro da janela de atualização: **Ctrl+R** verifica, **Ctrl+D** baixa e **Ctrl+Enter** abre o instalador depois do download. Em Preferências, **Alt+3** abre Atualizações.
 
-As consultas usam HTTPS e timeouts; não enviam trechos, perfis, fontes ou credenciais SSH. A fonte recebe os dados normais de uma requisição HTTP, incluindo IP e versão do TinkerCraft no User-Agent. SHA-256 verifica integridade em relação ao release configurado; não é uma assinatura independente do publicador. Só configure uma fonte que você controla ou em que confia.
+As consultas usam HTTPS e timeouts; não enviam trechos, perfis, fontes ou credenciais SSH. A fonte recebe os dados normais de uma requisição HTTP, incluindo IP e versão do TinkerCraft no User-Agent. SHA-256 verifica integridade em relação ao release configurado; não é uma assinatura independente do publicador. O mantenedor do build é responsável pela fonte embutida.
 
 ## Gerar um pacote
 
