@@ -4,10 +4,53 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 	"tinkercraft/internal/core"
 )
+
+func TestStarInvitationDismissalIsPermanentAndPreservesWorkspace(t *testing.T) {
+	dir := t.TempDir()
+	svc, err := New(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer svc.Close()
+	if svc.Bootstrap().Settings.StarPromptDismissed {
+		t.Fatal("new workspaces should show the invitation")
+	}
+	settings := svc.Bootstrap().Settings
+	if err := svc.SaveSettings(settings); err != nil {
+		t.Fatal(err)
+	}
+	staleSettings := svc.Bootstrap().Settings
+	expected := svc.Bootstrap()
+	expected.Settings.StarPromptDismissed = true
+	for range 2 {
+		if err := svc.DismissStarPrompt(); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if !reflect.DeepEqual(svc.Bootstrap(), expected) {
+		t.Fatal("dismissing the invitation changed unrelated workspace data")
+	}
+	if err := svc.SaveSettings(staleSettings); err != nil {
+		t.Fatal(err)
+	}
+	if !svc.Bootstrap().Settings.StarPromptDismissed {
+		t.Fatal("saving an older settings form restored the invitation")
+	}
+	svc.Close()
+	reopened, err := New(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer reopened.Close()
+	if !reopened.Bootstrap().Settings.StarPromptDismissed {
+		t.Fatal("dismissal was lost after restarting the service")
+	}
+}
 
 func TestInterfaceLanguageDefaultsPersistsAndRejectsUnknownValues(t *testing.T) {
 	dir := t.TempDir()

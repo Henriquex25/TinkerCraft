@@ -17,6 +17,16 @@ export const api: API = new Proxy({} as API, {
         throw new Error(
           tr("Open the TinkerCraft desktop app. The backend is not connected."),
         );
+      if (method === "OpenProjectRepository" || method === "OpenSupportPage") {
+        window.open(
+          method === "OpenSupportPage"
+            ? "https://www.buymeacoffee.com/henriquemiranda"
+            : "https://github.com/Henriquex25/TinkerCraft",
+          "_blank",
+          "noopener,noreferrer",
+        );
+        return;
+      }
       if (method === "Copy") {
         await navigator.clipboard.writeText(String(args[0]));
         return;

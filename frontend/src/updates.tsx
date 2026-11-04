@@ -10,6 +10,7 @@ import {
   LoaderCircle,
   PackageCheck,
   RefreshCw,
+  Coffee,
 } from "lucide-react";
 import { api, errorText } from "./api";
 import { Modal } from "./dialogs";
@@ -23,6 +24,7 @@ export function UpdatesDialog({
   error,
   check,
   close,
+  support,
 }: {
   info?: UpdateInfo;
   build?: BuildInfo;
@@ -30,6 +32,7 @@ export function UpdatesDialog({
   error: string;
   check: () => void;
   close: () => void;
+  support: () => void;
 }) {
   const [downloading, setDownloading] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
@@ -95,6 +98,20 @@ export function UpdatesDialog({
               {build?.version ?? info?.build.version ?? "…"}
             </p>
           </div>
+        </div>
+        <div className="project-support">
+          <div>
+            <strong>{tr("Support TinkerCraft")}</strong>
+            <p>{tr("Support continued development with a coffee.")}</p>
+          </div>
+          <button
+            className="secondary-button"
+            onClick={support}
+            title={hints.title("community.support")}
+          >
+            <Coffee size={16} aria-hidden="true" />
+            {tr("Buy me a coffee")} <Shortcut id="community.support" />
+          </button>
         </div>
         <div className={`update-summary ${info?.available ? "available" : ""}`}>
           {checking ? (

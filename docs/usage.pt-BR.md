@@ -132,6 +132,8 @@ Abra **Preferências → Atalhos de teclado** para remapear, remover ou restaura
 | `Ctrl+Espaço` | Mostrar sugestões de autocomplete |
 | `Ctrl+Alt+R` / `Ctrl+Alt+I` | Atualizar autocomplete / diagnóstico |
 | `Alt+1` / `Alt+2` | Focar editor / resultado |
+| `Ctrl+J` | Ocultar ou mostrar o painel de saída |
+| `Ctrl+Shift+Delete` | Limpar o resultado atual |
 | `Ctrl+Alt+1`, `2`, `3` | Inspecionar, tabela, JSON |
 | `Ctrl+Shift+C` / `Ctrl+Shift+E` | Copiar JSON / exportar CSV |
 | `Ctrl+Alt+F` | Filtrar resultado |
@@ -139,6 +141,10 @@ Abra **Preferências → Atalhos de teclado** para remapear, remover ou restaura
 | `Alt+PageUp` / `Alt+PageDown` | Dump anterior / próximo |
 
 Tab/Shift+Tab percorrem controles; Enter/Espaço acionam botões e seletores. Na árvore, ↑/↓ navegam e ←/→ recolhem/abrem o nó. O divisor entre editor e resultado também aceita ←/→ quando focado. No Monaco, o comportamento padrão de Tab é indentar; **Ctrl+M** alterna a navegação de foco com Tab para sair do editor apenas pelo teclado. Formulários mantêm o foco dentro da janela; a paleta pode ser aberta sobre eles.
+
+O X no painel de saída oculta todo o painel, inclusive quando ainda não há resultado. O código ocupa a largura disponível. O resultado, a visualização, os filtros e a largura anterior são preservados ao reabrir por Ctrl+J ou pelo botão na barra de abas. Executar código e Alt+2 também mostram a saída. O atalho pode ser remapeado em Preferências.
+
+O apoio voluntário está disponível em **Sobre e atualizações → Pague um café**, na paleta e em [Buy Me a Coffee](https://www.buymeacoffee.com/henriquemiranda). Um convite não modal pode aparecer a partir da quinta abertura do app, se houver execução no histórico e o convite de estrela tiver sido respondido em uma sessão anterior. As duas respostas dispensam permanentemente esse convite. O aplicativo abre a página no navegador; não processa pagamentos nem restringe recursos a quem contribui.
 
 ## Compilar e desenvolver
 

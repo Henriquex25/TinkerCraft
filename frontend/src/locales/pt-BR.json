@@ -283,5 +283,19 @@
   "Stack trace": "Rastreamento da pilha",
   "/home/you/.ssh/id_ed25519": "/home/voce/.ssh/id_ed25519",
   "my-laravel-project.test-1": "meu-projeto-laravel.test-1",
-  "Timeout (s)": "Tempo limite (s)"
+  "Timeout (s)": "Tempo limite (s)",
+  "Enjoying TinkerCraft?": "Gostando do TinkerCraft?",
+  "Would you give TinkerCraft a star on GitHub? It helps others discover the project.": "Você poderia dar uma estrela ao TinkerCraft no GitHub? Isso ajuda outras pessoas a descobrir o projeto.",
+  "Either choice dismisses this invitation permanently on this device.": "Qualquer uma das opções dispensa este convite permanentemente neste dispositivo.",
+  "No, thanks": "Não, obrigado",
+  "Star on GitHub": "Dar estrela no GitHub",
+  "Dismiss GitHub invitation": "Dispensar convite do GitHub",
+  "Toggle output visibility": "Alternar visibilidade da saída",
+  "Hide output": "Ocultar saída",
+  "Show output": "Mostrar saída",
+  "Buy me a coffee": "Pague um café",
+  "Support TinkerCraft": "Apoie o TinkerCraft",
+  "Dismiss support invitation": "Dispensar convite de apoio",
+  "If TinkerCraft has been useful, consider buying me a coffee to support its development.": "Se o TinkerCraft tem sido útil, considere pagar um café para apoiar seu desenvolvimento.",
+  "Support continued development with a coffee.": "Apoie a continuidade do desenvolvimento com um café."
 }

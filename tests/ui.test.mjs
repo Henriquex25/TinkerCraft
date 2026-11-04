@@ -134,6 +134,30 @@ try {
     .first()
     .waitFor();
   assert.equal(await page.locator("html").getAttribute("lang"), "en");
+  await page.locator(".repository-prompt").waitFor();
+  await page.keyboard.press("F1");
+  await page.getByLabel("Search commands").fill("Dismiss GitHub invitation");
+  await page.keyboard.press("Enter");
+  await page.locator(".repository-prompt").waitFor({ state: "detached" });
+  const editorWidth = (await page.locator(".editor-panel").boundingBox()).width;
+  await page.getByRole("button", { name: "Hide output", exact: true }).click();
+  await page.locator(".output-panel").waitFor({ state: "hidden" });
+  assert.equal(await page.locator(".splitter").count(), 0);
+  assert(
+    (await page.locator(".editor-panel").boundingBox()).width >
+      editorWidth * 1.5,
+  );
+  await page.keyboard.press(`${modifier}+j`);
+  await page.locator(".output-panel").waitFor({ state: "visible" });
+  assert(
+    Math.abs(
+      (await page.locator(".editor-panel").boundingBox()).width - editorWidth,
+    ) < 3,
+  );
+  await page
+    .getByRole("button", { name: "Toggle output visibility", exact: true })
+    .click();
+  await page.locator(".output-panel").waitFor({ state: "hidden" });
   await page.getByRole("button", { name: "Run", exact: false }).first().click();
   await page.getByText("Execution completed", { exact: true }).waitFor();
   await page.getByRole("button", { name: "Table", exact: true }).click();
@@ -191,6 +215,17 @@ try {
   await page.getByRole("cell", { name: "Ana Silva", exact: true }).waitFor();
   assert.equal(await page.locator("tbody tr").count(), 3);
   await page.getByLabel("Filtrar resultado").fill("Bruno");
+  assert.equal(await page.locator("tbody tr").count(), 1);
+  await page
+    .getByRole("button", { name: "Ocultar saída", exact: true })
+    .click();
+  await page.locator(".output-panel").waitFor({ state: "hidden" });
+  await page.keyboard.press(`${modifier}+j`);
+  await page.getByLabel("Filtrar resultado").waitFor({ state: "visible" });
+  assert.equal(
+    await page.getByLabel("Filtrar resultado").inputValue(),
+    "Bruno",
+  );
   assert.equal(await page.locator("tbody tr").count(), 1);
   await page.getByLabel("Filtrar resultado").fill("");
   await page
@@ -404,6 +439,9 @@ try {
   await completeBinding.press(`${modifier}+Alt+Space`);
   const historyBinding = page.getByLabel("Histórico — atalho", { exact: true });
   await historyBinding.press(`${modifier}+Shift+h`);
+  await page
+    .getByLabel("Alternar visibilidade da saída — atalho", { exact: true })
+    .press(`${modifier}+Shift+j`);
   await page.getByLabel("Buscar atalho", { exact: true }).fill("Executar");
   await page.screenshot({
     path: path.join(root, "test-results/tinkercraft-shortcuts.png"),
@@ -411,6 +449,16 @@ try {
   });
   await page.keyboard.press(`${modifier}+s`);
   await page.getByRole("dialog").waitFor({ state: "hidden" });
+  await page.waitForFunction(() =>
+    document
+      .querySelector('[aria-label="Alternar visibilidade da saída"]')
+      ?.getAttribute("title")
+      ?.includes("Ctrl + Shift + J"),
+  );
+  await page.keyboard.press(`${modifier}+Shift+j`);
+  await page.locator(".output-panel").waitFor({ state: "hidden" });
+  await page.keyboard.press(`${modifier}+Shift+j`);
+  await page.locator(".output-panel").waitFor({ state: "visible" });
   await page.waitForFunction(() =>
     document
       .querySelector('[aria-label="Histórico"]')

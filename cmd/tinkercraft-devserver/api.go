@@ -14,7 +14,7 @@ import (
 
 func apiHandler(svc *service.Service, token string) http.Handler {
 	allowed := map[string]bool{}
-	for _, name := range []string{"Bootstrap", "SaveProfile", "DeleteProfile", "SaveWorkspace", "SaveSettings", "Execute", "Cancel", "TestConnection", "ListContainers", "ContainerWorkdir", "StartLanguage", "RefreshLanguage", "StopLanguage", "ChangeLanguage", "LanguageRequest", "ResolveCompletion", "ClearHistory", "Health", "BuildInfo", "CheckUpdates", "DownloadUpdate"} {
+	for _, name := range []string{"Bootstrap", "SaveProfile", "DeleteProfile", "SaveWorkspace", "SaveSettings", "DismissStarPrompt", "DismissDonationPrompt", "Execute", "Cancel", "TestConnection", "ListContainers", "ContainerWorkdir", "StartLanguage", "RefreshLanguage", "StopLanguage", "ChangeLanguage", "LanguageRequest", "ResolveCompletion", "ClearHistory", "Health", "BuildInfo", "CheckUpdates", "DownloadUpdate"} {
 		allowed[name] = true
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

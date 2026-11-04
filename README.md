@@ -20,6 +20,7 @@ Inspired by [Tinkerwell](https://tinkerwell.app), TinkerCraft is an independent 
 - **Work in your application's context.** Bootstrap Laravel or Composer, use plain PHP, or provide a custom bootstrap file.
 - **Run where your project lives.** Local PHP, local Docker containers, SSH servers, and Docker containers over SSH.
 - **Read the result.** Expand arrays and objects, inspect Eloquent models and Collections, switch to JSON or a table, and export the inspected data as CSV.
+- **Focus on your code.** Hide or restore the output panel with **Ctrl+J**. Closing the panel preserves results and its current view; running a snippet opens it again.
 - **Keep your snippets.** Rename tabs, restore them after restarting, save PHP files, and revisit execution history.
 - **Stay on the keyboard.** A command palette, remappable shortcuts, and shortcut hints throughout the interface.
 - **Complete remote code locally.** A selective source cache supports remote completion and expires after inactivity; it does not upload changes to your project.
@@ -99,6 +100,10 @@ Output and CSV exports reflect the inspected data, including any truncation limi
 Issues, focused pull requests, and reproducible bug reports are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md).
 
 For questions and ideas, see [Support](SUPPORT.md) and the [community conduct guidelines](CODE_OF_CONDUCT.md). Repository owners can follow the [GitHub maintainer guide](docs/github-maintainer.md) to configure community workflows and publish app updates.
+
+At startup, a small invitation lets you support the project with a GitHub star. Both **No, thanks** and **Star on GitHub** permanently dismiss it in your local workspace. The latter opens the repository in your browser, where you can choose to star it; the app does not access your GitHub account. Both actions are also available in the command palette while the invitation is visible.
+
+You can also [buy me a coffee](https://www.buymeacoffee.com/henriquemiranda) to support continued development. The link is available in **About and updates** and the command palette. A separate, dismissible invitation may appear from the fifth app launch, after you have run a snippet and answered the star invitation in an earlier session. Both responses dismiss it permanently. Launch counting stays local and stops at five; language reloads do not count as new launches. Donations are optional and do not unlock features.
 
 CI is configured to run on pull requests and pushes: Go tests with race detection and coverage, static checks, frontend compilation, rendering and CSV tests, Laravel and Phpactor integration, WebKit workflows, native Wails tests, and dependency audits. These checks reduce regression risk; they do not prove that every environment or change is safe. Maintainers should require the **Linux checks** status before merging.
 

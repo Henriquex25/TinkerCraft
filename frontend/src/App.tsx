@@ -26,6 +26,7 @@ import {
   Settings2,
   Square,
   Terminal,
+  PanelRight,
   X,
 } from "lucide-react";
 import { api, errorText, uid } from "./api";
@@ -45,6 +46,7 @@ import {
 } from "./dialogs";
 import { Output } from "./output";
 import { UpdatesDialog } from "./updates";
+import { CommunityPrompt } from "./community";
 import { BrandIcon } from "./brand";
 import {
   Shortcut,
@@ -101,6 +103,7 @@ export default function App() {
   const [renaming, setRenaming] = useState("");
   const renameGeneration = useRef(0);
   const [split, setSplit] = useState(52);
+  const [outputVisible, setOutputVisible] = useState(true);
   const [saved, setSaved] = useState(true);
   const stateRef = useRef<State | undefined>(undefined);
   const workspaceRef = useRef<HTMLDivElement>(null);
@@ -367,6 +370,7 @@ export default function App() {
       return;
     }
     setRunning((values) => ({ ...values, [target.id]: true }));
+    setOutputVisible(true);
     try {
       const result = await api.Execute(
         target.id,
@@ -469,6 +473,15 @@ export default function App() {
     );
   }
   async function savedSettings(settings: Settings) {
+    settings = {
+      ...settings,
+      starPromptDismissed:
+        settings.starPromptDismissed ||
+        stateRef.current?.settings.starPromptDismissed,
+      donationPromptDismissed:
+        settings.donationPromptDismissed ||
+        stateRef.current?.settings.donationPromptDismissed,
+    };
     const language = normalizeLanguage(settings.language);
     if (language !== uiLanguage()) {
       await settleEditorInput();
@@ -560,7 +573,33 @@ export default function App() {
     }
   }
   function focusOutput() {
-    document.querySelector<HTMLElement>(".output-panel")?.focus();
+    setOutputVisible(true);
+    requestAnimationFrame(() =>
+      document.querySelector<HTMLElement>(".output-panel")?.focus(),
+    );
+  }
+  function hideOutput() {
+    setOutputVisible(false);
+    requestAnimationFrame(() => editorAction("focus"));
+  }
+  function toggleOutput() {
+    setOutputVisible((visible) => !visible);
+    requestAnimationFrame(() => editorAction("focus"));
+  }
+  async function supportProject() {
+    try {
+      await api.DismissDonationPrompt();
+      setState(
+        (current) =>
+          current && {
+            ...current,
+            settings: { ...current.settings, donationPromptDismissed: true },
+          },
+      );
+      await api.OpenSupportPage();
+    } catch (error) {
+      notify(errorText(error));
+    }
   }
   async function clearHistory() {
     try {
@@ -571,6 +610,8 @@ export default function App() {
     }
   }
   useCommandActions({
+    toggleOutput,
+    "community.support": supportProject,
     checkUpdates: () => checkUpdates(true),
     run: () => runRef.current(),
     save: () => saveWorkspace(true).catch(() => {}),
@@ -983,6 +1024,18 @@ export default function App() {
           <div className="tabs-spacer" />
           <button
             className="icon-button"
+            aria-label={tr("Toggle output visibility")}
+            aria-pressed={outputVisible}
+            title={hints.title(
+              "toggleOutput",
+              outputVisible ? tr("Hide output") : tr("Show output"),
+            )}
+            onClick={toggleOutput}
+          >
+            <PanelRight size={16} />
+          </button>
+          <button
+            className="icon-button"
             title={hints.title("renameTab")}
             aria-label={tr("Rename tab")}
             onClick={() => renameTab()}
@@ -1015,7 +1068,11 @@ export default function App() {
         <div
           className="workspace-panels"
           ref={workspaceRef}
-          style={{ "--editor-width": `${split}%` } as React.CSSProperties}
+          style={
+            {
+              "--editor-width": outputVisible ? `${split}%` : "100%",
+            } as React.CSSProperties
+          }
         >
           <section className="editor-panel">
             <CodeEditor
@@ -1024,29 +1081,33 @@ export default function App() {
               onPosition={(line, column) => setPosition({ line, column })}
             />
           </section>
-          <div
-            className="splitter"
-            role="separator"
-            aria-label={tr("Resize editor and output")}
-            aria-orientation="vertical"
-            onPointerDown={resize}
-            tabIndex={0}
-            aria-valuemin={32}
-            aria-valuemax={70}
-            aria-valuenow={split}
-            onKeyDown={(e) => {
-              if (["ArrowLeft", "ArrowRight"].includes(e.key)) {
-                e.preventDefault();
-                setSplit((value) =>
-                  Math.max(
-                    32,
-                    Math.min(70, value + (e.key === "ArrowRight" ? 2 : -2)),
-                  ),
-                );
-              }
-            }}
-          />
+          {outputVisible && (
+            <div
+              className="splitter"
+              role="separator"
+              aria-label={tr("Resize editor and output")}
+              aria-orientation="vertical"
+              onPointerDown={resize}
+              tabIndex={0}
+              aria-valuemin={32}
+              aria-valuemax={70}
+              aria-valuenow={split}
+              onKeyDown={(e) => {
+                if (["ArrowLeft", "ArrowRight"].includes(e.key)) {
+                  e.preventDefault();
+                  setSplit((value) =>
+                    Math.max(
+                      32,
+                      Math.min(70, value + (e.key === "ArrowRight" ? 2 : -2)),
+                    ),
+                  );
+                }
+              }}
+            />
+          )}
           <Output
+            visible={outputVisible}
+            hide={hideOutput}
             key={tab.id}
             result={results[tab.id]}
             running={isRunning}
@@ -1150,6 +1211,7 @@ export default function App() {
       )}
       {updatesOpen && (
         <UpdatesDialog
+          support={supportProject}
           info={updateInfo}
           build={buildInfo}
           checking={checkingUpdates}
@@ -1231,6 +1293,40 @@ export default function App() {
           </div>
         </Modal>
       )}
+      {!state.settings.starPromptDismissed && (
+        <CommunityPrompt
+          dismissed={() =>
+            setState(
+              (current) =>
+                current && {
+                  ...current,
+                  settings: { ...current.settings, starPromptDismissed: true },
+                },
+            )
+          }
+          notify={notify}
+        />
+      )}
+      {state.settings.starPromptDismissed &&
+        state.suggestSupport &&
+        !state.settings.donationPromptDismissed && (
+          <CommunityPrompt
+            kind="donation"
+            dismissed={() =>
+              setState(
+                (current) =>
+                  current && {
+                    ...current,
+                    settings: {
+                      ...current.settings,
+                      donationPromptDismissed: true,
+                    },
+                  },
+              )
+            }
+            notify={notify}
+          />
+        )}
       {toast && (
         <div className="toast" role="status">
           <Terminal size={15} />

@@ -101,6 +101,18 @@ with tempfile.TemporaryDirectory(prefix='tinkercraft-native-') as folder:
     directory = Path(folder)
     app = App(directory)
     try:
+        app.screenshot('tinkercraft-native-star-invitation.png')
+        app.key('F1')
+        time.sleep(.4)
+        app.type('Dismiss GitHub invitation')
+        app.key('Return')
+        wait_for(lambda: state_at(directory).get('settings', {}).get('starPromptDismissed') is True)
+        time.sleep(.3)
+        app.key('ctrl+j')
+        time.sleep(.4)
+        app.screenshot('tinkercraft-native-editor-only.png')
+        app.key('ctrl+j')
+        time.sleep(.3)
         app.key('ctrl+Return')
         wait_for(lambda: state_at(directory).get('history'))
         assert state_at(directory)['history'][0]['success']
@@ -167,6 +179,7 @@ with tempfile.TemporaryDirectory(prefix='tinkercraft-native-') as folder:
     try:
         reopened.screenshot('tinkercraft-native-restored.png')
         assert state_at(directory)['settings']['language'] == 'pt-BR'
+        assert state_at(directory)['settings']['starPromptDismissed'] is True
         assert 'Workspace PHP' in subprocess.check_output(['xdotool', 'getwindowname', reopened.window_id], text=True)
         assert state_at(directory)['tabs'][0]['code'] == code
         assert len(state_at(directory)['history']) == 1, 'Unexecuted draft was evaluated'
@@ -174,3 +187,27 @@ with tempfile.TemporaryDirectory(prefix='tinkercraft-native-') as folder:
         print('PASS: native reopen retained named, unexecuted draft and connection.')
     finally:
         reopened.cleanup()
+    fixture = state_at(directory)
+    fixture['launchCount'] = 4
+    (directory / 'workspace.json').write_text(json.dumps(fixture))
+    support = App(directory)
+    try:
+        assert state_at(directory)['launchCount'] == 5
+        support.screenshot('tinkercraft-native-support-invitation.png')
+        support.key('F1')
+        time.sleep(.4)
+        support.type('Dispensar convite de apoio')
+        support.key('Return')
+        wait_for(lambda: state_at(directory).get('settings', {}).get('donationPromptDismissed') is True)
+        support.close()
+    finally:
+        support.cleanup()
+    support_reopened = App(directory)
+    try:
+        assert state_at(directory)['launchCount'] == 5
+        assert state_at(directory)['settings']['donationPromptDismissed'] is True
+        assert len(state_at(directory)['history']) == 1
+        support_reopened.close()
+        print('PASS: delayed support invitation, keyboard dismissal, capped launch count and persistence after native restart.')
+    finally:
+        support_reopened.cleanup()
