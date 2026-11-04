@@ -94,6 +94,14 @@ Passaram `./scripts/check.sh` com Laravel/Phpactor reais e a suíte WebKit compl
 
 O pacote WebKit 4.0 foi reconstruído e seu payload extraído passou a suíte nativa em Xvfb com diretório de trabalho `/tmp`: Ctrl+J, execução, reloads de idioma, persistência do rascunho, convite de apoio na quinta abertura, dispensa pelo teclado e nova reabertura. As imagens `test-results/tinkercraft-native-editor-only.png` e `tinkercraft-native-support-invitation.png` foram conferidas visualmente. O teste usa só fixtures e simula condições de uso no workspace temporário; não altera perfis ou janelas do usuário. Não houve instalação no sistema, commit, push ou publicação.
 
+## Cancelamento durante análise PHP — 4 de novembro de 2026
+
+O CI expôs um erro de classificação: cancelar enquanto `compile.php` ainda estava rodando retornava `CompilerError` com `context canceled`, sem marcar a execução como cancelada. O teste WebKit aguardava corretamente a mensagem de cancelamento. A correção verifica o contexto após a análise local, antes de classificar falhas do compilador, e retorna `ExecutionError`, `cancelled=true`, duração e a mensagem própria de cancelamento.
+
+O novo teste reproduziu a falha antes da correção tanto com contexto previamente cancelado quanto durante análise em um processo PHP real. A sincronização usa um arquivo de prontidão em fixture temporária, sem depender de uma espera arbitrária; um arquivo sentinela verifica que o trecho não executou. Após a correção, os testes de cancelamento/timeout passaram cinco vezes com race detector. Passaram também `./scripts/check.sh` com Phpactor/Laravel reais e `npm run test:ui` completo, mantendo a asserção original de cancelamento e seu timeout.
+
+Não houve commit, push, mudança de versão ou disparo de workflow remoto durante esta correção; essas etapas permanecem sob execução do mantenedor no aprendizado da publicação.
+
 ## Evidências anteriores por área
 
 | Área | Evidência |

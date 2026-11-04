@@ -151,6 +151,55 @@ func TestCancellationAndTimeout(t *testing.T) {
 		t.Fatalf("%+v", r)
 	}
 }
+func TestCancellationBeforeAndDuringCompilation(t *testing.T) {
+	for _, stage := range []string{"before compilation", "during compilation"} {
+		t.Run(stage, func(t *testing.T) {
+			engine, profile, settings := fixture(t)
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			if stage == "before compilation" {
+				cancel()
+			} else {
+				ready := filepath.Join(t.TempDir(), "compiler-ready")
+				t.Setenv("TINKERCRAFT_TEST_COMPILER_READY", ready)
+				compiler := "<?php file_put_contents(getenv('TINKERCRAFT_TEST_COMPILER_READY'), 'ready'); sleep(30);"
+				if err := os.WriteFile(filepath.Join(engine.RuntimeDir, "compile.php"), []byte(compiler), 0600); err != nil {
+					t.Fatal(err)
+				}
+				go func() {
+					ticker := time.NewTicker(10 * time.Millisecond)
+					defer ticker.Stop()
+					for {
+						if _, err := os.Stat(ready); err == nil {
+							cancel()
+							return
+						}
+						select {
+						case <-ctx.Done():
+							return
+						case <-ticker.C:
+						}
+					}
+				}()
+			}
+			result := make(chan core.Result, 1)
+			go func() {
+				result <- engine.Execute(ctx, profile, settings, "file_put_contents('must-not-run', 'executed');")
+			}()
+			select {
+			case got := <-result:
+				if got.Success || !got.Cancelled || got.Error == nil || got.Error.Class != "ExecutionError" || got.Error.Message != "Execução cancelada" {
+					t.Fatalf("expected a structured cancellation during %s, got %+v, error: %+v", stage, got, got.Error)
+				}
+			case <-time.After(5 * time.Second):
+				t.Fatal("cancelling compilation did not stop the process promptly")
+			}
+			if _, err := os.Stat(filepath.Join(profile.ProjectPath, "must-not-run")); !os.IsNotExist(err) {
+				t.Fatal("the snippet executed despite cancelling compilation")
+			}
+		})
+	}
+}
 func TestTransportArgumentSafety(t *testing.T) {
 	_, p, _ := fixture(t)
 	p.Mode = "ssh-docker"

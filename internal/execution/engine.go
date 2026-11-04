@@ -43,6 +43,12 @@ func (e *Engine) Execute(ctx context.Context, p core.Profile, settings core.Sett
 		php = "php"
 	}
 	compiled, err := Run(compileCtx, Command{Binary: php, Args: []string{filepath.Join(e.RuntimeDir, "compile.php")}}, input, 4*1024*1024)
+	if ctx.Err() != nil {
+		result := failure("ExecutionError", "Execução cancelada")
+		result.Cancelled = true
+		result.DurationMS = float64(time.Since(started).Milliseconds())
+		return result
+	}
 	if err != nil {
 		return failure("CompilerError", fmt.Sprintf("Não foi possível analisar o código com o PHP local (%s): %v", php, err))
 	}
