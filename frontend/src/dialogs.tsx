@@ -1,3 +1,5 @@
+import { translateStatus } from "./i18n";
+import { t as tr } from "./i18n";
 import { useEffect, useState } from "react";
 import {
   Box,
@@ -24,13 +26,12 @@ import { Shortcut, useCommandActions, useCommandHints } from "./commands";
 import { Keybindings } from "./keybindings";
 import { bindingErrors } from "./shortcuts";
 import type { BuildInfo, Container, Health, Profile, Settings } from "./types";
-
 export const modeLabel = (mode: string) =>
   ({
     local: "Local",
-    docker: "Docker local",
+    docker: tr("Local Docker"),
     ssh: "SSH",
-    "ssh-docker": "Docker via SSH",
+    "ssh-docker": tr("Docker over SSH"),
   })[mode] ?? mode;
 export const ModeIcon = ({
   mode,
@@ -62,7 +63,6 @@ export const newProfile = (): Profile => ({
   bootstrapFile: "",
   timeout: 30,
 });
-
 export function Modal({
   title,
   eyebrow,
@@ -141,8 +141,8 @@ export function Modal({
           <button
             className="icon-button"
             onClick={close}
-            title={hints.title("dialog.close", "Fechar")}
-            aria-label="Fechar"
+            title={hints.title("dialog.close", tr("Close"))}
+            aria-label={tr("Close")}
           >
             <X size={19} />
           </button>
@@ -152,7 +152,6 @@ export function Modal({
     </div>
   );
 }
-
 export function ProfileDialog({
   profiles,
   initial,
@@ -204,7 +203,7 @@ export function ProfileDialog({
       const items = await api.ListContainers(form);
       setContainers(items);
       if (!items.length)
-        setError("Nenhum container em execução nesse ambiente.");
+        setError(tr("No running containers in this environment."));
     } catch (e) {
       setError(errorText(e));
     } finally {
@@ -214,7 +213,7 @@ export function ProfileDialog({
   async function detectDirectory(container = form.container) {
     if (!container.trim()) {
       setError(
-        "Informe ou selecione um container antes de detectar o diretório.",
+        tr("Enter or select a container before detecting its directory."),
       );
       return;
     }
@@ -262,9 +261,9 @@ export function ProfileDialog({
       const result = await api.TestConnection(form);
       if (!result.success)
         throw new Error(
-          result.error?.message || result.stderr || "Conexão não estabelecida",
+          result.error?.message || result.stderr || tr("Connection failed"),
         );
-      setTest(`Conexão estabelecida · PHP ${result.phpVersion}`);
+      setTest(tr("Connected · PHP {0}", [result.phpVersion]));
     } catch (e) {
       setError(errorText(e));
     } finally {
@@ -325,8 +324,8 @@ export function ProfileDialog({
   });
   return (
     <Modal
-      title="Conexões"
-      eyebrow="AMBIENTE DE EXECUÇÃO"
+      title={tr("Connections")}
+      eyebrow={tr("EXECUTION ENVIRONMENT")}
       close={close}
       className="connections-modal"
     >
@@ -337,9 +336,10 @@ export function ProfileDialog({
             onClick={() => selectProfile()}
           >
             <Plus size={17} />
-            Nova conexão <Shortcut id="profile.new" />
+            {tr("New connection") + " "}
+            <Shortcut id="profile.new" />
           </button>
-          <div className="list-label">SEUS AMBIENTES</div>
+          <div className="list-label">{tr("YOUR ENVIRONMENTS")}</div>
           {profiles.map((profile) => (
             <button
               className={`connection-item ${form.id === profile.id ? "active" : ""}`}
@@ -356,7 +356,7 @@ export function ProfileDialog({
           ))}
           <div className="connection-note">
             <KeyRound size={18} />
-            <p>SSH usa suas chaves e configurações do OpenSSH.</p>
+            <p>{tr("SSH uses your OpenSSH keys and configuration.")}</p>
           </div>
         </aside>
         <form className="connection-form" onSubmit={save}>
@@ -366,25 +366,25 @@ export function ProfileDialog({
                 {
                   mode: "local",
                   name: "Local",
-                  detail: "PHP nesta máquina",
+                  detail: tr("PHP on this machine"),
                   icon: Monitor,
                 },
                 {
                   mode: "docker",
                   name: "Docker",
-                  detail: "Container local",
+                  detail: tr("Local container"),
                   icon: Box,
                 },
                 {
                   mode: "ssh",
                   name: "SSH",
-                  detail: "Servidor remoto",
+                  detail: tr("Remote server"),
                   icon: Server,
                 },
                 {
                   mode: "ssh-docker",
                   name: "SSH + Docker",
-                  detail: "Container remoto",
+                  detail: tr("Remote container"),
                   icon: Globe,
                 },
               ] as const
@@ -405,10 +405,10 @@ export function ProfileDialog({
             ))}
           </div>
           <label className="field">
-            <span>Nome da conexão</span>
+            <span>{tr("Connection name")}</span>
             <input
               required
-              placeholder="Meu projeto Laravel"
+              placeholder={tr("My Laravel project")}
               value={form.name}
               onChange={(e) => update("name", e.target.value)}
             />
@@ -417,16 +417,16 @@ export function ProfileDialog({
             <>
               <div className="form-row">
                 <label className="field grow">
-                  <span>Host ou alias SSH</span>
+                  <span>{tr("SSH host or alias")}</span>
                   <input
                     required
-                    placeholder="meu-servidor"
+                    placeholder={tr("my-server")}
                     value={form.ssh.host}
                     onChange={(e) => ssh("host", e.target.value)}
                   />
                 </label>
                 <label className="field port-field">
-                  <span>Porta</span>
+                  <span>{tr("Port")}</span>
                   <input
                     type="number"
                     min={0}
@@ -440,7 +440,8 @@ export function ProfileDialog({
               <div className="form-row">
                 <label className="field grow">
                   <span>
-                    Usuário <small>opcional com SSH config</small>
+                    {tr("User") + " "}
+                    <small>{tr("optional with SSH config")}</small>
                   </span>
                   <input
                     placeholder="forge"
@@ -450,11 +451,12 @@ export function ProfileDialog({
                 </label>
                 <label className="field grow">
                   <span>
-                    Chave privada <small>opcional com agent</small>
+                    {tr("Private key") + " "}
+                    <small>{tr("optional with agent")}</small>
                   </span>
                   <div className="input-action">
                     <input
-                      placeholder="/home/voce/.ssh/id_ed25519"
+                      placeholder={tr("/home/you/.ssh/id_ed25519")}
                       value={form.ssh.identityFile}
                       onChange={(e) => ssh("identityFile", e.target.value)}
                     />
@@ -481,10 +483,10 @@ export function ProfileDialog({
             <>
               <div className="container-picker">
                 <label className="field grow">
-                  <span>Container PHP</span>
+                  <span>{tr("PHP container")}</span>
                   <input
                     required
-                    placeholder="meu-projeto-laravel.test-1"
+                    placeholder={tr("my-laravel-project.test-1")}
                     list="containers"
                     value={form.container}
                     onChange={(e) => update("container", e.target.value)}
@@ -509,7 +511,8 @@ export function ProfileDialog({
                   ) : (
                     <RefreshCw size={16} />
                   )}
-                  Buscar containers <Shortcut id="profile.containers" />
+                  {tr("Find containers") + " "}
+                  <Shortcut id="profile.containers" />
                 </button>
               </div>
               {containers.length > 0 && (
@@ -538,10 +541,10 @@ export function ProfileDialog({
             <label className="field">
               <span>
                 {docker
-                  ? "Diretório dentro do container"
+                  ? tr("Directory inside container")
                   : remote
-                    ? "Diretório no servidor"
-                    : "Diretório do projeto"}
+                    ? tr("Directory on server")
+                    : tr("Project directory")}
               </span>
               <div className="input-action">
                 <input
@@ -549,7 +552,7 @@ export function ProfileDialog({
                   placeholder={
                     remote || docker
                       ? "/var/www/html"
-                      : "/home/voce/Projetos/meu-app"
+                      : tr("/home/you/Projects/my-app")
                   }
                   value={form.projectPath}
                   onChange={(e) => update("projectPath", e.target.value)}
@@ -571,7 +574,7 @@ export function ProfileDialog({
                 className="secondary-button"
                 disabled={Boolean(busy)}
                 title={hints.title("profile.detect")}
-                aria-label="Detectar diretório"
+                aria-label={tr("Detect directory")}
                 onClick={() => detectDirectory()}
               >
                 {busy === "detect" ? (
@@ -579,7 +582,8 @@ export function ProfileDialog({
                 ) : (
                   <Wand2 size={16} />
                 )}
-                Detectar diretório <Shortcut id="profile.detect" />
+                {tr("Detect directory") + " "}
+                <Shortcut id="profile.detect" />
               </button>
             )}
           </div>
@@ -587,9 +591,9 @@ export function ProfileDialog({
             <div className="autocomplete-summary">
               <Braces size={18} />
               <span>
-                Autocomplete automático. O projeto será indexado a partir da
-                montagem local ou de um cache temporário, sem precisar escolher
-                outra pasta.
+                {tr(
+                  "Automatic completion. The project is indexed from a local mount or temporary cache, without selecting another folder.",
+                )}
               </span>
             </div>
           )}
@@ -597,10 +601,10 @@ export function ProfileDialog({
             className="advanced-settings"
             open={form.bootstrap === "custom" ? true : undefined}
           >
-            <summary>Configurações avançadas</summary>
+            <summary>{tr("Advanced settings")}</summary>
             <div className="form-row">
               <label className="field grow">
-                <span>Executável PHP</span>
+                <span>{tr("PHP executable")}</span>
                 <input
                   required
                   value={form.phpBinary}
@@ -614,15 +618,15 @@ export function ProfileDialog({
                   value={form.bootstrap}
                   onChange={(e) => update("bootstrap", e.target.value)}
                 >
-                  <option value="auto">Detectar automaticamente</option>
+                  <option value="auto">{tr("Detect automatically")}</option>
                   <option value="laravel">Laravel</option>
                   <option value="composer">Composer</option>
-                  <option value="none">PHP puro</option>
-                  <option value="custom">Arquivo personalizado</option>
+                  <option value="none">{tr("Plain PHP")}</option>
+                  <option value="custom">{tr("Custom file")}</option>
                 </select>
               </label>
               <label className="field timeout-field">
-                <span>Timeout (s)</span>
+                <span>{tr("Timeout (s)")}</span>
                 <input
                   type="number"
                   min={1}
@@ -634,7 +638,7 @@ export function ProfileDialog({
             </div>
             {form.bootstrap === "custom" && (
               <label className="field">
-                <span>Arquivo de bootstrap</span>
+                <span>{tr("Bootstrap file")}</span>
                 <input
                   required
                   placeholder="bootstrap.php"
@@ -644,9 +648,9 @@ export function ProfileDialog({
               </label>
             )}
             <label className="field">
-              <span>Autocomplete</span>
+              <span>{tr("Completion")}</span>
               <select
-                aria-label="Modo de autocomplete"
+                aria-label={tr("Completion mode")}
                 value={autocomplete}
                 onChange={(e) =>
                   update(
@@ -655,39 +659,41 @@ export function ProfileDialog({
                   )
                 }
               >
-                <option value="auto">Automático</option>
-                <option value="local">Usar uma pasta local</option>
-                <option value="off">Desativado</option>
+                <option value="auto">{tr("Automatic")}</option>
+                <option value="local">{tr("Use a local folder")}</option>
+                <option value="off">{tr("Disabled")}</option>
               </select>
             </label>
             {autocomplete === "local" && (
               <label className="field">
-                <span>Pasta local para indexação</span>
+                <span>{tr("Local folder for indexing")}</span>
                 <div className="input-action">
                   <input
                     required
-                    placeholder="/home/voce/Projetos/meu-app"
+                    placeholder={tr("/home/you/Projects/my-app")}
                     value={form.localPath}
                     onChange={(e) => update("localPath", e.target.value)}
                   />
                   <button
                     type="button"
-                    title="Selecionar pasta para indexação"
+                    title={tr("Select folder for indexing")}
                     onClick={() => browse("localPath")}
                   >
                     <FolderOpen size={17} />
                   </button>
                 </div>
                 <small>
-                  Use uma cópia local quando preferir controlar os arquivos
-                  usados pelo autocomplete.
+                  {tr(
+                    "Use a local copy if you prefer to control the files used for completion.",
+                  )}
                 </small>
               </label>
             )}
             {remote && (
               <p className="field-hint">
-                Antes do primeiro acesso, conecte pelo terminal para registrar a
-                chave do servidor em known_hosts.
+                {tr(
+                  "Before your first connection, connect from a terminal to verify the server key in known_hosts.",
+                )}
               </p>
             )}
           </details>
@@ -712,7 +718,7 @@ export function ProfileDialog({
                 onClick={remove}
               >
                 <Trash2 size={16} />
-                {confirmDelete ? "Confirmar exclusão" : "Excluir"}{" "}
+                {confirmDelete ? tr("Confirm deletion") : tr("Delete")}{" "}
                 <Shortcut id="profile.delete" />
               </button>
             ) : (
@@ -727,12 +733,13 @@ export function ProfileDialog({
                 onClick={testConnection}
               >
                 {busy === "test" && <LoaderCircle className="spin" size={16} />}
-                Testar conexão <Shortcut id="profile.test" />
+                {tr("Test connection") + " "}
+                <Shortcut id="profile.test" />
               </button>
               <button
                 className="primary-button"
                 type="submit"
-                aria-label="Salvar conexão"
+                aria-label={tr("Save connection")}
                 disabled={Boolean(busy)}
               >
                 {busy === "save" ? (
@@ -740,7 +747,8 @@ export function ProfileDialog({
                 ) : (
                   <Check size={16} />
                 )}
-                Salvar conexão <Shortcut id="dialog.save" />
+                {tr("Save connection") + " "}
+                <Shortcut id="dialog.save" />
               </button>
             </div>
           </div>
@@ -749,7 +757,6 @@ export function ProfileDialog({
     </Modal>
   );
 }
-
 export function SettingsDialog({
   settings,
   initialSection = "general",
@@ -763,10 +770,11 @@ export function SettingsDialog({
   build?: BuildInfo;
   checkUpdates: () => void;
   close: () => void;
-  saved: (settings: Settings) => void;
+  saved: (settings: Settings) => void | Promise<void>;
 }) {
   const [form, setForm] = useState({
     ...settings,
+    language: settings.language ?? "en",
     cacheDays: settings.cacheDays || 7,
   });
   const [section, setSection] = useState(initialSection);
@@ -791,7 +799,7 @@ export function SettingsDialog({
         throw new Error(conflicts.join(" "));
       }
       await api.SaveSettings(form);
-      saved(form);
+      await saved(form);
       close();
     } catch (e) {
       setError(errorText(e));
@@ -815,6 +823,14 @@ export function SettingsDialog({
   }
   useCommandActions({
     "settings.php": () => chooseTool("phpBinary"),
+    "settings.language": () => {
+      setSection("general");
+      requestAnimationFrame(() =>
+        document
+          .querySelector<HTMLSelectElement>("[data-interface-language]")
+          ?.focus(),
+      );
+    },
     "settings.phpactor": () => chooseTool("phpactorPath"),
     "settings.install": copyInstall,
     "settings.reset": () =>
@@ -837,7 +853,7 @@ export function SettingsDialog({
         throw new Error(conflicts.join(" "));
       }
       await api.SaveSettings(form);
-      saved(form);
+      await saved(form);
       close();
       checkUpdates();
     } catch (error) {
@@ -848,8 +864,8 @@ export function SettingsDialog({
   }
   return (
     <Modal
-      title="Seu espaço, do seu jeito."
-      eyebrow="PREFERÊNCIAS"
+      title={tr("Your workspace, your way.")}
+      eyebrow={tr("PREFERENCES")}
       close={close}
       className="settings-modal"
       scope="settings"
@@ -858,7 +874,7 @@ export function SettingsDialog({
         <div
           className="settings-tabs"
           role="tablist"
-          aria-label="Seções de preferências"
+          aria-label={tr("Preference sections")}
         >
           <button
             type="button"
@@ -866,7 +882,8 @@ export function SettingsDialog({
             aria-selected={section === "general"}
             onClick={() => setSection("general")}
           >
-            Geral <Shortcut id="settings.general" />
+            {tr("General") + " "}
+            <Shortcut id="settings.general" />
           </button>
           <button
             type="button"
@@ -874,7 +891,8 @@ export function SettingsDialog({
             aria-selected={section === "shortcuts"}
             onClick={() => setSection("shortcuts")}
           >
-            Atalhos de teclado <Shortcut id="settings.shortcuts" />
+            {tr("Keyboard shortcuts") + " "}
+            <Shortcut id="settings.shortcuts" />
           </button>
           <button
             type="button"
@@ -882,7 +900,8 @@ export function SettingsDialog({
             aria-selected={section === "updates"}
             onClick={() => setSection("updates")}
           >
-            Atualizações <Shortcut id="settings.updates" />
+            {tr("Updates") + " "}
+            <Shortcut id="settings.updates" />
           </button>
         </div>
         {section === "updates" ? (
@@ -890,14 +909,16 @@ export function SettingsDialog({
             <div className="settings-intro">
               <RefreshCw size={20} />
               <p>
-                TinkerCraft {build?.version ?? "…"}. As atualizações são
-                baixadas após sua solicitação e instaladas pelo Linux.
+                TinkerCraft {build?.version ?? "…"}
+                {tr(
+                  ". Updates are downloaded on request and installed through Linux.",
+                )}
               </p>
             </div>
             <label className="field">
-              <span>Repositório GitHub de releases</span>
+              <span>{tr("GitHub release repository")}</span>
               <input
-                aria-label="Fonte de atualizações"
+                aria-label={tr("Update source")}
                 placeholder={
                   build?.releaseSource ||
                   "https://github.com/seu-usuario/tinkercraft"
@@ -908,9 +929,9 @@ export function SettingsDialog({
                 }
               />
               <small>
-                Informe a URL do repositório público. Vazio utiliza a fonte
-                definida no build ou no .env de desenvolvimento. Um manifesto
-                HTTPS próprio também é aceito.
+                {tr(
+                  "Enter the public repository URL. Leave empty to use the build configuration or development .env. A custom HTTPS manifest is also supported.",
+                )}
               </small>
             </label>
             <label className="checkbox-field">
@@ -921,11 +942,12 @@ export function SettingsDialog({
                   setForm({ ...form, checkUpdatesOnStartup: e.target.checked })
                 }
               />
-              <span>Verificar atualizações ao iniciar</span>
+              <span>{tr("Check for updates on startup")}</span>
             </label>
             <p className="field-hint">
-              A verificação não envia seus códigos, conexões ou dados dos
-              projetos. O aviso aparece no rodapé quando há uma versão nova.
+              {tr(
+                "Update checks do not send code, connections, or project data. A notification appears in the footer when a new version is available.",
+              )}
             </p>
             <button
               type="button"
@@ -934,7 +956,8 @@ export function SettingsDialog({
               onClick={saveAndCheck}
             >
               <RefreshCw size={15} />
-              Salvar e verificar agora <Shortcut id="settings.checkUpdates" />
+              {tr("Save and check now") + " "}
+              <Shortcut id="settings.checkUpdates" />
             </button>
           </div>
         ) : section === "shortcuts" ? (
@@ -946,16 +969,40 @@ export function SettingsDialog({
           />
         ) : (
           <div className="settings-general">
+            <label className="field">
+              <span>{tr("Language")}</span>
+              <select
+                data-interface-language
+                aria-label={tr("Interface language")}
+                value={form.language}
+                onChange={(event) =>
+                  setForm({
+                    ...form,
+                    language: event.target.value as "en" | "pt-BR",
+                  })
+                }
+              >
+                <option value="en">English</option>
+                <option value="pt-BR">Português (Brasil)</option>
+              </select>
+              <small>
+                {tr(
+                  "Choose the interface language. Code, connection names, and execution output are not translated.",
+                )}
+              </small>
+            </label>
             <div className="settings-intro">
               <Settings2 size={20} />
               <p>
-                O PHP local analisa seus trechos e executa o servidor de
-                linguagem. Pode ter uma versão diferente do PHP remoto.
+                {tr(
+                  "Local PHP parses snippets and runs the language server. Its version may differ from remote PHP.",
+                )}
               </p>
             </div>
             <label className="field">
               <span>
-                Executável PHP local <small>PHP 8.2 ou superior</small>
+                {tr("Local PHP executable") + " "}
+                <small>{tr("PHP 8.2 or later")}</small>
               </span>
               <div className="input-action">
                 <input
@@ -981,14 +1028,17 @@ export function SettingsDialog({
                 </button>
               </div>
             </label>
-            <div className="form-section-title">INTELIGÊNCIA DO EDITOR</div>
+            <div className="form-section-title">
+              {tr("EDITOR INTELLIGENCE")}
+            </div>
             <label className="field">
               <span>
-                Phpactor <small>caminho para phpactor.phar ou script PHP</small>
+                Phpactor{" "}
+                <small>{tr("path to phpactor.phar or PHP script")}</small>
               </span>
               <div className="input-action">
                 <input
-                  placeholder="Detectar phpactor no PATH"
+                  placeholder={tr("Detect phpactor on PATH")}
                   value={form.phpactorPath}
                   onChange={(e) =>
                     setForm({ ...form, phpactorPath: e.target.value })
@@ -1010,15 +1060,17 @@ export function SettingsDialog({
                 </button>
               </div>
               <small>
-                Autocomplete de tipos, métodos encadeados, imports, assinatura e
-                documentação via LSP.
+                {tr(
+                  "Type and chained method completion, imports, signatures, and documentation through LSP.",
+                )}
               </small>
             </label>
             <div className="setup-note">
-              <strong>Primeira configuração</strong>
+              <strong>{tr("Initial setup")}</strong>
               <p>
-                Instale o Phpactor pelo script do projeto e selecione o arquivo
-                baixado acima.
+                {tr(
+                  "Install Phpactor using the project script, then select the downloaded file above.",
+                )}
               </p>
               <button
                 type="button"
@@ -1036,16 +1088,16 @@ export function SettingsDialog({
                 {copied ? <Check size={14} /> : <Copy size={14} />}
               </button>
               <small>
-                Sem Phpactor, o indexador básico sugere funções, classes e
-                membros públicos. Para métodos mágicos do Laravel, use os
-                arquivos gerados pelo IDE Helper no projeto.
+                {tr(
+                  "Without Phpactor, the basic indexer suggests functions, classes, and public members. For Laravel magic methods, use IDE Helper files generated in your project.",
+                )}
               </small>
             </div>
-            <div className="form-section-title">CACHE DE AUTOCOMPLETE</div>
+            <div className="form-section-title">{tr("COMPLETION CACHE")}</div>
             <label className="field">
-              <span>Remover após dias sem uso</span>
+              <span>{tr("Remove after days without use")}</span>
               <input
-                aria-label="Dias sem uso para expirar cache"
+                aria-label={tr("Days without use before cache expires")}
                 type="number"
                 min={1}
                 max={90}
@@ -1055,55 +1107,53 @@ export function SettingsDialog({
                 }
               />
               <small>
-                O cache inclui arquivos PHP e metadados Composer. Não copia
-                .env, bancos de dados ou uploads. A limpeza ocorre ao abrir o
-                aplicativo e enquanto ele está em uso.
+                {tr(
+                  "The cache includes PHP files and Composer metadata. It excludes .env, databases, and uploads. Cleanup runs on startup and while the app is open.",
+                )}
               </small>
             </label>
             <div className="health-grid">
               <div>
-                <span>PHP local</span>
-                <strong>{health?.php ?? "Verificando…"}</strong>
+                <span>{tr("Local PHP")}</span>
+                <strong>{translateStatus(health?.php ?? "Checking…")}</strong>
               </div>
               <div>
                 <span>Docker CLI</span>
                 <strong>
                   {health
                     ? health.docker
-                      ? "Encontrado"
-                      : "Não encontrado"
+                      ? tr("Found")
+                      : tr("Not found")
                     : "…"}
                 </strong>
               </div>
               <div>
                 <span>OpenSSH</span>
                 <strong>
-                  {health
-                    ? health.ssh
-                      ? "Encontrado"
-                      : "Não encontrado"
-                    : "…"}
+                  {health ? (health.ssh ? tr("Found") : tr("Not found")) : "…"}
                 </strong>
               </div>
             </div>
             {health && (
               <p className="data-path">
-                Workspace salvo em <code>{health.dataDir}</code>
+                {tr("Workspace saved in") + " "}
+                <code>{health.dataDir}</code>
               </p>
             )}
           </div>
         )}
         {error && <div className="form-error">{error}</div>}
         <div className="form-footer">
-          <span>Preferências salvas neste dispositivo.</span>
+          <span>{tr("Preferences saved on this device.")}</span>
           <button
             type="submit"
-            aria-label="Salvar preferências"
+            aria-label={tr("Save preferences")}
             className="primary-button"
             disabled={busy || bindingErrors(form.shortcuts ?? {}).length > 0}
           >
             <Check size={14} />
-            Salvar preferências <Shortcut id="dialog.save" />
+            {tr("Save preferences") + " "}
+            <Shortcut id="dialog.save" />
           </button>
         </div>
       </form>

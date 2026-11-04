@@ -19,7 +19,7 @@ import (
 	phpruntime "tinkercraft/runtime"
 )
 
-const WelcomeCode = "// Um espaço para explorar suas ideias.\n$people = [\n    ['id' => 1, 'name' => 'Ana Silva', 'role' => 'Developer', 'active' => true],\n    ['id' => 2, 'name' => 'Bruno Costa', 'role' => 'Designer', 'active' => true],\n    ['id' => 3, 'name' => 'Clara Santos', 'role' => 'Developer', 'active' => false],\n];\n\n$people;\n"
+const WelcomeCode = "// A space to explore your ideas.\n$people = [\n    ['id' => 1, 'name' => 'Ana Silva', 'role' => 'Developer', 'active' => true],\n    ['id' => 2, 'name' => 'Bruno Costa', 'role' => 'Designer', 'active' => true],\n    ['id' => 3, 'name' => 'Clara Santos', 'role' => 'Developer', 'active' => false],\n];\n\n$people;\n"
 
 type Service struct {
 	Updates            *updates.Manager
@@ -104,7 +104,7 @@ func New(dir string) (*Service, error) {
 			return nil, err
 		}
 		profile := core.Profile{ID: execution.ID(), Name: "PHP Playground", Mode: "local", ProjectPath: playground, PHPBinary: "php", Bootstrap: "none", Timeout: 30}
-		tab := core.Tab{ID: execution.ID(), Name: "Primeira ideia", Code: WelcomeCode, ProfileID: profile.ID}
+		tab := core.Tab{ID: execution.ID(), Name: "First idea", Code: WelcomeCode, ProfileID: profile.ID}
 		if err := store.Update(func(state *core.State) error {
 			state.Profiles = append(state.Profiles, profile)
 			state.Tabs = []core.Tab{tab}
@@ -178,6 +178,12 @@ func (s *Service) SaveWorkspace(tabs []core.Tab, active string) error {
 	return s.Store.Update(func(state *core.State) error { state.Tabs = tabs; state.ActiveTab = active; return nil })
 }
 func (s *Service) SaveSettings(settings core.Settings) error {
+	if settings.Language == "" {
+		settings.Language = "en"
+	}
+	if settings.Language != "en" && settings.Language != "pt-BR" {
+		return fmt.Errorf("Unsupported interface language")
+	}
 	settings.UpdateSource = strings.TrimSpace(settings.UpdateSource)
 	if _, _, err := updates.SourceURL(settings.UpdateSource); err != nil {
 		return err
@@ -213,6 +219,9 @@ func (s *Service) profile(id string) (core.Profile, error) {
 	return core.Profile{}, fmt.Errorf("Selecione uma conexão")
 }
 func (s *Service) Execute(tabID, profileID, code string) (core.Result, error) {
+	if tabID == "" || len(tabID) > 100 || len(code) > 1048576 {
+		return core.Result{}, fmt.Errorf("Aba inválida ou trecho maior que 1 MiB")
+	}
 	p, err := s.profile(profileID)
 	if err != nil {
 		return core.Result{}, err
@@ -272,6 +281,9 @@ func (s *Service) RefreshLanguage(tabID, profileID, code string) (language.Statu
 	return s.startLanguage(tabID, profileID, code, true)
 }
 func (s *Service) startLanguage(tabID, profileID, code string, refresh bool) (language.Status, error) {
+	if tabID == "" || len(tabID) > 100 || len(code) > 1048576 {
+		return language.Status{}, fmt.Errorf("Aba inválida ou trecho maior que 1 MiB")
+	}
 	p, err := s.profile(profileID)
 	if err != nil {
 		return language.Status{}, err
@@ -292,8 +304,7 @@ func (s *Service) startLanguage(tabID, profileID, code string, refresh bool) (la
 		}
 		s.mu.Unlock()
 	}()
-	// A cancelled preparation must finish before its replacement starts a
-	// language session, so its cleanup cannot stop the newer session.
+
 	s.languageStartMu.Lock()
 	defer s.languageStartMu.Unlock()
 	if err := ctx.Err(); err != nil {
@@ -315,7 +326,7 @@ func (s *Service) startLanguage(tabID, profileID, code string, refresh bool) (la
 		if ctx.Err() != nil {
 			return language.Status{}, ctx.Err()
 		}
-		// A source-transfer failure must not remove PHP's own completions.
+
 		root := filepath.Join(s.Dir, "language-scratch", "project")
 		if mkdirErr := os.MkdirAll(root, 0700); mkdirErr != nil {
 			return language.Status{}, mkdirErr
@@ -341,7 +352,7 @@ func (s *Service) startLanguage(tabID, profileID, code string, refresh bool) (la
 	status.Source = project.Source
 	if !project.UpdatedAt.IsZero() {
 		status.UpdatedAt = project.UpdatedAt.Format(time.RFC3339)
-		status.Message += " · cache atualizado em " + project.UpdatedAt.Local().Format("02/01 15:04")
+		status.Message += " · cache updated on " + status.UpdatedAt
 	}
 	if project.Source == "mount" {
 		status.Message += " · diretório montado pelo Docker"

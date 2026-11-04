@@ -1,0 +1,13 @@
+node_modules/
+frontend/node_modules/
+frontend/public/vendor/
+frontend/src/vendor/
+runtime/vendor/
+tests/fixtures/laravel/vendor/
+frontend/dist/
+build/bin/
+build/dist/
+.data/
+.tools/
+test-results/
+coverage.out

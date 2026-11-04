@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the small UI/window icon without modifying the original artwork."""
+
 from pathlib import Path
 
 try:
@@ -13,6 +13,6 @@ root = Path(__file__).resolve().parent.parent
 icon = GdkPixbuf.Pixbuf.new_from_file(str(root / 'build/appicon.png'))
 if icon.get_width() != icon.get_height():
     raise SystemExit('build/appicon.png deve ser quadrado; o original não será recortado.')
-# GTK/X11 may omit oversized window icons instead of reporting an error.
+
 icon.scale_simple(128, 128, GdkPixbuf.InterpType.HYPER).savev(
     str(root / 'build/appicon-small.png'), 'png', [], [])

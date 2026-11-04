@@ -10,13 +10,51 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: release-${{ inputs.version }}
   cancel-in-progress: false
 
 jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      RELEASE_VERSION: ${{ inputs.version }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Validate main and version consistency
+        run: |
+          python3 - <<'PY'
+          import json, os, re
+          from pathlib import Path
+          version = os.environ['RELEASE_VERSION']
+          if os.environ['GITHUB_REF'] != 'refs/heads/main':
+              raise SystemExit('Run releases from main after merging a reviewed PR.')
+          if not re.fullmatch(r'(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)', version):
+              raise SystemExit('Use MAJOR.MINOR.PATCH without a v prefix.')
+          if Path('VERSION').read_text().strip() != version:
+              raise SystemExit('The release version must match VERSION in this commit.')
+          for filename in ['package.json', 'package-lock.json', 'frontend/package.json', 'frontend/package-lock.json']:
+              data = json.loads(Path(filename).read_text())
+              if data['version'] != version or ('packages' in data and data['packages']['']['version'] != version):
+                  raise SystemExit('Update the version in ' + filename + ' before releasing.')
+          PY
+      - name: Require successful CI for the exact commit
+        run: |
+          count="$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$GITHUB_SHA&branch=main&event=push&status=success&per_page=100" --jq '.workflow_runs | length')"
+          if [[ "$count" -eq 0 ]]; then
+            echo 'Wait for the CI push run on this exact main commit to succeed before releasing.' >&2
+            exit 1
+          fi
+
   build:
+    needs: verify
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -35,17 +73,19 @@ jobs:
       TINKERCRAFT_WEBKIT: ${{ matrix.webkit }}
       TINKERCRAFT_RELEASE_SOURCE: https://github.com/${{ github.repository }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          go-version-file: go.mod
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+        with:
+          go-version: "1.27.3"
           cache-dependency-path: go.sum
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version: "22"
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-      - uses: shivammathur/setup-php@v2
+      - uses: shivammathur/setup-php@d52fc211a0436f8839a587b3b5b8efddab4744ea
         with:
           php-version: "8.4"
           extensions: mbstring, dom, sqlite3, curl
@@ -74,9 +114,10 @@ jobs:
           fi
           node tests/render.test.mjs
           python3 tests/distribution.test.py
+          python3 tests/community.test.py
           cd build/dist
           sha256sum -c checksums.txt
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: linux-amd64-${{ matrix.variant }}
           path: build/dist/
@@ -86,6 +127,7 @@ jobs:
   draft:
     needs: build
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
     permissions:
       contents: write
     env:
@@ -93,8 +135,10 @@ jobs:
       RELEASE_SOURCE: https://github.com/${{ github.repository }}
       GH_TOKEN: ${{ github.token }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/download-artifact@v8
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
         with:
           path: packages
       - name: Prepare release files

@@ -4,8 +4,6 @@ import { mkdtemp, mkdir, rm, writeFile, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { chromium, webkit } from "playwright-core";
-
-// Run outside restricted sessions: this test needs loopback sockets and a browser.
 const root = path.resolve(import.meta.dirname, "..");
 const data = await mkdtemp(path.join(tmpdir(), "tinkercraft-ui-"));
 const token = "tinkercraft-test-" + Date.now();
@@ -56,6 +54,7 @@ try {
       env: {
         ...process.env,
         TINKERCRAFT_TEST_TOKEN: token,
+        TINKERCRAFT_RELEASE_SOURCE: "",
         PATH: fixtureBin + path.delimiter + process.env.PATH,
         TINKERCRAFT_UI_FIXTURE_ROOT: fixtureRoot,
       },
@@ -67,7 +66,7 @@ try {
       errors = "";
     const timer = setTimeout(
       () => reject(new Error("Backend did not start: " + errors)),
-      120_000,
+      120000,
     );
     server.stderr.on("data", (chunk) => {
       errors += chunk;
@@ -103,16 +102,8 @@ try {
   );
   const errors = [];
   page.on("pageerror", (error) => {
-    // Disposing a Monaco model cancels its delayed tasks. WebKit surfaces that
-    // library cancellation as an unhandled rejection; other errors still fail.
-    if (
-      error.message === "Canceled: Canceled" &&
-      error.stack.includes("/vendor/monaco/")
-    )
-      return;
     errors.push(error.message);
   });
-  // Clipboard fixture covers both our JSON export and Monaco's selection clipboard.
   await page.addInitScript(() =>
     Object.defineProperty(navigator, "clipboard", {
       configurable: true,
@@ -121,8 +112,6 @@ try {
           window.__copiedJSON = text;
         },
         write: async (items) => {
-          // WebKit's Monaco clipboard service passes deferred ClipboardItems.
-          // Consume them so intentional cancellation has a rejection handler.
           await Promise.all(
             items.flatMap((item) =>
               item.types.map((type) =>
@@ -140,6 +129,59 @@ try {
   assert.equal(await page.title(), "TinkerCraft · PHP workspace");
   await page.getByTitle("TinkerCraft", { exact: true }).waitFor();
   await page.locator(".monaco-editor").waitFor();
+  await page
+    .getByRole("button", { name: "Run", exact: false })
+    .first()
+    .waitFor();
+  assert.equal(await page.locator("html").getAttribute("lang"), "en");
+  await page.getByRole("button", { name: "Run", exact: false }).first().click();
+  await page.getByText("Execution completed", { exact: true }).waitFor();
+  await page.getByRole("button", { name: "Table", exact: true }).click();
+  await page.getByRole("cell", { name: "Ana Silva", exact: true }).waitFor();
+  await page.screenshot({
+    path: path.join(root, "test-results/tinkercraft-english.png"),
+    fullPage: true,
+  });
+  await page.keyboard.press(`${modifier}+,`);
+  assert.equal(
+    await page.getByLabel("Interface language", { exact: true }).inputValue(),
+    "en",
+  );
+  await page
+    .getByLabel("Interface language", { exact: true })
+    .selectOption("pt-BR");
+  const initialLanguageReload = page.waitForNavigation({ waitUntil: "load" });
+  await page
+    .getByRole("button", { name: "Save preferences", exact: true })
+    .click();
+  await initialLanguageReload;
+  await page
+    .getByRole("button", { name: "Executar", exact: false })
+    .first()
+    .waitFor();
+  await page
+    .getByRole("button", { name: "Autocomplete pronto", exact: true })
+    .waitFor();
+  assert.equal(await page.locator("html").getAttribute("lang"), "pt-BR");
+  await page
+    .getByRole("button", { name: "Autocomplete pronto", exact: true })
+    .waitFor();
+  await page.keyboard.press("Alt+1");
+  await page.keyboard.press("F1");
+  await page.getByLabel("Buscar comando").fill("Localizar no editor");
+  await page.keyboard.press("Enter");
+  await page
+    .locator(".find-widget .monaco-inputbox :is(input,textarea)")
+    .first()
+    .waitFor();
+  assert.match(
+    await page
+      .locator(".find-widget .monaco-inputbox :is(input,textarea)")
+      .first()
+      .getAttribute("aria-label"),
+    /localizar/i,
+  );
+  await page.keyboard.press("Escape");
   await page
     .getByRole("button", { name: "Executar", exact: false })
     .first()
@@ -163,8 +205,6 @@ try {
     path: path.join(root, "test-results/tinkercraft-table.png"),
     fullPage: true,
   });
-
-  // Edit real Monaco through the keyboard and evaluate on the real Go/PHP backend.
   await page
     .getByRole("button", { name: "Autocomplete pronto", exact: true })
     .waitFor();
@@ -198,7 +238,6 @@ try {
     .first()
     .click();
   await page.getByText("Execução cancelada", { exact: true }).waitFor();
-
   await page.getByRole("button", { name: "Nova aba", exact: true }).click();
   assert.equal(await page.locator(".editor-tab").count(), 2);
   await page.getByRole("button", { name: "Nova conexão", exact: true }).click();
@@ -229,8 +268,6 @@ try {
     fullPage: true,
   });
   await page.getByRole("button", { name: "Fechar", exact: true }).click();
-  // Exercise the UI and real Go/PHP snapshot pipeline with a simulated Docker CLI.
-  // This does not claim that a real Docker daemon was used.
   await page.getByRole("button", { name: "Nova conexão", exact: true }).click();
   await page.getByRole("button", { name: /^Docker/ }).click();
   await page
@@ -266,7 +303,6 @@ try {
     "$product = new \\App\\Product();\n$product->",
   );
   let cachedSuggestion = false;
-  // Phpactor may still be indexing the newly copied sources after initialize.
   for (let attempt = 0; attempt < 12; attempt++) {
     await page.keyboard.press("Control+Space");
     try {
@@ -286,11 +322,10 @@ try {
   await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "Histórico", exact: true }).click();
   await page.locator(".history-item").first().waitFor();
-  await page.waitForTimeout(600); // Allow the draft debounce to persist before reload.
+  await page.waitForTimeout(600);
   await page.reload();
   await page.locator(".monaco-editor").waitFor();
   assert.equal(await page.locator(".editor-tab").count(), 2);
-  // Keyboard workflow: name and retain a draft that has never been executed.
   await page.keyboard.press("F2");
   await page
     .getByLabel("Nome da aba", { exact: true })
@@ -325,7 +360,6 @@ try {
   const phpFile = await phpDownload;
   assert.equal(phpFile.suggestedFilename(), "Consulta de amanhã.php");
   assert.equal(await readFile(await phpFile.path(), "utf8"), "<?php\n" + draft);
-
   await page.keyboard.press(`${modifier}+Shift+p`);
   await page
     .getByRole("dialog", { name: "Paleta de comandos", exact: true })
@@ -342,14 +376,13 @@ try {
   await page.keyboard.press(`${modifier}+Tab`);
   await page
     .locator(".editor-tab.active")
-    .getByText("Primeira ideia", { exact: true })
+    .getByText("First idea", { exact: true })
     .waitFor();
   await page.keyboard.press(`${modifier}+Shift+Tab`);
   await page
     .locator(".editor-tab.active")
     .getByText("Consulta de amanhã", { exact: true })
     .waitFor();
-
   await page.keyboard.press(`${modifier}+Alt+k`);
   await page.getByRole("tab", { name: /^Atalhos de teclado/ }).waitFor();
   const runBinding = page.getByLabel("Executar ou cancelar — atalho", {
@@ -376,7 +409,6 @@ try {
     path: path.join(root, "test-results/tinkercraft-shortcuts.png"),
     fullPage: true,
   });
-  // Search has focus, so Ctrl+S submits instead of recording a shortcut.
   await page.keyboard.press(`${modifier}+s`);
   await page.getByRole("dialog").waitFor({ state: "hidden" });
   await page.waitForFunction(() =>
@@ -395,10 +427,8 @@ try {
   assert(
     (await page.locator(".run-button kbd").textContent()).includes("Shift"),
   );
-
   await page.locator(".monaco-editor").first().click();
   await page.keyboard.press(`${modifier}+a`);
-  // A leading '[' surrounds a selection in Monaco; clear before typing an array.
   await page.keyboard.press("Backspace");
   await page.keyboard.type("[['name' => 'Tomorrow', 'active' => true]];");
   await page.keyboard.press(`${modifier}+Shift+Enter`);
@@ -412,7 +442,6 @@ try {
       '"Tomorrow"',
     ),
   );
-  // Verify copied JSON through the isolated clipboard fixture.
   await page.keyboard.press(`${modifier}+Shift+c`);
   assert.deepEqual(await page.evaluate(() => JSON.parse(window.__copiedJSON)), [
     { name: "Tomorrow", active: true },
@@ -421,8 +450,6 @@ try {
   await page.locator(".history-item").first().waitFor();
   await page.keyboard.press(`${modifier}+Shift+h`);
   await page.getByRole("complementary").waitFor({ state: "hidden" });
-
-  // Suggestions must appear while typing, without the manual trigger.
   await page
     .getByRole("button", { name: "Autocomplete pronto", exact: true })
     .waitFor();
@@ -461,7 +488,6 @@ try {
   assert(
     (await page.locator(".view-lines").textContent()).includes("$tomorrow"),
   );
-  // Update UI uses an isolated release response; it never opens a real installer.
   let updateDownloads = 0,
     installerOpens = 0;
   const releaseBuild = {
@@ -519,7 +545,6 @@ try {
     .getByRole("button", { name: "Salvar preferências", exact: true })
     .click();
   await page.getByRole("dialog").waitFor({ state: "hidden" });
-  // Reopening with startup checking enabled must show a non-blocking update badge.
   await page.keyboard.press(`${modifier}+,`);
   await page.keyboard.press("Alt+3");
   assert.equal(
@@ -569,6 +594,52 @@ try {
   await page.keyboard.press("Escape");
   console.log(
     "PASS: update preferences, opt-out/persistence, startup badge, release dialog and explicit download/installer actions (isolated release and installer fixtures).",
+  );
+  await page.keyboard.press(`${modifier}+,`);
+  await page.keyboard.press("Alt+1");
+  assert.equal(
+    await page.getByLabel("Idioma da interface", { exact: true }).inputValue(),
+    "pt-BR",
+  );
+  await page
+    .getByLabel("Idioma da interface", { exact: true })
+    .selectOption("en");
+  const englishReload = page.waitForNavigation({ waitUntil: "load" });
+  await page
+    .getByRole("button", { name: "Salvar preferências", exact: true })
+    .click();
+  await englishReload;
+  await page
+    .locator(".editor-tab.active")
+    .getByText("Consulta de amanhã", { exact: true })
+    .waitFor();
+  await page
+    .getByRole("button", { name: "Completion ready", exact: true })
+    .waitFor();
+  assert.equal(await page.locator("html").getAttribute("lang"), "en");
+  assert(
+    (await page.locator(".view-lines").textContent()).includes("$tomorrow"),
+  );
+  assert(
+    (await page.locator(".run-button kbd").textContent()).includes("Shift"),
+  );
+  await page.keyboard.press("F1");
+  await page.getByLabel("Search commands").fill("Find in editor");
+  await page.keyboard.press("Enter");
+  const englishFind = page
+    .locator(".find-widget .monaco-inputbox :is(input,textarea)")
+    .first();
+  await englishFind.waitFor();
+  assert.match(await englishFind.getAttribute("aria-label"), /find/i);
+  await page.keyboard.press("Escape");
+  await page.keyboard.press(`${modifier}+,`);
+  assert.equal(
+    await page.getByLabel("Interface language", { exact: true }).inputValue(),
+    "en",
+  );
+  await page.keyboard.press("Escape");
+  console.log(
+    "PASS: English default, persisted English/Portuguese selection, translated Monaco find, and unchanged named drafts and shortcuts across locale reloads.",
   );
   assert.deepEqual(errors, []);
   console.log(

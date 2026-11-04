@@ -109,6 +109,7 @@ func (p Profile) Validate() error {
 }
 
 type Settings struct {
+	Language              string            `json:"language"`
 	UpdateSource          string            `json:"updateSource,omitempty"`
 	CheckUpdatesOnStartup *bool             `json:"checkUpdatesOnStartup,omitempty"`
 	Shortcuts             map[string]string `json:"shortcuts,omitempty"`

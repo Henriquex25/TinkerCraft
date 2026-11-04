@@ -7,9 +7,12 @@
     "build": "./scripts/build.sh",
     "test": "go test ./...",
     "test:ui": "node tests/ui.test.mjs",
-    "test:render": "node tests/render.test.mjs"
+    "test:render": "node tests/render.test.mjs",
+    "format": "prettier --write \"frontend/src/**/*.{ts,tsx,css,json}\" frontend/vite.config.ts \"tests/*.mjs\" \".github/**/*.{yml,json}\" \"scripts/*.mjs\"",
+    "format:check": "prettier --check \"frontend/src/**/*.{ts,tsx,css,json}\" frontend/vite.config.ts \"tests/*.mjs\" \".github/**/*.{yml,json}\" \"scripts/*.mjs\""
   },
   "devDependencies": {
-    "playwright-core": "1.58.2"
+    "playwright-core": "1.58.2",
+    "prettier": "3.9.10"
   }
 }

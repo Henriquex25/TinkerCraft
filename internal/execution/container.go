@@ -101,7 +101,6 @@ func (e *Engine) ContainerWorkdir(ctx context.Context, p core.Profile, container
 	return dir, nil
 }
 
-// A local bind mount already is the same source tree; reuse it without copying.
 func (e *Engine) LocalMount(ctx context.Context, p core.Profile) (string, error) {
 	if p.Mode != "docker" {
 		return "", nil

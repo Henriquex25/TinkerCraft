@@ -1,3 +1,4 @@
+import { t as tr } from "./i18n";
 import { useState } from "react";
 import { RotateCcw, Search, X } from "lucide-react";
 import { Shortcut, useCommandHints } from "./commands";
@@ -35,17 +36,17 @@ export function Keybindings({
   return (
     <div className="keybindings">
       <p>
-        Selecione um campo e pressione a combinação desejada. Backspace remove o
-        atalho; Tab navega e Esc sai da captura. A paleta de comandos permite
-        acessar ações sem atalho individual.
+        {tr(
+          "Select a field and press your desired shortcut. Backspace removes it; Tab moves focus and Esc leaves capture mode. The command palette also provides access to actions without a shortcut.",
+        )}
       </p>
       <label className="search-box">
         <Search size={15} />
         <input
-          aria-label="Buscar atalho"
+          aria-label={tr("Search shortcuts")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Buscar ação ou categoria…"
+          placeholder={tr("Search actions or categories…")}
         />
       </label>
       {(error || errors.length > 0) && (
@@ -63,24 +64,24 @@ export function Keybindings({
                 {c.scope === "workspace"
                   ? "Editor"
                   : c.scope === "global"
-                    ? "Sempre"
+                    ? tr("Always")
                     : c.scope === "dialog"
-                      ? "Formulários"
+                      ? tr("Forms")
                       : c.scope === "profile"
-                        ? "Conexões"
+                        ? tr("Connections")
                         : c.scope === "updates"
-                          ? "Atualizações"
-                          : "Preferências"}
+                          ? tr("Updates")
+                          : tr("Preferences")}
               </small>
             </label>
             <input
               id={`binding-${c.id}`}
               data-shortcut-recorder
-              aria-label={`${c.label} — atalho`}
+              aria-label={tr("{0} — shortcut", [c.label])}
               readOnly
               value={formatKey(keysFor(c.id, value)[0] ?? "")}
-              placeholder="Sem atalho"
-              title="Clique e pressione uma combinação"
+              placeholder={tr("No shortcut")}
+              title={tr("Click and press a shortcut")}
               onKeyDown={(e) => {
                 if (e.key === "Tab") return;
                 e.preventDefault();
@@ -109,8 +110,10 @@ export function Keybindings({
             <button
               type="button"
               className="icon-button"
-              aria-label={`Restaurar atalho de ${c.label}`}
-              title={`Restaurar padrão${c.key ? ` (${formatKey(c.key)})` : ""}`}
+              aria-label={tr("Restore shortcut for {0}", [c.label])}
+              title={tr("Restore default{0}", [
+                c.key ? ` (${formatKey(c.key)})` : "",
+              ])}
               onClick={() => restore(c.id)}
             >
               <RotateCcw size={14} />
@@ -118,8 +121,8 @@ export function Keybindings({
             <button
               type="button"
               className="icon-button"
-              aria-label={`Remover atalho de ${c.label}`}
-              title="Remover atalho"
+              aria-label={tr("Remove shortcut for {0}", [c.label])}
+              title={tr("Remove shortcut")}
               onClick={() => change({ ...value, [c.id]: "" })}
             >
               <X size={14} />
@@ -137,7 +140,8 @@ export function Keybindings({
         }}
       >
         <RotateCcw size={14} />
-        Restaurar todos os padrões <Shortcut id="settings.reset" />
+        {tr("Restore all defaults") + " "}
+        <Shortcut id="settings.reset" />
       </button>
     </div>
   );

@@ -1,6 +1,6 @@
 <?php
 declare(strict_types=1);
-// Read sources only. Never load application code, autoloaders or remote configuration.
+
 $input = json_decode(stream_get_contents(STDIN), true, 512, JSON_THROW_ON_ERROR);
 $root = realpath($input['projectPath']);
 if ($root === false || !is_dir($root)) { fwrite(STDERR, 'Diretório do projeto não encontrado'); exit(2); }
@@ -19,7 +19,7 @@ $collect = static function (string $base, bool $vendor) use ($root, $blocked, $m
         $relative = str_replace(DIRECTORY_SEPARATOR, '/', substr($entry->getPathname(), strlen(rtrim($root, DIRECTORY_SEPARATOR)) + 1));
         if ($name === 'node_modules' || $relative === 'bootstrap/cache' || (!$vendor && $relative === 'vendor')) { return false; }
         if (!str_contains($relative, '/') && in_array($name, $blocked, true)) { return false; }
-        // Dependency fixtures/tests are often much larger than their public sources.
+
         if ($vendor && substr_count($relative, '/') >= 3 && in_array(strtolower($name), ['test', 'tests', 'fixtures', 'doc', 'docs', 'examples', 'benchmarks'], true)) { return false; }
         return true;
     });
@@ -37,7 +37,7 @@ $collect = static function (string $base, bool $vendor) use ($root, $blocked, $m
         echo json_encode(['path' => $relative, 'data' => base64_encode($content)], JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR) . "\n";
     }
 };
-// Always collect application sources before spending the budget on dependencies.
+
 $collect($root, false);
 if (!$limited) { $collect($root . '/vendor', true); }
 echo json_encode(['done' => true, 'files' => $files, 'bytes' => $bytes, 'skipped' => $skipped, 'limited' => $limited], JSON_THROW_ON_ERROR) . "\n";

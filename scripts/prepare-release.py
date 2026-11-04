@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Merge ABI-specific build artifacts into the files attached to one GitHub release."""
+
 import argparse
 import hashlib
 import json

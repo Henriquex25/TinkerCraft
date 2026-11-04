@@ -9,7 +9,7 @@ Prioridades: editor responsivo; execução local, Docker, SSH e Docker por SSH; 
 ## Arquitetura e localização
 
 - Desktop Wails 2, backend Go e WebKitGTK no Linux.
-- React/TypeScript/Vite em `frontend/`; Monaco e ponte do editor em `frontend/src/editor.tsx`.
+- React/TypeScript/Vite em `frontend/`; Monaco ESM oficial e ponte do editor em `frontend/src/editor.tsx`; contribuições em `frontend/src/monaco.ts`. DOMPurify corrigido é fixado no npm e substitui o módulo interno via Vite, com assertion de build.
 - Phpactor local via LSP/stdio e fallback de indexação AST em `internal/language/`.
 - Comandos, transportes, timeout, cancelamento e protocolo em `internal/execution/`.
 - Compilador, runner, indexador e snapshot seletivo PHP em `runtime/`, embutidos no binário Go.
@@ -41,6 +41,8 @@ Cache de fontes: priorizar a aplicação; limite de 256 MiB/80.000 arquivos/4 Mi
 O fallback sugere funções, classes e membros públicos/herdados, mas não equivale à inferência de cadeias, generics e métodos mágicos. A interface deve distinguir Phpactor, fallback e erro. Arquivos IDE Helper fornecidos pelo usuário podem complementar os tipos Laravel. A interface prioriza editor e resultado, preto/cinza/laranja, fontes legíveis e detalhes técnicos em menus/tooltip/configurações avançadas.
 
 ## Teclado e persistência de edição
+
+- Idioma inicial/padrão inglês (`en`), com português do Brasil (`pt-BR`) em Preferências. Persistir em Settings.Language. Mensagens próprias em `frontend/src/i18n.ts` e `locales/`; preservar código, nomes e saídas do usuário. A troca salva rascunhos e recarrega a interface para inicializar também o Monaco traduzido; manter o handshake de fechamento funcional após reload. Traduções Monaco fixadas à versão e fontes Microsoft, com licença MIT em `docs/licenses` e gerador em `scripts/update-monaco-locale.py`; consultar `docs/translations.md`.
 
 - Catálogo e validação de atalhos em `frontend/src/shortcuts.ts`; despacho, contextos e paleta em `commands.tsx`; remapeamento em `keybindings.tsx`.
 - Registrar ações no sistema central; não adicionar handlers fixos em paralelo no Monaco. Tooltips e indicadores usam os bindings configurados. Ações raras ficam acessíveis na paleta e controles aceitam navegação por teclado.
@@ -97,7 +99,7 @@ npm run test:ui
 TINKERCRAFT_NATIVE_TEST=1 xvfb-run -a -s '-screen 0 1440x1000x24' /usr/bin/python3 tests/native.test.py
 ```
 
-Aplicar `gofmt` em Go alterado e manter TypeScript compilando. Executar verificações proporcionais à mudança. Recompilar o executável após alterar backend ou assets embutidos: `start.sh` não recompila se o binário já existir. O build detecta WebKit2GTK 4.0/4.1. O worker Monaco é importado estaticamente como texto e usa Blob para a origem `wails://`; testes HTTP não substituem verificação dos bindings e diálogos Wails.
+Aplicar `gofmt` em Go alterado e manter TypeScript compilando. Executar verificações proporcionais à mudança. Recompilar o executável após alterar backend ou assets embutidos: `start.sh` não recompila se o binário já existir. O build detecta WebKit2GTK 4.0/4.1. O Monaco usa imports ESM estáticos; seu worker é embutido com `?worker&inline` e Blob para `wails://`. Não reintroduzir o bundle AMD antigo nem o sanitizador inline vulnerável. Testes HTTP não substituem verificação dos bindings e diálogos Wails.
 
 ## Documentação de referência
 
@@ -107,3 +109,9 @@ Aplicar `gofmt` em Go alterado e manter TypeScript compilando. Executar verifica
 - `docs/validation.md`: testes efetivamente executados e pendências.
 - `docs/releases.md`: `.env`, pacotes, integração Linux, variantes WebKit e fluxo GitHub Releases.
 - `THIRD_PARTY_NOTICES.md` e `docs/vendor-sha256.txt`: origem, licenças e identidade dos arquivos vendorizados.
+
+## Comunidade e revisão
+
+Configuração inicial e releases em `docs/github-maintainer.md`. Formulários em `.github/ISSUE_TEMPLATE` e `DISCUSSION_TEMPLATE`, labels em `.github/labels.json`, regras propostas em `.github/main-ruleset.json`; `scripts/configure-github.py` apenas simula sem `--apply`, exige autenticação própria via gh para alterações e valida origin/permissões. Não exigir aprovação independente enquanto houver só um mantenedor. Proteção deve esperar CI verde no main atual. Release deve verificar versão consistente e CI aprovado no mesmo SHA, gerar rascunho e deixar a publicação explícita ao mantenedor. Binaries gerados ficam ignorados no Git e são assets de Releases, não arquivos fonte.
+
+README, CONTRIBUTING e SECURITY em inglês. Documentação de uso detalhada em `docs/usage.pt-BR.md`; revisão em `docs/review-2026-11-04.md`. CI em `.github/workflows/ci.yml` deve testar PRs sem secrets ou permissões de escrita; não usar `pull_request_target` para executar código contribuído. Scripts executam dados baixados somente após conferir o pin (`scripts/phpactor.sha256`). Comentários comuns foram removidos a pedido do usuário; preservar diretivas de build, shebangs e avisos de terceiros. Regressões de limites, CSV, transporte, persistência e segurança exigem testes. Não afirmar ausência de vulnerabilidades ou liberação jurídica da marca.

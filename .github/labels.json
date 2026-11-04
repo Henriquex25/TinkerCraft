@@ -1,0 +1,72 @@
+[
+  {
+    "name": "bug",
+    "color": "d73a4a",
+    "description": "Something does not work as expected"
+  },
+  {
+    "name": "enhancement",
+    "color": "a2eeef",
+    "description": "A concrete improvement or new capability"
+  },
+  {
+    "name": "documentation",
+    "color": "0075ca",
+    "description": "Documentation improvements"
+  },
+  {
+    "name": "dependencies",
+    "color": "0366d6",
+    "description": "Dependency and build-tool updates"
+  },
+  {
+    "name": "accessibility",
+    "color": "7057ff",
+    "description": "Keyboard, readability, or assistive technology"
+  },
+  {
+    "name": "good first issue",
+    "color": "7057ff",
+    "description": "Scoped work with enough guidance for a new contributor"
+  },
+  {
+    "name": "help wanted",
+    "color": "008672",
+    "description": "Community contributions are welcome"
+  },
+  {
+    "name": "status: needs triage",
+    "color": "ededed",
+    "description": "Awaiting maintainer assessment"
+  },
+  {
+    "name": "status: needs reproduction",
+    "color": "fbca04",
+    "description": "A disposable reproduction or more details are needed"
+  },
+  {
+    "name": "area: editor",
+    "color": "f9a15d",
+    "description": "Monaco, completion, and language analysis"
+  },
+  {
+    "name": "area: execution",
+    "color": "f9a15d",
+    "description": "PHP, Laravel, Docker, and SSH execution"
+  },
+  {
+    "name": "area: updates",
+    "color": "f9a15d",
+    "description": "Packaging, releases, and update delivery"
+  },
+  {
+    "name": "breaking change",
+    "color": "b60205",
+    "description": "A user-visible compatibility change"
+  },
+  {
+    "name": "skip changelog",
+    "color": "ededed",
+    "description": "Internal-only change omitted from generated release notes"
+  }
+]

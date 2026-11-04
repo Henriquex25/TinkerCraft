@@ -5,8 +5,6 @@ import (
 	"path/filepath"
 )
 
-// WorkspaceDirectory keeps earlier installations usable without moving or
-// overwriting their data. The new directory wins once it has a workspace.
 func WorkspaceDirectory() (string, error) {
 	for _, name := range []string{"TINKERCRAFT_DATA_DIR", "LUME_DATA_DIR"} {
 		if dir := os.Getenv(name); dir != "" {

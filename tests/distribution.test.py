@@ -1,4 +1,3 @@
-"""Configuration and release assembly tests; no network or system installation."""
 import importlib.util
 import json
 import os
@@ -8,6 +7,7 @@ import tempfile
 import unittest
 from unittest import mock
 import hashlib
+import shutil
 
 ROOT = Path(__file__).resolve().parent.parent
 spec = importlib.util.spec_from_file_location('distribution_config', ROOT / 'scripts/config.py')
@@ -15,6 +15,27 @@ configuration = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(configuration)
 
 class DistributionTests(unittest.TestCase):
+    def test_phpactor_checksum_is_checked_before_execution(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / 'scripts').mkdir()
+            (root / 'bin').mkdir()
+            (root / '.tools').mkdir()
+            for file in ['install-phpactor.sh', 'phpactor.sha256']:
+                shutil.copy2(ROOT / 'scripts' / file, root / 'scripts' / file)
+            original = root / '.tools/phpactor.phar'
+            original.write_bytes(b'previous installation')
+            marker = root / 'must-not-execute'
+            (root / 'bin/curl').write_text('#!/usr/bin/env python3\nimport sys,pathlib\npathlib.Path(sys.argv[sys.argv.index("-o")+1]).write_bytes(b"corrupted download")\n')
+            (root / 'bin/php').write_text('#!/bin/sh\ntouch "$TINKERCRAFT_TEST_PHAR_MARKER"\n')
+            for file in (root / 'bin').iterdir():
+                file.chmod(0o755)
+            result = subprocess.run(['bash', str(root / 'scripts/install-phpactor.sh')], env={**os.environ, 'PATH': str(root / 'bin') + os.pathsep + os.environ['PATH'], 'TINKERCRAFT_TEST_PHAR_MARKER': str(marker)}, capture_output=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertFalse(marker.exists())
+            self.assertEqual(original.read_bytes(), b'previous installation')
+            self.assertFalse(list((root / '.tools').glob('phpactor-download-*')))
+
     def test_dotenv_is_data_and_rejects_duplicates(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)

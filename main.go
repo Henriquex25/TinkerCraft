@@ -42,7 +42,11 @@ func main() {
 	}
 	defer svc.Close()
 	app := &App{svc: svc}
-	err = wails.Run(&options.App{Title: "TinkerCraft · PHP workspace", Width: 1440, Height: 920, MinWidth: 1000, MinHeight: 660, BackgroundColour: options.NewRGB(20, 20, 20), AssetServer: &assetserver.Options{Assets: assets}, OnStartup: app.startup, OnBeforeClose: app.beforeClose, OnShutdown: app.shutdown, Bind: []interface{}{app}, Linux: &linux.Options{Icon: appIcon, ProgramName: "tinkercraft", WebviewGpuPolicy: linux.WebviewGpuPolicyOnDemand}})
+	windowTitle := "TinkerCraft · PHP workspace"
+	if svc.Store.Snapshot().Settings.Language == "pt-BR" {
+		windowTitle = "TinkerCraft · Workspace PHP"
+	}
+	err = wails.Run(&options.App{Title: windowTitle, Width: 1440, Height: 920, MinWidth: 1000, MinHeight: 660, BackgroundColour: options.NewRGB(20, 20, 20), AssetServer: &assetserver.Options{Assets: assets}, OnStartup: app.startup, OnBeforeClose: app.beforeClose, OnShutdown: app.shutdown, Bind: []interface{}{app}, Linux: &linux.Options{Icon: appIcon, ProgramName: "tinkercraft", WebviewGpuPolicy: linux.WebviewGpuPolicyOnDemand}})
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)

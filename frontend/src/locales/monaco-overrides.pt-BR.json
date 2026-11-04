@@ -1,0 +1,15 @@
+{
+  "Collapse unchanged lines": "Recolher linhas inalteradas",
+  "Show {0} hidden lines": "Mostrar {0} linhas ocultas",
+  "Binary file changed": "Arquivo binário alterado",
+  "Open Diff": "Abrir comparação",
+  "Controls whether original line numbers are hidden in inline diffs. When set to null, uses the editor's default: hidden in compact multi diff editors and visible in other diff editors.": "Controla se os números de linha originais ficam ocultos nas comparações em linha. Quando nulo, usa o padrão do editor: ocultos em comparações múltiplas compactas e visíveis nos demais editores de comparação.",
+  "Render full-width characters using the width defined by the font.": "Renderizar caracteres de largura completa usando a largura definida pela fonte.",
+  "Render full-width characters centered in exactly two character cells. Only applies to monospace fonts. Does not apply to multi codepoint full-width characters or to GPU rendering. This has a performance impact on line rendering.": "Renderizar caracteres de largura completa centralizados em exatamente duas células. Aplica-se apenas a fontes monoespaçadas. Não se aplica a caracteres compostos ou à renderização por GPU. Isso afeta o desempenho da renderização das linhas.",
+  "Controls the width used to render full-width characters.": "Controla a largura usada para renderizar caracteres de largura completa.",
+  "Controls whether an indicator is rendered at the wrapping column of lines that wrap. Only has an effect when `#editor.wordWrap#` is enabled.": "Controla se um indicador é exibido na coluna de quebra das linhas quebradas. Só tem efeito quando `#editor.wordWrap#` está habilitado.",
+  "Color of the indicator shown at the end of a soft wrapped line in the editor.": "Cor do indicador exibido no final de uma linha com quebra visual no editor.",
+  "Whether inline mode is temporarily active after manually resizing the diff editor": "Se o modo em linha está temporariamente ativo após redimensionar manualmente o editor de comparação",
+  "Whether automatic diff editor layout would render side by side": "Se o layout automático da comparação seria exibido lado a lado",
+  "Whether the operating system is ChromeOS": "Se o sistema operacional é ChromeOS"
+}

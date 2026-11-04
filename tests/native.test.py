@@ -1,4 +1,3 @@
-"""Native Wails keyboard/close test. Run on a dedicated Xvfb display, not the user's desktop."""
 import json
 import os
 from pathlib import Path
@@ -46,12 +45,12 @@ class App:
         self.log = tempfile.TemporaryFile()
         binary = Path(os.environ.get('TINKERCRAFT_NATIVE_BINARY', ROOT / 'build/bin/tinkercraft'))
         self.process = subprocess.Popen([str(binary)], cwd=os.environ.get('TINKERCRAFT_NATIVE_CWD', ROOT),
-            env={**os.environ, 'TINKERCRAFT_DATA_DIR': str(directory), 'LIBGL_ALWAYS_SOFTWARE': '1', 'TINKERCRAFT_RELEASE_SOURCE': '', 'TINKERCRAFT_PHPACTOR': '', 'LUME_PHPACTOR': ''}, stdout=self.log, stderr=self.log)
+            env={**os.environ, 'TINKERCRAFT_DATA_DIR': str(directory), 'LIBGL_ALWAYS_SOFTWARE': '1', 'XDG_CACHE_HOME': str(directory / 'os-cache'), 'XDG_DATA_HOME': str(directory / 'os-data'), 'XDG_CONFIG_HOME': str(directory / 'os-config'), 'TINKERCRAFT_RELEASE_SOURCE': '', 'TINKERCRAFT_PHPACTOR': '', 'LUME_PHPACTOR': ''}, stdout=self.log, stderr=self.log)
         self.window_id = wait_for(lambda: window_for(self.process.pid))
         if (binary.parent / 'phpactor.phar').is_file():
             assert Path(state_at(directory)['settings']['phpactorPath']) == binary.parent / 'phpactor.phar'
         self.action('windowfocus', '--sync', self.window_id)
-        time.sleep(4)  # WebKit, React and the local Monaco bundle initialize asynchronously.
+        time.sleep(4)
 
     def action(self, *args):
         owner = subprocess.check_output(['xdotool', 'getwindowpid', self.window_id], text=True).strip()
@@ -71,7 +70,7 @@ class App:
         Gdk.pixbuf_get_from_window(window, 0, 0, window.get_width(), window.get_height()).savev(str(RESULTS / name), 'png', [], [])
 
     def close(self):
-        # Send the normal WM_DELETE_WINDOW protocol, rather than destroying GTK's window.
+
         owner = subprocess.check_output(['xdotool', 'getwindowpid', self.window_id], text=True).strip()
         assert owner == str(self.process.pid)
         connection = display.Display()
@@ -95,7 +94,7 @@ class App:
         self.log.close()
 
 
-# Keep the test off the shared graphical session even if invoked accidentally.
+
 assert 'xvfb-run.' in os.environ.get('XAUTHORITY', ''), 'Run this test through xvfb-run -a'
 assert os.environ.get('TINKERCRAFT_NATIVE_TEST') == '1', 'Use TINKERCRAFT_NATIVE_TEST=1 xvfb-run -a /usr/bin/python3 tests/native.test.py'
 with tempfile.TemporaryDirectory(prefix='tinkercraft-native-') as folder:
@@ -113,20 +112,40 @@ with tempfile.TemporaryDirectory(prefix='tinkercraft-native-') as folder:
         app.key('Escape')
         app.key('F1')
         time.sleep(.3)
-        app.type('Configurar atalhos')
+        app.type('Configure shortcuts')
         app.key('Return')
         time.sleep(1)
         app.screenshot('tinkercraft-native-shortcuts.png')
         app.key('Escape')
         app.key('F1')
         time.sleep(.3)
-        app.type('Sobre')
+        app.type('About')
         app.key('Return')
         time.sleep(.8)
-        app.key('ctrl+r')  # Actual Wails binding, intentionally unconfigured/offline.
+        app.key('ctrl+r')
         time.sleep(.5)
         app.screenshot('tinkercraft-native-updates.png')
         app.key('Escape')
+        for command, choice, language in [('Change language', 'End', 'pt-BR'), ('Alterar idioma', 'Home', 'en'), ('Change language', 'End', 'pt-BR')]:
+            app.key('ctrl+comma')
+            time.sleep(.5)
+            app.key('F1')
+            time.sleep(.3)
+            app.type(command)
+            app.key('Return')
+            time.sleep(1)
+            app.key(choice)
+            time.sleep(.3)
+            app.screenshot('tinkercraft-native-language-select-' + language + '.png')
+            app.key('ctrl+s')
+            try:
+                wait_for(lambda: state_at(directory).get('settings', {}).get('language') == language)
+            except AssertionError:
+                app.screenshot('tinkercraft-native-language-failure.png')
+                raise
+            time.sleep(4)
+            app.screenshot('tinkercraft-native-language-' + language + '.png')
+        print('PASS: native language selection persisted English and Portuguese through interface reloads.')
         app.key('F2')
         app.type('Retomar no dia seguinte')
         app.key('Return')
@@ -147,6 +166,8 @@ with tempfile.TemporaryDirectory(prefix='tinkercraft-native-') as folder:
     reopened = App(directory)
     try:
         reopened.screenshot('tinkercraft-native-restored.png')
+        assert state_at(directory)['settings']['language'] == 'pt-BR'
+        assert 'Workspace PHP' in subprocess.check_output(['xdotool', 'getwindowname', reopened.window_id], text=True)
         assert state_at(directory)['tabs'][0]['code'] == code
         assert len(state_at(directory)['history']) == 1, 'Unexecuted draft was evaluated'
         reopened.close()

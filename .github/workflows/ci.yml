@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "24 9 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Linux checks
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    env:
+      TINKERCRAFT_WEBKIT: "4.0"
+      TINKERCRAFT_RELEASE_SOURCE: ""
+      TINKERCRAFT_PHPACTOR_REAL: ${{ github.workspace }}/.tools/phpactor.phar
+      TINKERCRAFT_LARAVEL_VENDOR: ${{ github.workspace }}/tests/fixtures/laravel/vendor
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+        with:
+          go-version: "1.27.3"
+          cache-dependency-path: go.sum
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: |
+            frontend/package-lock.json
+            package-lock.json
+      - uses: shivammathur/setup-php@d52fc211a0436f8839a587b3b5b8efddab4744ea
+        with:
+          php-version: "8.4"
+          extensions: mbstring, dom, sqlite3, curl
+          tools: composer:v2
+          coverage: none
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config libgtk-3-dev libwebkit2gtk-4.0-dev python3-gi gir1.2-gdkpixbuf-2.0 xvfb xauth xdotool python3-xlib
+      - name: Install locked dependencies
+        run: |
+          npm ci
+          npm --prefix frontend ci
+          composer install --working-dir=tests/fixtures/laravel --no-interaction --prefer-dist --no-progress --no-scripts --no-plugins
+          ./scripts/install-phpactor.sh
+      - name: Validate licenses and vendor integrity
+        run: sha256sum --check --quiet docs/vendor-sha256.txt
+      - name: Test backend, rendering, CSV and distribution
+        run: ./scripts/check.sh
+      - name: Audit dependencies
+        run: |
+          npm audit
+          npm --prefix frontend audit
+          composer audit --working-dir=tests/fixtures/laravel
+          go install golang.org/x/vuln/cmd/govulncheck@v1.9.0
+          govulncheck ./...
+      - name: Test WebKit user workflows
+        run: |
+          npx playwright-core install --with-deps webkit
+          npm run test:ui
+      - name: Build and test native desktop
+        run: |
+          go install github.com/wailsapp/wails/v2/cmd/wails@v2.15.0
+          ./scripts/build.sh
+          TINKERCRAFT_NATIVE_TEST=1 xvfb-run -a -s '-screen 0 1440x1000x24' /usr/bin/python3 tests/native.test.py
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: test-evidence
+          path: |
+            coverage.out
+            test-results/*.png
+          if-no-files-found: ignore
+          retention-days: 7

@@ -9,15 +9,20 @@
     "preview": "vite preview --host 127.0.0.1"
   },
   "dependencies": {
+    "dompurify": "3.4.17",
+    "lucide-react": "1.42.0",
+    "monaco-editor": "0.57.0",
     "react": "19.2.8",
-    "react-dom": "19.2.8",
-    "lucide-react": "1.42.0"
+    "react-dom": "19.2.8"
   },
   "devDependencies": {
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.5",
     "@vitejs/plugin-react": "5.2.0",
     "typescript": "5.9.3",
-    "vite": "7.3.6"
+    "vite": "7.3.7"
+  },
+  "overrides": {
+    "dompurify": "$dompurify"
   }
 }

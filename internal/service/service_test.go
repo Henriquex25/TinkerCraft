@@ -9,6 +9,57 @@ import (
 	"tinkercraft/internal/core"
 )
 
+func TestInterfaceLanguageDefaultsPersistsAndRejectsUnknownValues(t *testing.T) {
+	dir := t.TempDir()
+	svc, err := New(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if svc.Bootstrap().Settings.Language != "en" {
+		t.Fatal("new workspaces must default to English")
+	}
+	settings := svc.Bootstrap().Settings
+	settings.Language = "pt-BR"
+	if err = svc.SaveSettings(settings); err != nil {
+		t.Fatal(err)
+	}
+	svc.Close()
+	reopened, err := New(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer reopened.Close()
+	if reopened.Bootstrap().Settings.Language != "pt-BR" {
+		t.Fatal("language preference was not persisted")
+	}
+	settings.Language = "unsupported"
+	if reopened.SaveSettings(settings) == nil {
+		t.Fatal("unsupported language accepted")
+	}
+	if reopened.Bootstrap().Settings.Language != "pt-BR" {
+		t.Fatal("rejected language changed the saved preference")
+	}
+}
+
+func TestOversizedInputDoesNotStartLanguageOrPersistHistory(t *testing.T) {
+	svc, err := New(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer svc.Close()
+	state := svc.Bootstrap()
+	code := strings.Repeat("x", 1048577)
+	if _, err := svc.Execute("tab", state.Profiles[0].ID, code); err == nil {
+		t.Fatal("oversized execution accepted")
+	}
+	if len(svc.Bootstrap().History) != 0 {
+		t.Fatal("rejected input leaked into history")
+	}
+	if _, err := svc.StartLanguage("tab", state.Profiles[0].ID, code); err == nil {
+		t.Fatal("oversized language input accepted")
+	}
+}
+
 func TestRemoteSourceFailurePreservesPHPCompletions(t *testing.T) {
 	bin := t.TempDir()
 	if err := os.WriteFile(filepath.Join(bin, "ssh"), []byte("#!/bin/sh\necho 'snapshot unavailable' >&2\nexit 1\n"), 0700); err != nil {

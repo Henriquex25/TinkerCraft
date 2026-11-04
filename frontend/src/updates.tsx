@@ -1,3 +1,6 @@
+import { translateStatus } from "./i18n";
+import { t as tr } from "./i18n";
+import { formatLocale } from "./i18n";
 import { useEffect, useState } from "react";
 import {
   ArrowUpCircle,
@@ -13,7 +16,6 @@ import { Modal } from "./dialogs";
 import { Shortcut, useCommandActions, useCommandHints } from "./commands";
 import type { BuildInfo, UpdateInfo } from "./types";
 import { BrandIcon } from "./brand";
-
 export function UpdatesDialog({
   info,
   build,
@@ -77,7 +79,7 @@ export function UpdatesDialog({
   });
   return (
     <Modal
-      title="Sobre e atualizações"
+      title={tr("About and updates")}
       eyebrow="TINKERCRAFT"
       close={close}
       className="updates-modal"
@@ -88,7 +90,10 @@ export function UpdatesDialog({
           <BrandIcon />
           <div>
             <h3>TinkerCraft</h3>
-            <p>Versão {build?.version ?? info?.build.version ?? "…"}</p>
+            <p>
+              {tr("Version") + " "}
+              {build?.version ?? info?.build.version ?? "…"}
+            </p>
           </div>
         </div>
         <div className={`update-summary ${info?.available ? "available" : ""}`}>
@@ -104,23 +109,45 @@ export function UpdatesDialog({
           <div>
             <strong>
               {checking
-                ? "Verificando atualizações…"
+                ? tr("Checking for updates…")
                 : info?.available
-                  ? `Versão ${info.latestVersion} disponível`
-                  : info?.message || "Verifique se há uma nova versão"}
+                  ? tr("Version {0} available", [info.latestVersion])
+                  : tr(
+                      translateStatus(info?.message || "") ||
+                        "Check whether a new version is available",
+                    )}
             </strong>
             <p>
               {downloading
-                ? "Baixando e conferindo o pacote…"
+                ? tr("Downloading and verifying package…")
                 : opened
-                  ? "Conclua a instalação na janela do sistema e depois feche esta janela e abra o TinkerCraft pelo menu do Linux."
+                  ? tr(
+                      "Complete installation in the system window, then close this window and reopen TinkerCraft from the Linux menu.",
+                    )
                   : downloaded
-                    ? "Pacote baixado e integridade SHA-256 conferida. Você pode abrir o instalador do Linux."
+                    ? tr(
+                        "Package downloaded and SHA-256 verified. You can open the Linux installer.",
+                      )
                     : info?.canDownload
-                      ? `O pacote tem ${(info.packageSize / 1024 / 1024).toFixed(1)} MiB. O instalador do sistema pedirá autorização para instalar.`
+                      ? tr(
+                          "The package is {0} MiB. The system installer will ask for authorization.",
+                          [
+                            (info.packageSize / 1024 / 1024).toLocaleString(
+                              formatLocale(),
+                              {
+                                minimumFractionDigits: 1,
+                                maximumFractionDigits: 1,
+                              },
+                            ),
+                          ],
+                        )
                       : !info?.configured
-                        ? "Configure a URL do repositório GitHub em Preferências → Atualizações."
-                        : "Seus códigos, conexões e preferências permanecem no workspace local."}
+                        ? tr(
+                            "Configure the GitHub repository URL in Preferences → Updates.",
+                          )
+                        : tr(
+                            "Your snippets, connections, and preferences remain in the local workspace.",
+                          )}
             </p>
           </div>
         </div>
@@ -131,14 +158,14 @@ export function UpdatesDialog({
         )}
         {info?.notes && (
           <details className="release-notes" open>
-            <summary>Novidades da versão</summary>
+            <summary>{tr("Release notes")}</summary>
             <pre>{info.notes}</pre>
           </details>
         )}
         {info?.checkedAt && (
           <p className="field-hint">
-            Última verificação:{" "}
-            {new Date(info.checkedAt).toLocaleString("pt-BR")}
+            {tr("Last checked:")}{" "}
+            {new Date(info.checkedAt).toLocaleString(formatLocale())}
           </p>
         )}
         <div className="update-actions">
@@ -149,7 +176,8 @@ export function UpdatesDialog({
             disabled={checking || downloading}
           >
             <RefreshCw size={15} />
-            Verificar agora <Shortcut id="updates.check" />
+            {tr("Check now") + " "}
+            <Shortcut id="updates.check" />
           </button>
           {info?.releaseURL && (
             <button
@@ -158,13 +186,14 @@ export function UpdatesDialog({
               onClick={release}
             >
               <ExternalLink size={15} />
-              Ver release <Shortcut id="updates.release" />
+              {tr("View release") + " "}
+              <Shortcut id="updates.release" />
             </button>
           )}
           {info?.canDownload && !downloaded && (
             <button
               className="primary-button"
-              aria-label="Baixar atualização"
+              aria-label={tr("Download update")}
               title={hints.title("updates.download")}
               onClick={download}
               disabled={downloading || checking}
@@ -174,24 +203,27 @@ export function UpdatesDialog({
               ) : (
                 <Download size={15} />
               )}
-              Baixar atualização <Shortcut id="updates.download" />
+              {tr("Download update") + " "}
+              <Shortcut id="updates.download" />
             </button>
           )}
           {downloaded && (
             <button
               className="primary-button"
-              aria-label="Abrir instalador do sistema"
+              aria-label={tr("Open system installer")}
               title={hints.title("updates.install")}
               onClick={install}
             >
               <PackageCheck size={16} />
-              Abrir instalador do sistema <Shortcut id="updates.install" />
+              {tr("Open system installer") + " "}
+              <Shortcut id="updates.install" />
             </button>
           )}
         </div>
         <p className="update-footnote">
-          O TinkerCraft não instala atualizações em segundo plano. Após
-          instalar, reinicie o aplicativo para usar a nova versão.
+          {tr(
+            "TinkerCraft does not install updates in the background. Restart the app after installation to use the new version.",
+          )}
         </p>
       </div>
     </Modal>

@@ -1,3 +1,4 @@
+import { t as tr } from "./i18n";
 export type CommandScope =
   | "workspace"
   | "profile"
@@ -23,250 +24,231 @@ const command = (
   scope: CommandScope = "workspace",
   aliases?: string[],
   alsoIn?: CommandScope[],
-): CommandDefinition => ({ id, label, group, key, scope, aliases, alsoIn });
+): CommandDefinition => ({
+  id,
+  get label() {
+    return tr(label);
+  },
+  get group() {
+    return tr(group);
+  },
+  key,
+  scope,
+  aliases,
+  alsoIn,
+});
 export const commands: CommandDefinition[] = [
+  command("findEditor", "Find in editor", "Editor"),
+  command(
+    "settings.language",
+    "Change language",
+    "Preferences",
+    "",
+    "settings",
+  ),
   command(
     "commands",
-    "Paleta de comandos",
-    "Navegação",
+    "Command palette",
+    "Navigation",
     "Ctrl+Shift+P",
     "global",
     ["F1"],
   ),
-  command(
-    "checkUpdates",
-    "Sobre e atualizações",
-    "Aplicativo",
-    "",
-    "workspace",
-  ),
-  command(
-    "updates.check",
-    "Verificar atualizações",
-    "Atualizações",
-    "Ctrl+R",
-    "updates",
-  ),
+  command("checkUpdates", "About and updates", "Application", "", "workspace"),
+  command("updates.check", "Check for updates", "Updates", "Ctrl+R", "updates"),
   command(
     "updates.download",
-    "Baixar atualização",
-    "Atualizações",
+    "Download update",
+    "Updates",
     "Ctrl+D",
     "updates",
   ),
   command(
     "updates.install",
-    "Abrir instalador do sistema",
-    "Atualizações",
+    "Open system installer",
+    "Updates",
     "Ctrl+Enter",
     "updates",
   ),
-  command(
-    "updates.release",
-    "Abrir página do release",
-    "Atualizações",
-    "",
-    "updates",
-  ),
+  command("updates.release", "Open release page", "Updates", "", "updates"),
   command(
     "settings.updates",
-    "Preferências de atualização",
-    "Preferências",
+    "Update preferences",
+    "Preferences",
     "Alt+3",
     "settings",
   ),
   command(
     "settings.checkUpdates",
-    "Salvar e verificar atualizações",
-    "Preferências",
+    "Save and check for updates",
+    "Preferences",
     "Ctrl+R",
     "settings",
   ),
-  command("run", "Executar ou cancelar", "Editor", "Ctrl+Enter", "workspace", [
+  command("run", "Run or cancel", "Editor", "Ctrl+Enter", "workspace", [
     "Ctrl+R",
   ]),
-  command("save", "Salvar abas no aplicativo", "Abas e arquivos", "Ctrl+S"),
+  command("save", "Save tabs in the app", "Tabs and files", "Ctrl+S"),
   command(
     "exportPHP",
-    "Salvar trecho como arquivo PHP",
-    "Abas e arquivos",
+    "Save snippet as PHP file",
+    "Tabs and files",
     "Ctrl+Shift+S",
   ),
-  command("openPHP", "Abrir arquivo PHP", "Abas e arquivos", "Ctrl+O"),
-  command("newTab", "Nova aba", "Abas e arquivos", "Ctrl+N"),
-  command("closeTab", "Fechar aba", "Abas e arquivos", "Ctrl+W"),
-  command("renameTab", "Renomear aba", "Abas e arquivos", "F2"),
-  command("nextTab", "Próxima aba", "Abas e arquivos", "Ctrl+Tab"),
-  command("previousTab", "Aba anterior", "Abas e arquivos", "Ctrl+Shift+Tab"),
-  command("history", "Histórico", "Navegação", "Ctrl+H"),
-  command("connections", "Projetos e conexões", "Navegação", "Ctrl+B"),
-  command("newConnection", "Nova conexão", "Conexões", "Ctrl+Shift+N"),
-  command("editConnection", "Configurar conexão", "Conexões", "Ctrl+Alt+E"),
-  command("selectConnection", "Selecionar conexão", "Conexões", "Ctrl+Alt+P"),
+  command("openPHP", "Open PHP file", "Tabs and files", "Ctrl+O"),
+  command("newTab", "New tab", "Tabs and files", "Ctrl+N"),
+  command("closeTab", "Close tab", "Tabs and files", "Ctrl+W"),
+  command("renameTab", "Rename tab", "Tabs and files", "F2"),
+  command("nextTab", "Next tab", "Tabs and files", "Ctrl+Tab"),
+  command("previousTab", "Previous tab", "Tabs and files", "Ctrl+Shift+Tab"),
+  command("history", "History", "Navigation", "Ctrl+H"),
+  command("connections", "Projects and connections", "Navigation", "Ctrl+B"),
+  command("newConnection", "New connection", "Connections", "Ctrl+Shift+N"),
+  command(
+    "editConnection",
+    "Configure connection",
+    "Connections",
+    "Ctrl+Alt+E",
+  ),
+  command("selectConnection", "Select connection", "Connections", "Ctrl+Alt+P"),
   command(
     "preferences",
-    "Preferências",
-    "Navegação",
+    "Preferences",
+    "Navigation",
     "Ctrl+,",
     "workspace",
     undefined,
     ["language"],
   ),
-  command("shortcuts", "Configurar atalhos", "Navegação", "Ctrl+Alt+K"),
-  command(
-    "complete",
-    "Mostrar sugestões de autocomplete",
-    "Editor",
-    "Ctrl+Space",
-  ),
+  command("shortcuts", "Configure shortcuts", "Navigation", "Ctrl+Alt+K"),
+  command("complete", "Show completion suggestions", "Editor", "Ctrl+Space"),
   command(
     "refreshLanguage",
-    "Atualizar autocomplete",
+    "Refresh completion",
     "Editor",
     "Ctrl+Alt+R",
     "workspace",
     undefined,
     ["language"],
   ),
-  command(
-    "languageDetails",
-    "Diagnóstico do autocomplete",
-    "Editor",
-    "Ctrl+Alt+I",
-  ),
+  command("languageDetails", "Completion diagnostics", "Editor", "Ctrl+Alt+I"),
   command(
     "tabFocus",
-    "Alternar navegação com Tab no editor",
+    "Toggle Tab focus navigation in editor",
     "Editor",
     "Ctrl+M",
   ),
-  command("focusEditor", "Focar editor", "Navegação", "Alt+1"),
-  command("focusOutput", "Focar resultado", "Navegação", "Alt+2"),
-  command("widenEditor", "Ampliar editor", "Navegação"),
-  command("narrowEditor", "Reduzir editor", "Navegação"),
-  command("clearHistory", "Limpar histórico", "Histórico"),
-  command("filterHistory", "Filtrar histórico", "Histórico"),
-  command("tree", "Inspecionar resultado", "Resultado", "Ctrl+Alt+1"),
-  command("table", "Ver resultado em tabela", "Resultado", "Ctrl+Alt+2"),
-  command("json", "Ver resultado em JSON", "Resultado", "Ctrl+Alt+3"),
-  command("copyOutput", "Copiar JSON", "Resultado", "Ctrl+Shift+C"),
-  command("exportCSV", "Exportar CSV", "Resultado", "Ctrl+Shift+E"),
-  command("clearOutput", "Limpar resultado", "Resultado", "Ctrl+Shift+Delete"),
-  command("expandTree", "Reabrir árvore", "Resultado", "Ctrl+Alt+ArrowDown"),
-  command("collapseTree", "Recolher árvore", "Resultado", "Ctrl+Alt+ArrowUp"),
-  command("filterOutput", "Filtrar resultado", "Resultado", "Ctrl+Alt+F"),
-  command("sortTable", "Ordenar coluna da tabela", "Resultado", "Ctrl+Alt+S"),
-  command(
-    "nextPage",
-    "Próxima página da tabela",
-    "Resultado",
-    "Alt+ArrowRight",
-  ),
-  command(
-    "previousPage",
-    "Página anterior da tabela",
-    "Resultado",
-    "Alt+ArrowLeft",
-  ),
-  command("nextDump", "Próximo dump", "Resultado", "Alt+PageDown"),
-  command("previousDump", "Dump anterior", "Resultado", "Alt+PageUp"),
-  command("dialog.close", "Fechar janela", "Formulários", "Escape", "dialog"),
-  command(
-    "dialog.save",
-    "Salvar formulário",
-    "Formulários",
-    "Ctrl+S",
-    "dialog",
-  ),
+  command("focusEditor", "Focus editor", "Navigation", "Alt+1"),
+  command("focusOutput", "Focus output", "Navigation", "Alt+2"),
+  command("widenEditor", "Widen editor", "Navigation"),
+  command("narrowEditor", "Narrow editor", "Navigation"),
+  command("clearHistory", "Clear history", "History"),
+  command("filterHistory", "Filter history", "History"),
+  command("tree", "Inspect output", "Output", "Ctrl+Alt+1"),
+  command("table", "Show output as table", "Output", "Ctrl+Alt+2"),
+  command("json", "Show output as JSON", "Output", "Ctrl+Alt+3"),
+  command("copyOutput", "Copy JSON", "Output", "Ctrl+Shift+C"),
+  command("exportCSV", "Export CSV", "Output", "Ctrl+Shift+E"),
+  command("clearOutput", "Clear output", "Output", "Ctrl+Shift+Delete"),
+  command("expandTree", "Reopen tree", "Output", "Ctrl+Alt+ArrowDown"),
+  command("collapseTree", "Collapse tree", "Output", "Ctrl+Alt+ArrowUp"),
+  command("filterOutput", "Filter output", "Output", "Ctrl+Alt+F"),
+  command("sortTable", "Sort table column", "Output", "Ctrl+Alt+S"),
+  command("nextPage", "Next table page", "Output", "Alt+ArrowRight"),
+  command("previousPage", "Previous table page", "Output", "Alt+ArrowLeft"),
+  command("nextDump", "Next dump", "Output", "Alt+PageDown"),
+  command("previousDump", "Previous dump", "Output", "Alt+PageUp"),
+  command("dialog.close", "Close window", "Forms", "Escape", "dialog"),
+  command("dialog.save", "Save form", "Forms", "Ctrl+S", "dialog"),
   command(
     "profile.new",
-    "Criar outra conexão",
-    "Conexões",
+    "Create another connection",
+    "Connections",
     "Ctrl+N",
     "profile",
   ),
   command(
     "profile.test",
-    "Testar conexão",
-    "Conexões",
+    "Test connection",
+    "Connections",
     "Ctrl+Enter",
     "profile",
   ),
   command(
     "profile.containers",
-    "Buscar containers",
-    "Conexões",
+    "Find containers",
+    "Connections",
     "Ctrl+L",
     "profile",
   ),
   command(
     "profile.detect",
-    "Detectar diretório",
-    "Conexões",
+    "Detect directory",
+    "Connections",
     "Ctrl+D",
     "profile",
   ),
   command(
     "profile.directory",
-    "Escolher diretório local",
-    "Conexões",
+    "Choose local directory",
+    "Connections",
     "Ctrl+O",
     "profile",
   ),
   command(
     "profile.sources",
-    "Escolher pasta manual para autocomplete",
-    "Conexões",
+    "Choose manual completion folder",
+    "Connections",
     "",
     "profile",
   ),
-  command("profile.identity", "Escolher chave SSH", "Conexões", "", "profile"),
+  command("profile.identity", "Choose SSH key", "Connections", "", "profile"),
   command(
     "profile.delete",
-    "Excluir conexão",
-    "Conexões",
+    "Delete connection",
+    "Connections",
     "Ctrl+Alt+Shift+D",
     "profile",
   ),
   command(
     "settings.general",
-    "Preferências gerais",
-    "Preferências",
+    "General preferences",
+    "Preferences",
     "Alt+1",
     "settings",
   ),
   command(
     "settings.shortcuts",
-    "Atalhos de teclado",
-    "Preferências",
+    "Keyboard shortcuts",
+    "Preferences",
     "Alt+2",
     "settings",
   ),
   command(
     "settings.php",
-    "Escolher executável PHP",
-    "Preferências",
+    "Choose PHP executable",
+    "Preferences",
     "",
     "settings",
   ),
   command(
     "settings.phpactor",
-    "Escolher Phpactor",
-    "Preferências",
+    "Choose Phpactor",
+    "Preferences",
     "",
     "settings",
   ),
   command(
     "settings.install",
-    "Copiar comando de instalação do Phpactor",
-    "Preferências",
+    "Copy Phpactor installation command",
+    "Preferences",
     "",
     "settings",
   ),
   command(
     "settings.reset",
-    "Restaurar atalhos padrão",
-    "Preferências",
+    "Restore default shortcuts",
+    "Preferences",
     "",
     "settings",
   ),
@@ -287,7 +269,7 @@ export const formatKey = (key: string) =>
     .map(
       (k) =>
         ({
-          Space: "Espaço",
+          Space: tr("Space"),
           ArrowLeft: "←",
           ArrowRight: "→",
           ArrowUp: "↑",
@@ -326,13 +308,13 @@ export function validateShortcut(value: string): string {
       value,
     )
   )
-    return "Combinação de teclas inválida.";
+    return tr("Invalid keyboard shortcut.");
   if (
     !/^(Ctrl|Alt)\+/.test(value) &&
     !/^F(?:[1-9]|1[0-2])$/.test(value) &&
     value !== "Escape"
   )
-    return "Use Ctrl, Alt ou uma tecla F1–F12 para preservar a digitação.";
+    return tr("Use Ctrl, Alt, or an F1–F12 key to preserve typing.");
   if (
     [
       "Ctrl+C",
@@ -350,7 +332,7 @@ export function validateShortcut(value: string): string {
       "Alt+F4",
     ].includes(value)
   )
-    return "Combinação reservada à edição ou ao sistema.";
+    return tr("This shortcut is reserved for editing or the system.");
   return "";
 }
 export const scopesOverlap = (a: CommandScope, b: CommandScope) =>
@@ -383,10 +365,14 @@ export function bindingErrors(bindings: Bindings): string[] {
       );
       if (conflict)
         errors.push(
-          `${formatKey(conflict)}: “${a.label}” e “${b.label}” usam o mesmo atalho.`,
+          tr("{0}: “{1}” and “{2}” use the same shortcut.", [
+            formatKey(conflict),
+            a.label,
+            b.label,
+          ]),
         );
     }
   if (keysFor("commands", bindings).length === 0)
-    errors.push("Mantenha um atalho para abrir a paleta de comandos.");
+    errors.push(tr("Keep a shortcut for opening the command palette."));
   return errors;
 }

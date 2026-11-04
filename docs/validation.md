@@ -42,7 +42,7 @@ TINKERCRAFT_NATIVE_CWD=/tmp TINKERCRAFT_NATIVE_TEST=1 \
   xvfb-run -a -s '-screen 0 1440x1000x24' /usr/bin/python3 tests/native.test.py
 ```
 
-Ainda não existe repositório remoto: a fonte permanece vazia. Não houve publicação nem execução do workflow no GitHub. A variante WebKit 4.1 em Ubuntu 24.04 está prevista na matriz, mas não foi gerada/executada aqui. A instalação/atualização pelo gerenciador de pacotes, a associação gráfica de `.deb` via `xdg-open` e o fluxo completo contra um release público ficam pendentes. O teste por extração não comprova esses passos do sistema operacional.
+Na entrega inicial, o repositório remoto ainda não existia. Na revisão atual, `https://github.com/Henriquex25/TinkerCraft` foi confirmado como público e incorporado à configuração de build. Não há releases publicados e os workflows desta revisão não foram executados no GitHub. A variante WebKit 4.1 em Ubuntu 24.04 está prevista na matriz, mas não foi gerada/executada aqui. A instalação/atualização pelo gerenciador de pacotes, a associação gráfica de `.deb` via `xdg-open` e o fluxo completo contra um release público ficam pendentes. O teste por extração não comprova esses passos do sistema operacional.
 
 ## Logo PNG — 4 de novembro de 2026
 
@@ -52,7 +52,31 @@ Passaram TypeScript/Vite, renderização React e a suíte WebKit completa com a 
 
 O binário extraído abriu em Xvfb com workspace isolado e diretório de trabalho `/tmp`. A propriedade X11 `_NET_WM_ICON` foi comparada pixel a pixel com a derivada de 128 pixels e o fechamento normal terminou com sucesso. O teste inicial com o original de 1254 pixels revelou que GTK/X11 omitia esse ícone; a derivada corrigiu o problema. Screenshot conferido em `test-results/tinkercraft-native-logo.png`. Não houve instalação no sistema nem alteração de janelas do usuário.
 
-## Passou
+## Revisão comunitária, segurança e idiomas — 4 de novembro de 2026
+
+O README de apresentação está em inglês, com guias de contribuição, segurança e atribuição de dependências. A revisão detalhada e as pendências estão em [review-2026-11-04.md](review-2026-11-04.md). Foram removidos comentários comuns do código próprio, preservando diretivas, shebangs e licenças.
+
+Passaram `./scripts/check.sh` com `TINKERCRAFT_PHPACTOR_REAL` apontando para o PHAR fixado e `TINKERCRAFT_LARAVEL_VENDOR` para a fixture Composer Laravel 12.71.0. Isso inclui formatação, sintaxe, TypeScript/Vite, Go com race detector/cobertura, vet, renderização/CSV e distribuição. A cobertura Go total foi **61,9%**, com pacotes de backend entre **48,5% e 78,2%**; GUI/main e contratos sem testes diretos reduzem o total. Essa medida não é garantia de ausência de regressões.
+
+As auditorias npm da raiz e frontend, Composer da fixture e `govulncheck` não reportaram vulnerabilidades conhecidas nas dependências analisadas. `actionlint`, `git diff --check` e o ledger SHA-256 do parser passaram. O instalador real do Phpactor verificou o hash antes de executar a versão 2026.10.07.0. A migração Monaco ESM inclui assertion de build para usar o DOMPurify corrigido.
+
+Inglês é o idioma inicial, inclusive para workspaces antigos sem preferência. Português do Brasil pode ser selecionado em Preferências. Os testes verificam persistência e rejeição de idiomas desconhecidos, preservação de parâmetros e texto do usuário, além da tradução dos controles internos do Monaco. A geração reproduzível de **2.146 mensagens** a partir das fontes oficiais Microsoft passou; sete posições sem mensagens no índice do upstream são preservadas. Fontes, commits e licença estão em [translations.md](translations.md).
+
+O teste nativo Wails em Xvfb passou com inglês → português → inglês, preferências persistidas, execução explícita, renomeação, fechamento logo após editar e reabertura de rascunho sem executá-lo. Os testes usam display e workspace isolados e verificam o PID antes de interagir. Diálogos nativos têm títulos traduzidos; os botões seguem o idioma do sistema operacional.
+
+A suíte WebKit completa passou novamente com idioma inicial inglês, execução e screenshot em inglês, troca para português, controle de busca Monaco traduzido, todos os fluxos existentes e retorno ao inglês preservando nome/código da aba e atalhos remapeados. A captura em `docs/images/workspace.png` usa somente dados da demonstração isolada.
+
+O `.deb` WebKit 4.0 atualizado foi extraído em uma pasta temporária nova. Foram verificados metadados, URL do repositório embutida, dez ícones PNG, desktop entry, licença das traduções e ausência de `.env`, CSVs e SVG antigo. O binário desse payload passou a suíte nativa com diretório de trabalho `/tmp`, usando o Phpactor incluído. O fluxo terminou em português, fechou logo após a última edição e reabriu com o idioma e o rascunho preservados, sem execução automática. Não houve instalação no sistema, publicação de release ou interação com janelas do usuário.
+
+## Preparação do GitHub para a comunidade — 4 de novembro de 2026
+
+Consulta pública confirmou Issues habilitadas, Discussions desabilitadas, nenhum ruleset e nenhum release publicado. O workflow de release anterior está no remoto; CI e a revisão local ainda precisam ser enviados. A máquina não tem `gh` instalado, sessão `gh` ou token GitHub no ambiente. Nenhuma configuração remota foi aplicada, nenhum post criado e nenhum commit/push/release realizado nesta preparação.
+
+Foram preparados formulários de issues e discussões, labels, CODEOWNERS, política de conduta/suporte, categorias de notas de release, ruleset para `main`, guia do mantenedor e helper de configuração. `python3 tests/community.test.py` passou os testes de preview sem rede/autenticação, rejeição de outro origin e impedimento de ativar proteção sem CI aprovado. `actionlint` passou nos workflows; Prettier verificou YAML/JSON. O preflight de release foi executado localmente com versão consistente e rejeitou branch incorreta, versão divergente e entrada malformada. As APIs de escrita permanecem sem teste integrado por falta de autenticação; categorias e notificações precisam ser verificadas após setup.
+
+`git check-ignore` confirmou executável, `.deb` e assets frontend gerados fora do Git, sem arquivos rastreados nesses diretórios. O pacote foi reempacotado com os novos guias de comunidade sem alterar o executável já validado.
+
+## Evidências por área
 
 | Área | Evidência |
 | --- | --- |
@@ -84,7 +108,7 @@ Os testes dos três transportes não locais também passaram pelo runner PHP rea
 Comandos principais:
 
 ```bash
-TINKERCRAFT_LARAVEL_VENDOR=/media/henrique/hdd/Projects/Clinicker/vendor \
+TINKERCRAFT_LARAVEL_VENDOR=/caminho/dependencias-laravel/vendor \
   GOCACHE=/tmp/tinkercraft-go-cache GOPROXY=off go test ./...
 GOCACHE=/tmp/tinkercraft-go-cache GOPROXY=off go vet ./...
 npm --prefix frontend run build
@@ -95,7 +119,7 @@ npm run test:ui
 TINKERCRAFT_NATIVE_TEST=1 xvfb-run -a -s '-screen 0 1440x1000x24' /usr/bin/python3 tests/native.test.py
 ```
 
-O teste Laravel lê apenas as dependências abertas do framework instaladas nesse diretório e cria um bootstrap separado em diretório temporário. O aplicativo Clinicker, seu autoload raiz, `.env`, providers, helpers e código de negócio não são executados nem modificados.
+O teste Laravel lê apenas as dependências abertas do framework instaladas nesse diretório e cria um bootstrap separado em diretório temporário. A aplicação de origem, seu autoload raiz, `.env`, providers, helpers e código de negócio não são executados nem modificados.
 
 ## Implementado, mas não validado integralmente aqui
 

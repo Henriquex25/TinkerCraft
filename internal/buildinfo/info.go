@@ -7,7 +7,6 @@ import (
 	"strings"
 )
 
-// Set by the release build; development builds do not point at an invented host.
 var Version = "0.2.0"
 var ReleaseSource = ""
 var Distribution = "source"

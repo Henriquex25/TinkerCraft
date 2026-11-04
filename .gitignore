@@ -14,3 +14,6 @@ test-results/
 build/dist/
 __pycache__/
 *.pyc
+tests/fixtures/laravel/vendor/
+/*.csv
+/coverage.out

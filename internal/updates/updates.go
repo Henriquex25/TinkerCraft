@@ -92,7 +92,6 @@ func validateURL(value string) error {
 	return nil
 }
 
-// GitHub repository URLs use the public stable releases API; other HTTPS URLs are manifests.
 func SourceURL(source string) (string, bool, error) {
 	if source == "" {
 		return "", false, nil

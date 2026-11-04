@@ -82,7 +82,7 @@ func BuildIndex(ctx context.Context, php, runtimeDir, root string) (*Index, erro
 			}
 		}
 	}
-	// Selected framework sources improve the fallback without indexing all vendor packages.
+
 	for _, base := range []string{"vendor/laravel/framework/src/Illuminate/Database/Eloquent", "vendor/laravel/framework/src/Illuminate/Database/Query", "vendor/laravel/framework/src/Illuminate/Collections", "vendor/laravel/framework/src/Illuminate/Support/Facades", "vendor/illuminate/database/Eloquent", "vendor/illuminate/collections"} {
 		roots = append(roots, filepath.Join(root, base))
 	}

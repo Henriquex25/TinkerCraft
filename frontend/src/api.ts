@@ -1,6 +1,6 @@
+import { translateStatus } from "./i18n";
+import { t as tr } from "./i18n";
 import type { API } from "./types";
-
-// The HTTP adapter exists only for authenticated, loopback development/tests.
 const token = new URLSearchParams(location.hash.slice(1)).get("devToken");
 export const isHeadless = !window.go && Boolean(token);
 export const api: API = new Proxy({} as API, {
@@ -15,7 +15,7 @@ export const api: API = new Proxy({} as API, {
         )(...args);
       if (!token)
         throw new Error(
-          "Abra o aplicativo desktop TinkerCraft. O backend não está conectado.",
+          tr("Open the TinkerCraft desktop app. The backend is not connected."),
         );
       if (method === "Copy") {
         await navigator.clipboard.writeText(String(args[0]));
@@ -43,7 +43,9 @@ export const api: API = new Proxy({} as API, {
       }
       if (["ChooseDirectory", "ChooseFile", "OpenSnippet"].includes(method))
         throw new Error(
-          "Seleção de arquivos disponível no aplicativo desktop. No modo de desenvolvimento, informe o caminho no formulário.",
+          tr(
+            "File selection is available in the desktop app. In development mode, enter the path in the form.",
+          ),
         );
       const response = await fetch("/api", {
         method: "POST",
@@ -54,13 +56,14 @@ export const api: API = new Proxy({} as API, {
         body: JSON.stringify({ method, args }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Falha no backend local");
+      if (!response.ok)
+        throw new Error(data.error || tr("Local backend error"));
       return data.result;
     };
   },
 });
 export const errorText = (error: unknown) =>
-  error instanceof Error ? error.message : String(error);
+  translateStatus(error instanceof Error ? error.message : String(error));
 export const uid = () =>
   crypto.randomUUID?.() ??
   `id-${Date.now()}-${Math.random().toString(16).slice(2)}`;

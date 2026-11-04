@@ -44,7 +44,6 @@ func (b *boundedBuffer) Write(p []byte) (int, error) {
 }
 func (b *boundedBuffer) String() string { b.mu.Lock(); defer b.mu.Unlock(); return b.data.String() }
 
-// Run never invokes a local shell. Child process groups are terminated on timeout/cancel.
 func Run(ctx context.Context, spec Command, input []byte, limit int) (ProcessResult, error) {
 	out := &boundedBuffer{limit: limit}
 	result, err := Stream(ctx, spec, input, out)
@@ -53,8 +52,6 @@ func Run(ctx context.Context, spec Command, input []byte, limit int) (ProcessRes
 	return result, err
 }
 
-// Stream drains stdout into a caller-owned writer; callers must enforce their
-// own protocol and size limits. Cancellation still terminates the process group.
 func Stream(ctx context.Context, spec Command, input []byte, stdout io.Writer) (ProcessResult, error) {
 	cmd := exec.CommandContext(ctx, spec.Binary, spec.Args...)
 	cmd.Dir = spec.Dir

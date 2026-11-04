@@ -47,7 +47,7 @@ foreach ($input['files'] as $file) {
             $entry = $signature($function); $entry['name'] = isset($function->namespacedName) ? (string)$function->namespacedName : (string)$function->name; $output['functions'][] = $entry;
         }
         $output['files']++;
-    } catch (Throwable $error) { /* Incomplete project files must not stop the index. */ }
+    } catch (Throwable $error) {                                                         }
 }
 foreach (get_defined_functions()['internal'] as $name) {
     $function = new ReflectionFunction($name); $params = [];

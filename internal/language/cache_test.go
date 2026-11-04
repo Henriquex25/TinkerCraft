@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -15,6 +16,16 @@ import (
 	"tinkercraft/internal/execution"
 	phpruntime "tinkercraft/runtime"
 )
+
+func TestSnapshotRejectsOversizedRecordBeforeReadingWholeStream(t *testing.T) {
+	input := &io.LimitedReader{R: strings.NewReader(`{"path":"app/Huge.php","data":"` + strings.Repeat("A", 16*1024*1024)), N: 20 * 1024 * 1024}
+	if _, err := extractSnapshot(input, t.TempDir()); err == nil {
+		t.Fatal("oversized record accepted")
+	}
+	if 20*1024*1024-input.N > 8*1024*1024 {
+		t.Fatal("oversized record consumed excessive input before rejection")
+	}
+}
 
 func cacheFixture(t *testing.T) (*Cache, core.Profile) {
 	t.Helper()
@@ -209,7 +220,7 @@ func TestRealPhpactorUsesCachedSourcesWithoutBootstrapping(t *testing.T) {
 
 func TestSnapshotPrioritizesApplicationAndCompletesAtBudget(t *testing.T) {
 	project := t.TempDir()
-	// Create dependencies first to catch filesystem-order dependent collection.
+
 	os.MkdirAll(filepath.Join(project, "vendor", "package", "library", "tests"), 0700)
 	os.WriteFile(filepath.Join(project, "vendor", "package", "library", "source.php"), []byte("<?php // dependency"), 0600)
 	os.WriteFile(filepath.Join(project, "vendor", "package", "library", "tests", "fixture.php"), []byte("<?php // fixture"), 0600)

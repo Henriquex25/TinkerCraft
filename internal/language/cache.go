@@ -1,6 +1,7 @@
 package language
 
 import (
+	"bufio"
 	"context"
 	"crypto/sha256"
 	"encoding/base64"
@@ -248,9 +249,17 @@ func allowedSnapshotPath(name string) bool {
 }
 func extractSnapshot(reader io.Reader, project string) (CacheMetadata, error) {
 	var meta CacheMetadata
-	decoder := json.NewDecoder(reader)
+	scanner := bufio.NewScanner(reader)
+	scanner.Buffer(make([]byte, 4096), 6*1024*1024+8192)
 	seen := map[string]bool{}
-	for {
+	done := false
+	for scanner.Scan() {
+		if len(strings.TrimSpace(scanner.Text())) == 0 {
+			continue
+		}
+		if done {
+			return meta, fmt.Errorf("Dados inesperados após o fim da transferência")
+		}
 		var record struct {
 			Path    string `json:"path"`
 			Data    string `json:"data"`
@@ -260,7 +269,7 @@ func extractSnapshot(reader io.Reader, project string) (CacheMetadata, error) {
 			Skipped int    `json:"skipped"`
 			Limited bool   `json:"limited"`
 		}
-		if err := decoder.Decode(&record); err != nil {
+		if err := json.Unmarshal(scanner.Bytes(), &record); err != nil {
 			return meta, fmt.Errorf("Transferência incompleta: %w", err)
 		}
 		if record.Done {
@@ -269,11 +278,8 @@ func extractSnapshot(reader io.Reader, project string) (CacheMetadata, error) {
 			}
 			meta.Skipped = record.Skipped
 			meta.Limited = record.Limited
-			var extra any
-			if err := decoder.Decode(&extra); err != io.EOF {
-				return meta, fmt.Errorf("Dados inesperados após o fim da transferência")
-			}
-			return meta, nil
+			done = true
+			continue
 		}
 		if !allowedSnapshotPath(record.Path) || len(record.Path) > 4096 || seen[record.Path] {
 			return meta, fmt.Errorf("Caminho de arquivo inválido no cache")
@@ -302,6 +308,13 @@ func extractSnapshot(reader io.Reader, project string) (CacheMetadata, error) {
 			return meta, err
 		}
 	}
+	if err := scanner.Err(); err != nil {
+		return meta, fmt.Errorf("Registro de cache inválido ou maior que o limite: %w", err)
+	}
+	if !done {
+		return meta, fmt.Errorf("Transferência incompleta: marcador final ausente")
+	}
+	return meta, nil
 }
 
 func (c *Cache) Touch(root string) {
