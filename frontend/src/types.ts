@@ -19,6 +19,8 @@ export interface Profile {
   timeout: number;
 }
 export interface Settings {
+  donationPromptDismissed?: boolean;
+  starPromptDismissed?: boolean;
   language?: "en" | "pt-BR";
   updateSource?: string;
   checkUpdatesOnStartup?: boolean;
@@ -43,6 +45,8 @@ export interface History {
   durationMs: number;
 }
 export interface State {
+  launchCount?: number;
+  suggestSupport?: boolean;
   version: number;
   profiles: Profile[];
   settings: Settings;
@@ -150,6 +154,10 @@ export interface API {
   DeleteProfile(id: string): Promise<void>;
   SaveWorkspace(tabs: Tab[], active: string): Promise<void>;
   SaveSettings(settings: Settings): Promise<void>;
+  DismissStarPrompt(): Promise<void>;
+  DismissDonationPrompt(): Promise<void>;
+  OpenSupportPage(): Promise<void>;
+  OpenProjectRepository(): Promise<void>;
   Execute(tabId: string, profileId: string, code: string): Promise<RunResult>;
   Cancel(tabId: string): Promise<boolean>;
   TestConnection(profile: Profile): Promise<RunResult>;

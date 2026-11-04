@@ -109,13 +109,15 @@ func (p Profile) Validate() error {
 }
 
 type Settings struct {
-	Language              string            `json:"language"`
-	UpdateSource          string            `json:"updateSource,omitempty"`
-	CheckUpdatesOnStartup *bool             `json:"checkUpdatesOnStartup,omitempty"`
-	Shortcuts             map[string]string `json:"shortcuts,omitempty"`
-	CacheDays             int               `json:"cacheDays"`
-	PHPBinary             string            `json:"phpBinary"`
-	PhpactorPath          string            `json:"phpactorPath"`
+	DonationPromptDismissed bool              `json:"donationPromptDismissed,omitempty"`
+	StarPromptDismissed     bool              `json:"starPromptDismissed,omitempty"`
+	Language                string            `json:"language"`
+	UpdateSource            string            `json:"updateSource,omitempty"`
+	CheckUpdatesOnStartup   *bool             `json:"checkUpdatesOnStartup,omitempty"`
+	Shortcuts               map[string]string `json:"shortcuts,omitempty"`
+	CacheDays               int               `json:"cacheDays"`
+	PHPBinary               string            `json:"phpBinary"`
+	PhpactorPath            string            `json:"phpactorPath"`
 }
 type Tab struct {
 	ID        string `json:"id"`
@@ -133,12 +135,18 @@ type History struct {
 	DurationMS  float64 `json:"durationMs"`
 }
 type State struct {
-	Version   int       `json:"version"`
-	Profiles  []Profile `json:"profiles"`
-	Settings  Settings  `json:"settings"`
-	Tabs      []Tab     `json:"tabs"`
-	ActiveTab string    `json:"activeTab"`
-	History   []History `json:"history"`
+	LaunchCount int       `json:"launchCount,omitempty"`
+	Version     int       `json:"version"`
+	Profiles    []Profile `json:"profiles"`
+	Settings    Settings  `json:"settings"`
+	Tabs        []Tab     `json:"tabs"`
+	ActiveTab   string    `json:"activeTab"`
+	History     []History `json:"history"`
+}
+
+type BootstrapState struct {
+	State
+	SuggestSupport bool `json:"suggestSupport"`
 }
 
 type Node struct {

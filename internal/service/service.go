@@ -22,6 +22,7 @@ import (
 const WelcomeCode = "// A space to explore your ideas.\n$people = [\n    ['id' => 1, 'name' => 'Ana Silva', 'role' => 'Developer', 'active' => true],\n    ['id' => 2, 'name' => 'Bruno Costa', 'role' => 'Designer', 'active' => true],\n    ['id' => 3, 'name' => 'Clara Santos', 'role' => 'Developer', 'active' => false],\n];\n\n$people;\n"
 
 type Service struct {
+	suggestSupport     bool
 	Updates            *updates.Manager
 	Cache              *language.Cache
 	preparations       map[string]preparation
@@ -114,10 +115,24 @@ func New(dir string) (*Service, error) {
 			return nil, err
 		}
 	}
+	if store.Snapshot().LaunchCount < 5 {
+		if err := store.Update(func(state *core.State) error {
+			state.LaunchCount = min(5, max(0, state.LaunchCount)+1)
+			return nil
+		}); err != nil {
+			s.Close()
+			return nil, err
+		}
+	}
+	current := store.Snapshot()
+	s.suggestSupport = current.LaunchCount >= 5 && len(current.History) > 0 && current.Settings.StarPromptDismissed && !current.Settings.DonationPromptDismissed
 	return s, nil
 }
-func (s *Service) Close()                { s.cancel(); s.Language.Close() }
-func (s *Service) Bootstrap() core.State { return s.Store.Snapshot() }
+func (s *Service) Close() { s.cancel(); s.Language.Close() }
+func (s *Service) Bootstrap() core.BootstrapState {
+	state := s.Store.Snapshot()
+	return core.BootstrapState{State: state, SuggestSupport: s.suggestSupport && !state.Settings.DonationPromptDismissed}
+}
 func (s *Service) SaveProfile(profile core.Profile) (core.Profile, error) {
 	if profile.ID == "" {
 		profile.ID = execution.ID()
@@ -208,7 +223,24 @@ func (s *Service) SaveSettings(settings core.Settings) error {
 	if len(settings.PhpactorPath) > 4096 {
 		return fmt.Errorf("Caminho do Phpactor inválido")
 	}
-	return s.Store.Update(func(state *core.State) error { state.Settings = settings; return nil })
+	return s.Store.Update(func(state *core.State) error {
+		settings.StarPromptDismissed = settings.StarPromptDismissed || state.Settings.StarPromptDismissed
+		settings.DonationPromptDismissed = settings.DonationPromptDismissed || state.Settings.DonationPromptDismissed
+		state.Settings = settings
+		return nil
+	})
+}
+func (s *Service) DismissStarPrompt() error {
+	return s.Store.Update(func(state *core.State) error {
+		state.Settings.StarPromptDismissed = true
+		return nil
+	})
+}
+func (s *Service) DismissDonationPrompt() error {
+	return s.Store.Update(func(state *core.State) error {
+		state.Settings.DonationPromptDismissed = true
+		return nil
+	})
 }
 func (s *Service) profile(id string) (core.Profile, error) {
 	for _, p := range s.Store.Snapshot().Profiles {

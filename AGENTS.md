@@ -42,6 +42,8 @@ O fallback sugere funções, classes e membros públicos/herdados, mas não equi
 
 ## Teclado e persistência de edição
 
+- Saída: Ctrl+J alterna visibilidade, com remapeamento e tooltip. O X do painel oculta, sem apagar resultado, modo, filtro ou largura escolhida. Ctrl+Shift+Delete continua limpando; executar código e Alt+2 reabrem a saída. Não registrar ações de saída/tabela enquanto o painel estiver oculto; manter o componente montado para preservar o estado.
+
 - Idioma inicial/padrão inglês (`en`), com português do Brasil (`pt-BR`) em Preferências. Persistir em Settings.Language. Mensagens próprias em `frontend/src/i18n.ts` e `locales/`; preservar código, nomes e saídas do usuário. A troca salva rascunhos e recarrega a interface para inicializar também o Monaco traduzido; manter o handshake de fechamento funcional após reload. Traduções Monaco fixadas à versão e fontes Microsoft, com licença MIT em `docs/licenses` e gerador em `scripts/update-monaco-locale.py`; consultar `docs/translations.md`.
 
 - Catálogo e validação de atalhos em `frontend/src/shortcuts.ts`; despacho, contextos e paleta em `commands.tsx`; remapeamento em `keybindings.tsx`.
@@ -111,6 +113,10 @@ Aplicar `gofmt` em Go alterado e manter TypeScript compilando. Executar verifica
 - `THIRD_PARTY_NOTICES.md` e `docs/vendor-sha256.txt`: origem, licenças e identidade dos arquivos vendorizados.
 
 ## Comunidade e revisão
+
+Apoio: URL fixa `https://www.buymeacoffee.com/henriquemiranda`, disponível em Sobre/paleta/README/FUNDING. `State.LaunchCount` local é incrementado por inicialização do serviço e limitado a cinco; reload de idioma não incrementa. `BootstrapState.SuggestSupport` é derivado por sessão: quinto início ou depois, histórico existente e estrela já dispensada antes da sessão. Não mostrar os dois convites em sequência na mesma sessão. Ambas as respostas e a abertura manual do link dispensam permanentemente `Settings.DonationPromptDismissed`, preservado contra formulários antigos. Testes simulam navegador, sem fazer pagamentos ou abrir contas reais.
+
+Convite para estrela em `frontend/src/community.tsx`: cartão não modal na inicialização, ações na paleta e traduções EN/PT. As duas respostas persistem `Settings.StarPromptDismissed` por método próprio atômico; `SaveSettings` não pode reativá-lo ao receber formulário antigo. O botão positivo abre somente o repositório oficial via Wails, sem autenticar nem adicionar estrelas automaticamente. Testes devem simular a abertura do navegador, sem visitar GitHub ou modificar contas.
 
 Configuração inicial e releases em `docs/github-maintainer.md`. Formulários em `.github/ISSUE_TEMPLATE` e `DISCUSSION_TEMPLATE`, labels em `.github/labels.json`, regras propostas em `.github/main-ruleset.json`; `scripts/configure-github.py` apenas simula sem `--apply`, exige autenticação própria via gh para alterações e valida origin/permissões. Não exigir aprovação independente enquanto houver só um mantenedor. Proteção deve esperar CI verde no main atual. Release deve verificar versão consistente e CI aprovado no mesmo SHA, gerar rascunho e deixar a publicação explícita ao mantenedor. Binaries gerados ficam ignorados no Git e são assets de Releases, não arquivos fonte.
 

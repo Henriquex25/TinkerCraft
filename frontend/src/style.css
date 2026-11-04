@@ -796,6 +796,9 @@ a {
   flex-direction: column;
   background: #171717;
 }
+.output-panel[hidden] {
+  display: none;
+}
 .output-panel .panel-heading {
   padding-right: 12px;
 }
@@ -1480,6 +1483,74 @@ tr:hover td {
 }
 .boot-screen .brand-symbol {
   margin-bottom: 20px;
+}
+.project-support {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 16px;
+  margin-bottom: 20px;
+  background: #282828;
+  border: 1px solid #454545;
+  border-radius: 8px;
+}
+.project-support strong {
+  font-size: 15px;
+  color: #dedede;
+}
+.project-support p {
+  color: #b1b1b1;
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 6px 0 0;
+}
+.repository-prompt {
+  position: fixed;
+  right: 22px;
+  bottom: 48px;
+  z-index: 40;
+  width: min(430px, calc(100vw - 85px));
+  padding: 20px;
+  border: 1px solid #555;
+  border-radius: 10px;
+  background: #252525;
+  box-shadow: 0 12px 40px #0007;
+  color: #ddd;
+}
+.repository-prompt-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #f9a15d;
+}
+.repository-prompt h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  color: #f0f0f0;
+}
+.repository-prompt p {
+  margin: 14px 0 10px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.repository-prompt small {
+  display: block;
+  color: #b1b1b1;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.repository-prompt-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+.repository-prompt-actions button {
+  font-size: 14px;
 }
 .toast {
   position: fixed;

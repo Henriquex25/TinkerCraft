@@ -6,7 +6,7 @@
   "scripts": {
     "build": "./scripts/build.sh",
     "test": "go test ./...",
-    "test:ui": "node tests/ui.test.mjs",
+    "test:ui": "node tests/ui.test.mjs && node tests/invitation.test.mjs",
     "test:render": "node tests/render.test.mjs",
     "format": "prettier --write \"frontend/src/**/*.{ts,tsx,css,json}\" frontend/vite.config.ts \"tests/*.mjs\" \".github/**/*.{yml,json}\" \"scripts/*.mjs\"",
     "format:check": "prettier --check \"frontend/src/**/*.{ts,tsx,css,json}\" frontend/vite.config.ts \"tests/*.mjs\" \".github/**/*.{yml,json}\" \"scripts/*.mjs\""

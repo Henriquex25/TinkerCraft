@@ -76,7 +76,25 @@ Foram preparados formulários de issues e discussões, labels, CODEOWNERS, polí
 
 `git check-ignore` confirmou executável, `.deb` e assets frontend gerados fora do Git, sem arquivos rastreados nesses diretórios. O pacote foi reempacotado com os novos guias de comunidade sem alterar o executável já validado.
 
-## Evidências por área
+## Convite para estrela no GitHub — 4 de novembro de 2026
+
+O cartão não modal aparece ao abrir um workspace que ainda não respondeu ao convite. As duas respostas salvam permanentemente `starPromptDismissed`; a positiva abre o repositório oficial no navegador, sem autenticar ou adicionar estrelas pelo aplicativo. A preferência permanece após reiniciar e não pode ser desfeita por um formulário de configurações antigo. A interface está traduzida para inglês/português e as ações estão disponíveis na paleta e no remapeamento de atalhos.
+
+Passaram `./scripts/check.sh` com Phpactor e Laravel reais, a suíte WebKit existente e os novos testes `tests/invitation.test.mjs`. Eles verificam os dois caminhos em workspaces separados, ausência do convite em nova sessão, preservação do foco e do histórico, tradução, erro de persistência com nova tentativa e abertura somente da URL oficial. A abertura do navegador é simulada: não foi visitado GitHub nem alterada qualquer conta.
+
+O `.deb` foi reconstruído, extraído em diretório temporário e seu binário passou a suíte nativa Xvfb. O convite foi dispensado pela paleta, a escolha sobreviveu às trocas de idioma e à reabertura e o último rascunho continuou preservado. A aparência foi conferida em `test-results/tinkercraft-native-star-invitation.png`. O pacote usa o executável testado e inclui a documentação atualizada; não houve instalação no sistema, commit, push ou publicação de release.
+
+## Visibilidade da saída e apoio voluntário — 4 de novembro de 2026
+
+O X da saída agora oculta o painel inteiro, mesmo vazio. Ctrl+J e o botão na barra de abas alternam a visibilidade; o atalho é remapeável. A saída permanece montada e preserva resultado, modo e filtros, enquanto o editor ocupa toda a largura. A largura anterior é restaurada ao mostrar o painel. Executar código e Alt+2 também mostram a saída. Limpar continua disponível por Ctrl+Shift+Delete e paleta. Ações internas de saída/tabela ficam indisponíveis enquanto o painel está oculto.
+
+O link fixo de Buy Me a Coffee informado pelo mantenedor foi incluído em Sobre, paleta, README e `.github/FUNDING.yml`. O convite é elegível apenas na inicialização do serviço, a partir da quinta abertura, com histórico existente e convite de estrela respondido antes da sessão. Consultas Bootstrap e reloads de idioma não contam como aberturas; o contador local para em cinco. As duas respostas e a abertura manual do link dispensam o convite permanentemente, inclusive contra salvamento de um formulário antigo. Não foram feitas consultas à conta ou pagamentos. A ferramenta web não conseguiu carregar a página externa; os testes verificam a URL configurada e simulam a abertura do navegador.
+
+Passaram `./scripts/check.sh` com Laravel/Phpactor reais e a suíte WebKit completa. Foram testados X com saída vazia, editor em largura total, restauração do tamanho, preservação do filtro/tabela, abertura ao executar e remapeamento para Ctrl+Shift+J. Testes de serviço cobriram limiar de abertura, ausência de histórico, não mostrar dois convites na mesma sessão, configurações antigas e reabertura. Os fluxos WebKit de apoio cobriram aceitar, recusar, tradução, erro ao salvar, nova sessão e abertura manual em Sobre antes do limiar.
+
+O pacote WebKit 4.0 foi reconstruído e seu payload extraído passou a suíte nativa em Xvfb com diretório de trabalho `/tmp`: Ctrl+J, execução, reloads de idioma, persistência do rascunho, convite de apoio na quinta abertura, dispensa pelo teclado e nova reabertura. As imagens `test-results/tinkercraft-native-editor-only.png` e `tinkercraft-native-support-invitation.png` foram conferidas visualmente. O teste usa só fixtures e simula condições de uso no workspace temporário; não altera perfis ou janelas do usuário. Não houve instalação no sistema, commit, push ou publicação.
+
+## Evidências anteriores por área
 
 | Área | Evidência |
 | --- | --- |

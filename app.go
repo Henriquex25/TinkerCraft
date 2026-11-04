@@ -52,9 +52,19 @@ func (a *App) startup(ctx context.Context) {
 	}
 }
 func (a *App) shutdown(context.Context)                         { a.svc.Close() }
-func (a *App) Bootstrap() core.State                            { return a.svc.Bootstrap() }
+func (a *App) Bootstrap() core.BootstrapState                   { return a.svc.Bootstrap() }
 func (a *App) SaveProfile(p core.Profile) (core.Profile, error) { return a.svc.SaveProfile(p) }
 func (a *App) DeleteProfile(id string) error                    { return a.svc.DeleteProfile(id) }
+func (a *App) DismissStarPrompt() error                         { return a.svc.DismissStarPrompt() }
+func (a *App) DismissDonationPrompt() error                     { return a.svc.DismissDonationPrompt() }
+func (a *App) OpenSupportPage() error {
+	runtime.BrowserOpenURL(a.ctx, "https://www.buymeacoffee.com/henriquemiranda")
+	return nil
+}
+func (a *App) OpenProjectRepository() error {
+	runtime.BrowserOpenURL(a.ctx, "https://github.com/Henriquex25/TinkerCraft")
+	return nil
+}
 func (a *App) SaveWorkspace(tabs []core.Tab, active string) error {
 	return a.svc.SaveWorkspace(tabs, active)
 }

@@ -149,10 +149,12 @@ function DataTable({
   node,
   notify,
   activate,
+  commandsEnabled,
 }: {
   node: ValueNode;
   notify: (text: string) => void;
   activate: () => void;
+  commandsEnabled: boolean;
 }) {
   const hints = useCommandHints();
   const table = useRef<HTMLTableElement>(null);
@@ -210,33 +212,38 @@ function DataTable({
       notify(String(error));
     }
   }
-  useCommandActions({
-    exportCSV,
-    nextPage: {
-      enabled: currentPage < pages - 1,
-      run: () => {
-        activate();
-        setPage(currentPage + 1);
-      },
-    },
-    previousPage: {
-      enabled: currentPage > 0,
-      run: () => {
-        activate();
-        setPage(currentPage - 1);
-      },
-    },
-    sortTable: () => {
-      activate();
-      const focused = document.activeElement;
-      const buttons = Array.from(
-        table.current?.querySelectorAll<HTMLButtonElement>("th button") ?? [],
-      );
-      const target = buttons.find((b) => b === focused) ?? buttons[0];
-      target?.click();
-      target?.focus();
-    },
-  });
+  useCommandActions(
+    commandsEnabled
+      ? {
+          exportCSV,
+          nextPage: {
+            enabled: currentPage < pages - 1,
+            run: () => {
+              activate();
+              setPage(currentPage + 1);
+            },
+          },
+          previousPage: {
+            enabled: currentPage > 0,
+            run: () => {
+              activate();
+              setPage(currentPage - 1);
+            },
+          },
+          sortTable: () => {
+            activate();
+            const focused = document.activeElement;
+            const buttons = Array.from(
+              table.current?.querySelectorAll<HTMLButtonElement>("th button") ??
+                [],
+            );
+            const target = buttons.find((b) => b === focused) ?? buttons[0];
+            target?.click();
+            target?.focus();
+          },
+        }
+      : {},
+  );
   return (
     <div className="table-view">
       <div className="table-toolbar">
@@ -359,11 +366,15 @@ export function Output({
   running,
   clear,
   notify,
+  hide,
+  visible = true,
 }: {
   result?: RunResult;
   running: boolean;
   clear: () => void;
   notify: (message: string) => void;
+  hide: () => void;
+  visible?: boolean;
 }) {
   const [mode, setMode] = useState<"tree" | "table" | "json">("tree");
   const hints = useCommandHints();
@@ -406,30 +417,42 @@ export function Output({
     setDepthLimit(depth);
     setExpand((value) => value + 1);
   }
-  useCommandActions({
-    tree: () => setMode("tree"),
-    table: () => setMode("table"),
-    json: () => setMode("json"),
-    copyOutput: { enabled: Boolean(node), run: copy },
-    clearOutput: { enabled: Boolean(result), run: clear },
-    expandTree: { enabled: Boolean(node), run: () => openTree() },
-    collapseTree: { enabled: Boolean(node), run: () => openTree(0) },
-    filterOutput: {
-      enabled: Boolean(node),
-      run: () => {
-        setMode("table");
-        requestAnimationFrame(() =>
-          document
-            .querySelector<HTMLInputElement>("[data-output-filter]")
-            ?.focus(),
-        );
-      },
-    },
-    nextDump: { enabled: dumps.length > 0, run: () => changeDump(1) },
-    previousDump: { enabled: dumps.length > 0, run: () => changeDump(-1) },
-  });
+  useCommandActions(
+    visible
+      ? {
+          tree: () => setMode("tree"),
+          table: () => setMode("table"),
+          json: () => setMode("json"),
+          copyOutput: { enabled: Boolean(node), run: copy },
+          clearOutput: { enabled: Boolean(result), run: clear },
+          expandTree: { enabled: Boolean(node), run: () => openTree() },
+          collapseTree: { enabled: Boolean(node), run: () => openTree(0) },
+          filterOutput: {
+            enabled: Boolean(node),
+            run: () => {
+              setMode("table");
+              requestAnimationFrame(() =>
+                document
+                  .querySelector<HTMLInputElement>("[data-output-filter]")
+                  ?.focus(),
+              );
+            },
+          },
+          nextDump: { enabled: dumps.length > 0, run: () => changeDump(1) },
+          previousDump: {
+            enabled: dumps.length > 0,
+            run: () => changeDump(-1),
+          },
+        }
+      : {},
+  );
   return (
-    <section className="output-panel" aria-label={tr("Output")} tabIndex={-1}>
+    <section
+      className="output-panel"
+      hidden={!visible}
+      aria-label={tr("Output")}
+      tabIndex={-1}
+    >
       <div className="output-tabs">
         <div>
           {(
@@ -473,10 +496,9 @@ export function Output({
           </button>
           <button
             className="icon-button"
-            disabled={!result}
-            onClick={clear}
-            title={hints.title("clearOutput")}
-            aria-label={tr("Clear output")}
+            onClick={hide}
+            title={hints.title("toggleOutput", tr("Hide output"))}
+            aria-label={tr("Hide output")}
           >
             <X size={17} />
           </button>
@@ -581,6 +603,7 @@ export function Output({
                 ) : null}
                 <div hidden={mode !== "table"} className="table-container">
                   <DataTable
+                    commandsEnabled={visible}
                     key={dumpIndex}
                     node={node}
                     notify={notify}

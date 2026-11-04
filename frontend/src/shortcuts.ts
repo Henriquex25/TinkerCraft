@@ -38,6 +38,23 @@ const command = (
   alsoIn,
 });
 export const commands: CommandDefinition[] = [
+  command(
+    "community.support",
+    "Buy me a coffee",
+    "Application",
+    "",
+    "workspace",
+    undefined,
+    ["updates"],
+  ),
+  command(
+    "community.dismissDonation",
+    "Dismiss support invitation",
+    "Application",
+  ),
+  command("toggleOutput", "Toggle output visibility", "Output", "Ctrl+J"),
+  command("community.star", "Star on GitHub", "Application"),
+  command("community.dismiss", "Dismiss GitHub invitation", "Application"),
   command("findEditor", "Find in editor", "Editor"),
   command(
     "settings.language",
