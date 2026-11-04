@@ -2,7 +2,9 @@
 Type=Application
 Name=TinkerCraft
 GenericName=PHP scratchpad
-Comment=Seu laboratório pessoal de PHP e Laravel
+GenericName[pt_BR]=Laboratório PHP
+Comment=Your personal PHP and Laravel playground
+Comment[pt_BR]=Seu laboratório pessoal de PHP e Laravel
 Exec=/usr/bin/tinkercraft
 TryExec=/usr/bin/tinkercraft
 Icon=tinkercraft

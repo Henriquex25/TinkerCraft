@@ -1,0 +1,14 @@
+{
+  "name": "tinkercraft/laravel-fixture",
+  "description": "Isolated open-source framework dependencies for integration tests",
+  "license": "MIT",
+  "require": {
+    "php": "^8.2",
+    "laravel/framework": "^12.0"
+  },
+  "config": {
+    "allow-plugins": false,
+    "platform": { "php": "8.2.30" },
+    "sort-packages": true
+  }
+}

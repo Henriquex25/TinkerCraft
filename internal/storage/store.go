@@ -19,7 +19,7 @@ func Open(dir string) (*Store, error) {
 	if err := os.MkdirAll(dir, 0700); err != nil {
 		return nil, err
 	}
-	s := &Store{path: filepath.Join(dir, "workspace.json"), state: core.State{Version: 1, Profiles: []core.Profile{}, Settings: core.Settings{PHPBinary: "php"}, Tabs: []core.Tab{}, History: []core.History{}}}
+	s := &Store{path: filepath.Join(dir, "workspace.json"), state: core.State{Version: 1, Profiles: []core.Profile{}, Settings: core.Settings{Language: "en", PHPBinary: "php"}, Tabs: []core.Tab{}, History: []core.History{}}}
 	data, err := os.ReadFile(s.path)
 	if err != nil && !os.IsNotExist(err) {
 		return nil, err

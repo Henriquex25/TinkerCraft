@@ -128,6 +128,14 @@ func TestComposerBootstrap(t *testing.T) {
 		t.Fatalf("%+v", r)
 	}
 }
+func TestMissingBootstrapUsesAppErrorClass(t *testing.T) {
+	engine, p, s := fixture(t)
+	p.Bootstrap = "composer"
+	r := engine.Execute(context.Background(), p, s, "42;")
+	if r.Success || r.Error == nil || r.Error.Class != `TinkerCraft\Runtime\BootstrapError` || !strings.Contains(r.Error.Message, "vendor/autoload.php") {
+		t.Fatalf("%+v", r)
+	}
+}
 func TestCancellationAndTimeout(t *testing.T) {
 	engine, p, s := fixture(t)
 	p.Timeout = 1
@@ -159,8 +167,7 @@ func TestTransportArgumentSafety(t *testing.T) {
 	if !strings.Contains(cmd, "'docker' 'exec' '-i' '--workdir'") {
 		t.Fatal(cmd)
 	}
-	// Ask a real POSIX shell to decode the generated remote command, with a fake Docker
-	// binary that serializes argv. Nothing in any argument may execute as shell code.
+
 	bin := t.TempDir()
 	docker := filepath.Join(bin, "docker")
 	script := "#!/usr/bin/env python3\nimport json,sys\nprint(json.dumps(sys.argv[1:]))\n"

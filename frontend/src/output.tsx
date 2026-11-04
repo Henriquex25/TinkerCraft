@@ -1,3 +1,6 @@
+import { translateStatus } from "./i18n";
+import { t as tr } from "./i18n";
+import { formatLocale } from "./i18n";
 import { useMemo, useState, useRef } from "react";
 import {
   Braces,
@@ -16,7 +19,17 @@ import {
 import { api } from "./api";
 import { Shortcut, useCommandActions, useCommandHints } from "./commands";
 import type { RunResult, ValueNode } from "./types";
-
+import { csv, cellText } from "./csv";
+const appFailureClasses = new Set([
+  "ConfigurationError",
+  "CompilerError",
+  "ExecutionError",
+  "InputLimit",
+  "TransportError",
+  "Timeout",
+  "ProcessExit",
+  "TinkerCraft\\Runtime\\BootstrapError",
+]);
 export function plain(node: ValueNode | null | undefined): any {
   if (!node) return null;
   if (node.children) {
@@ -30,6 +43,8 @@ export function plain(node: ValueNode | null | undefined): any {
   return node.type === "null" ? null : (node.value ?? node.class ?? node.type);
 }
 const preview = (node: ValueNode): string => {
+  if (node.type === "limit") return tr("Inspection limit");
+  if (node.type === "reference") return tr("Circular reference");
   if (node.children || node.type === "array" || node.type === "object")
     return `${node.class?.split("\\").pop() ?? "array"} ${node.list ? "[" : "{"}${node.count ?? node.children?.length ?? 0}${node.list ? "]" : "}"}`;
   if (node.type === "string") return JSON.stringify(node.value);
@@ -51,7 +66,6 @@ function TreeNode({
 }) {
   const [open, setOpen] = useState(depth < depthLimit);
   const hasChildren = Boolean(node.children?.length);
-  // A key on the tree resets expansion when the toolbar changes its depth.
   return (
     <div className="tree-node">
       <button
@@ -115,7 +129,7 @@ function TreeNode({
             {node.class}
           </span>
         )}
-        {node.truncated && <span className="limit-tag">parcial</span>}
+        {node.truncated && <span className="limit-tag">{tr("partial")}</span>}
       </button>
       {open &&
         node.children?.map((entry, i) => (
@@ -131,32 +145,6 @@ function TreeNode({
     </div>
   );
 }
-const cellText = (value: any) =>
-  typeof value === "object" && value !== null
-    ? JSON.stringify(value)
-    : value === null
-      ? "null"
-      : String(value);
-function csv(rows: Record<string, any>[], columns: string[]) {
-  const quote = (s: string) => `"${s.replaceAll('"', '""')}"`;
-  return (
-    "\uFEFF" +
-    [
-      columns.map(quote).join(","),
-      ...rows.map((row) =>
-        columns
-          .map((column) => {
-            let value = cellText(row[column] ?? "");
-            // Spreadsheets may evaluate formula-looking cells even inside quoted CSV.
-            if (typeof row[column] === "string" && /^[=+\-@\t\r]/.test(value))
-              value = `'${value}`;
-            return quote(value);
-          })
-          .join(","),
-      ),
-    ].join("\r\n")
-  );
-}
 function DataTable({
   node,
   notify,
@@ -169,7 +157,10 @@ function DataTable({
   const hints = useCommandHints();
   const table = useRef<HTMLTableElement>(null);
   const [search, setSearch] = useState("");
-  const [sort, setSort] = useState<{ key: string; desc: boolean } | null>(null);
+  const [sort, setSort] = useState<{
+    key: string;
+    desc: boolean;
+  } | null>(null);
   const [page, setPage] = useState(0);
   const rows = useMemo(() => {
     const data = plain(node);
@@ -214,7 +205,7 @@ function DataTable({
   const currentPage = Math.min(page, pages - 1);
   async function exportCSV() {
     try {
-      await api.Export("resultado.csv", csv(filtered, columns));
+      await api.Export(tr("result.csv"), csv(filtered, columns));
     } catch (error) {
       notify(String(error));
     }
@@ -252,8 +243,9 @@ function DataTable({
         <label className="search-box">
           <Search size={14} />
           <input
-            aria-label="Filtrar resultado"
-            placeholder="Filtrar resultado…"
+            data-output-filter
+            aria-label={tr("Filter output")}
+            placeholder={tr("Filter output…")}
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -264,7 +256,7 @@ function DataTable({
         <button
           className="icon-button"
           title={hints.title("exportCSV")}
-          aria-label="Exportar CSV"
+          aria-label={tr("Export CSV")}
           onClick={exportCSV}
         >
           <Download size={15} />
@@ -278,7 +270,10 @@ function DataTable({
               {columns.map((column) => (
                 <th key={column}>
                   <button
-                    title={hints.title("sortTable", `Ordenar por ${column}`)}
+                    title={hints.title(
+                      "sortTable",
+                      tr("Sort by {0}", [column]),
+                    )}
                     onClick={() =>
                       setSort({
                         key: column,
@@ -326,19 +321,23 @@ function DataTable({
           </tbody>
         </table>
         {filtered.length === 0 && (
-          <div className="empty-small">Nenhum resultado para esse filtro.</div>
+          <div className="empty-small">
+            {tr("No results match this filter.")}
+          </div>
         )}
       </div>
       <footer className="table-footer">
         <span>
-          {filtered.length} {filtered.length === 1 ? "registro" : "registros"}
+          {filtered.length}{" "}
+          {filtered.length === 1 ? tr("record") : tr("records")}
         </span>
         <div>
           <button
             disabled={currentPage === 0}
             onClick={() => setPage(currentPage - 1)}
           >
-            Anterior <Shortcut id="previousPage" />
+            {tr("Previous") + " "}
+            <Shortcut id="previousPage" />
           </button>
           <span>
             {currentPage + 1} / {pages}
@@ -347,14 +346,14 @@ function DataTable({
             disabled={currentPage >= pages - 1}
             onClick={() => setPage(currentPage + 1)}
           >
-            Próxima <Shortcut id="nextPage" />
+            {tr("Next") + " "}
+            <Shortcut id="nextPage" />
           </button>
         </div>
       </footer>
     </div>
   );
 }
-
 export function Output({
   result,
   running,
@@ -421,7 +420,7 @@ export function Output({
         setMode("table");
         requestAnimationFrame(() =>
           document
-            .querySelector<HTMLInputElement>('[aria-label="Filtrar resultado"]')
+            .querySelector<HTMLInputElement>("[data-output-filter]")
             ?.focus(),
         );
       },
@@ -430,13 +429,13 @@ export function Output({
     previousDump: { enabled: dumps.length > 0, run: () => changeDump(-1) },
   });
   return (
-    <section className="output-panel" aria-label="Resultado" tabIndex={-1}>
+    <section className="output-panel" aria-label={tr("Output")} tabIndex={-1}>
       <div className="output-tabs">
         <div>
           {(
             [
-              { id: "tree", title: "Inspecionar", icon: ListTree },
-              { id: "table", title: "Tabela", icon: Table2 },
+              { id: "tree", title: tr("Inspect"), icon: ListTree },
+              { id: "table", title: tr("Table"), icon: Table2 },
               { id: "json", title: "JSON", icon: Braces },
             ] as const
           ).map((item) => (
@@ -457,7 +456,7 @@ export function Output({
             <button
               className="icon-button"
               title={hints.title("expandTree")}
-              aria-label="Reabrir árvore"
+              aria-label={tr("Reopen tree")}
               onClick={() => openTree()}
             >
               <ListTree size={16} />
@@ -468,7 +467,7 @@ export function Output({
             disabled={!node}
             onClick={copy}
             title={hints.title("copyOutput")}
-            aria-label="Copiar JSON"
+            aria-label={tr("Copy JSON")}
           >
             {copied ? <Check size={16} /> : <Copy size={16} />}
           </button>
@@ -477,7 +476,7 @@ export function Output({
             disabled={!result}
             onClick={clear}
             title={hints.title("clearOutput")}
-            aria-label="Limpar resultado"
+            aria-label={tr("Clear output")}
           >
             <X size={17} />
           </button>
@@ -487,7 +486,7 @@ export function Output({
         {running && (
           <div className="running-banner">
             <span className="spinner" />
-            Executando no ambiente selecionado…
+            {tr("Running in the selected environment…")}
           </div>
         )}
         {!result && !running && (
@@ -495,7 +494,7 @@ export function Output({
             <div className="empty-symbol">
               <Terminal size={27} strokeWidth={1.3} />
             </div>
-            <p>Execute um trecho para ver o resultado.</p>
+            <p>{tr("Run a snippet to see its output.")}</p>
             <span className="shortcut-hint">
               <Shortcut id="run" />
             </span>
@@ -508,19 +507,28 @@ export function Output({
             <div>
               <AlertCircle size={16} />
               <strong>{result.error.class}</strong>
-              {result.error.line > 0 && <span>linha {result.error.line}</span>}
+              {result.error.line > 0 && (
+                <span>
+                  {tr("line") + " "}
+                  {result.error.line}
+                </span>
+              )}
             </div>
-            <p>{result.error.message}</p>
+            <p>
+              {appFailureClasses.has(result.error.class)
+                ? translateStatus(result.error.message)
+                : result.error.message}
+            </p>
             {result.error.file && (
               <small>
                 {result.error.file.includes("eval()'d code")
-                  ? "Trecho avaliado"
+                  ? tr("Evaluated snippet")
                   : result.error.file}
               </small>
             )}
             {result.error.trace && (
               <details>
-                <summary>Stack trace</summary>
+                <summary>{tr("Stack trace")}</summary>
                 <pre>{result.error.trace}</pre>
               </details>
             )}
@@ -535,7 +543,7 @@ export function Output({
                     className={dumpIndex === -1 ? "active" : ""}
                     onClick={() => setSelected(-1)}
                   >
-                    Retorno
+                    {tr("Return")}
                   </button>
                 )}
                 {dumps.map((_, i) => (
@@ -557,7 +565,7 @@ export function Output({
                       <span>
                         {dumpIndex >= 0
                           ? `DUMP ${dumpIndex + 1}`
-                          : "VALOR RETORNADO"}
+                          : tr("RETURN VALUE")}
                       </span>
                       <span>{node.class ?? node.type}</span>
                     </div>
@@ -587,7 +595,7 @@ export function Output({
           <div className="text-output">
             <div>
               <Terminal size={13} />
-              SAÍDA PADRÃO
+              {tr("STANDARD OUTPUT")}
             </div>
             <pre>{result.stdout}</pre>
           </div>
@@ -605,8 +613,9 @@ export function Output({
         ))}
         {result?.truncated && (
           <div className="warning-card">
-            A inspeção foi limitada para manter o aplicativo responsivo. O
-            resultado exibido e as exportações são parciais.
+            {tr(
+              "Inspection was limited to keep the app responsive. Displayed results and exports are partial.",
+            )}
           </div>
         )}
       </div>
@@ -615,19 +624,23 @@ export function Output({
           <>
             <span className={result.success ? "success-text" : "muted"}>
               {result.cancelled
-                ? "Cancelado"
+                ? tr("Cancelled")
                 : result.success
-                  ? "Execução concluída"
-                  : "Execução com erro"}
+                  ? tr("Execution completed")
+                  : tr("Execution failed")}
             </span>
             <span>
-              {result.durationMs.toLocaleString("pt-BR")} ms <i />
-              {(result.memoryBytes / 1048576).toFixed(1)} MB
+              {result.durationMs.toLocaleString(formatLocale())} ms <i />
+              {(result.memoryBytes / 1048576).toLocaleString(formatLocale(), {
+                minimumFractionDigits: 1,
+                maximumFractionDigits: 1,
+              })}{" "}
+              MB
             </span>
           </>
         ) : (
           <>
-            <span>Pronto quando você estiver.</span>
+            <span>{tr("Ready when you are.")}</span>
             <span>PHP / Laravel</span>
           </>
         )}

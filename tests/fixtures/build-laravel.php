@@ -1,6 +1,6 @@
 <?php
-// Build an isolated app from installed OPEN SOURCE framework dependencies only.
-// Never include the host project's autoload.php, .env, providers or application code.
+
+
 declare(strict_types=1);
 [$script, $vendor, $target] = $argv;
 $installed = json_decode(file_get_contents($vendor . '/composer/installed.json'), true, 512, JSON_THROW_ON_ERROR);

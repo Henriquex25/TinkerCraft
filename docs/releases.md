@@ -7,7 +7,7 @@ O formato inicial é **Debian `.deb`**, com entrada no menu de aplicativos, íco
 Para Pop!_OS/Ubuntu 22.04 x86-64, a variante desta máquina é `webkit40`:
 
 ```bash
-cd /media/henrique/hdd/Projects/tinkercraft
+cd tinkercraft
 sudo apt install ./build/dist/tinkercraft_0.2.0_linux_amd64_webkit40.deb
 ```
 
@@ -78,16 +78,16 @@ Sem seleção explícita, o build prefere os headers WebKit 4.1 se disponíveis,
 
 ## GitHub Releases
 
-Quando o repositório público existir:
+O repositório público é `https://github.com/Henriquex25/TinkerCraft`. O [guia do mantenedor](github-maintainer.md) explica o primeiro setup do GitHub, PRs e publicação passo a passo. Ainda não há releases publicados.
 
 1. Preencha o `.env` para builds locais e envie o código ao repositório. O `.env`, arquivos de workspace, cache, ferramentas e pacotes gerados permanecem fora do Git.
-2. Em **Actions**, execute **Build Linux release draft**, informando, por exemplo, `0.2.0`.
-3. A automação compila em Ubuntu 22.04/24.04, testa Go/TypeScript/renderização, reúne os dois `.deb`, verifica hashes e cria um **release em rascunho** com `checksums.txt` e `manifest.json`. A URL do próprio repositório é embutida automaticamente; não precisa cadastrar segredo de URL.
+2. Faça o merge das alterações e da versão em `main`, aguarde o CI de push nesse mesmo commit passar e, em **Actions**, execute **Build Linux release draft** na branch **main**, informando, por exemplo, `0.2.0`, sem `v`. `VERSION`, manifests npm e lockfiles precisam ter essa versão.
+3. A automação verifica branch, consistência da versão e CI aprovado no SHA exato, compila em Ubuntu 22.04/24.04, testa Go/TypeScript/renderização, reúne os dois `.deb`, verifica hashes e cria um **release em rascunho** com `checksums.txt` e `manifest.json`. A URL do próprio repositório é embutida automaticamente; não precisa cadastrar segredo de URL.
 4. Revise as notas e os pacotes; publique o rascunho pelo GitHub. Só releases estáveis publicados entram na consulta `releases/latest`. Rascunhos e pré-releases ficam fora desse canal.
 
-O workflow está em `.github/workflows/release.yml`; usa o token temporário do GitHub, com permissão de escrita apenas no job que cria o rascunho. Não foi executado na nuvem porque ainda não existe repositório remoto. Ele não publica automaticamente.
+O workflow está em `.github/workflows/release.yml`; usa o token temporário do GitHub, com permissão de escrita apenas no job que cria o rascunho. Ainda não foi executado na nuvem nesta revisão. O repositório público `Henriquex25/TinkerCraft` foi confirmado; faltam publicar esta revisão e validar o primeiro release. Ele não publica automaticamente.
 
-Para versões seguintes, altere `VERSION` no código e informe a mesma versão ao workflow. O agregador rejeita artefatos com versões divergentes, variantes duplicadas ou hash/tamanho incorretos. Um release sem pacote compatível ainda pode ser anunciado, mas o botão de download não é habilitado.
+Para versões seguintes, altere `VERSION`, as versões npm da raiz/frontend e seus lockfiles no código e informe a mesma versão ao workflow. O guia do mantenedor traz os comandos. Não reutilize um número já publicado para pacotes com código diferente; gere uma versão superior. O agregador rejeita artefatos com versões divergentes, variantes duplicadas ou hash/tamanho incorretos. Um release sem pacote compatível ainda pode ser anunciado, mas o botão de download não é habilitado.
 
 O backend também aceita um manifesto HTTPS no formato gerado, caso a hospedagem mude no futuro. O caminho padrão desta implementação é GitHub Releases público, usando o digest SHA-256 da API ou o arquivo `checksums.txt` do release.
 

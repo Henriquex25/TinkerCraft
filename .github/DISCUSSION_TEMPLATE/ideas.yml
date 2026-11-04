@@ -1,0 +1,15 @@
+title: ""
+body:
+  - type: textarea
+    id: workflow
+    attributes:
+      label: What workflow could improve?
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Your idea
+      description: Explain the outcome and alternatives; implementation details are optional.
+    validations:
+      required: true

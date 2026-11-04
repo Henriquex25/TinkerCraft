@@ -10,8 +10,6 @@ import (
 	"strings"
 )
 
-// Phpactor can locate PSR classes immediately without executing Composer PHP
-// files from another machine. It receives only maps generated from JSON here.
 func prepareAnalysisAutoload(root, home string) error {
 	type autoload struct {
 		PSR4 map[string]json.RawMessage `json:"psr-4"`

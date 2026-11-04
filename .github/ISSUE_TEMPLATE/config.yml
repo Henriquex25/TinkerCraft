@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Help and questions
+    url: https://github.com/Henriquex25/TinkerCraft/discussions/categories/help-and-questions
+    about: Ask how to use TinkerCraft or troubleshoot a setup.
+  - name: Ideas and feedback
+    url: https://github.com/Henriquex25/TinkerCraft/discussions/categories/ideas
+    about: Discuss ideas before turning them into a specific feature request.
+  - name: Security reporting
+    url: https://github.com/Henriquex25/TinkerCraft/blob/main/SECURITY.md
+    about: Read the private reporting instructions. Do not disclose vulnerabilities in public issues.

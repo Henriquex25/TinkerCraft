@@ -1,0 +1,21 @@
+title: ""
+body:
+  - type: markdown
+    attributes:
+      value: Share only disposable code and redacted diagnostics. Never post SSH keys, credentials, private sources, or real query results.
+  - type: textarea
+    id: question
+    attributes:
+      label: What are you trying to do?
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: TinkerCraft version, Linux distribution, PHP / Laravel, and connection type
+  - type: textarea
+    id: attempted
+    attributes:
+      label: What have you tried?
+      description: Include redacted errors if relevant.

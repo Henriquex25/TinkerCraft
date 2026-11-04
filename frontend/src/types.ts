@@ -19,6 +19,7 @@ export interface Profile {
   timeout: number;
 }
 export interface Settings {
+  language?: "en" | "pt-BR";
   updateSource?: string;
   checkUpdatesOnStartup?: boolean;
   shortcuts?: Record<string, string>;
@@ -53,7 +54,10 @@ export interface ValueNode {
   type: string;
   class?: string;
   value?: unknown;
-  children?: { key: string; value: ValueNode }[];
+  children?: {
+    key: string;
+    value: ValueNode;
+  }[];
   count?: number;
   list?: boolean;
   truncated?: boolean;
@@ -138,6 +142,7 @@ export interface API {
   OpenUpdateInstaller(): Promise<void>;
   OpenUpdateRelease(): Promise<void>;
   EnableCloseGuard(): Promise<void>;
+  DisableCloseGuard(): Promise<void>;
   ConfirmClose(): Promise<void>;
   CancelClose(): Promise<void>;
   Bootstrap(): Promise<State>;
@@ -181,11 +186,14 @@ export interface API {
 }
 declare global {
   interface Window {
-    go?: { main: { App: API } };
+    go?: {
+      main: {
+        App: API;
+      };
+    };
     runtime?: {
       EventsOn(name: string, callback: (data: any) => void): () => void;
     };
-    require?: any;
     MonacoEnvironment?: {
       getWorkerUrl?: (module: string, label: string) => string;
       getWorker?: (module: string, label: string) => Worker;

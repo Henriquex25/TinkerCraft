@@ -47,8 +47,6 @@ func TestBasicIndexUnderstandsProjectClasses(t *testing.T) {
 	}
 }
 
-// A protocol fixture tests framing, server requests, diagnostics and UTF-16 offsets
-// without making claims about the availability of a real Phpactor installation.
 const fakeServer = `<?php
 function send($value) { $json = json_encode($value); fwrite(STDOUT, 'Content-Length: '.strlen($json)."\r\n\r\n".$json); fflush(STDOUT); }
 $configured=false;

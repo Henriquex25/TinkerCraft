@@ -1,3 +1,4 @@
+import { t as tr } from "./i18n";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
 import {
@@ -8,10 +9,17 @@ import {
   type Bindings,
   type CommandScope,
 } from "./shortcuts";
-
-type Action = (() => unknown) | { run: () => unknown; enabled: boolean };
+type Action =
+  | (() => unknown)
+  | {
+      run: () => unknown;
+      enabled: boolean;
+    };
 type Actions = Record<string, Action>;
-type Registration = { ids: string[]; get: (id: string) => Action | undefined };
+type Registration = {
+  ids: string[];
+  get: (id: string) => Action | undefined;
+};
 const noop = () => {};
 const Context = createContext({
   bindings: {} as Bindings,
@@ -163,7 +171,7 @@ export function CommandProvider({ children }: { children: React.ReactNode }) {
             className="command-palette"
             role="dialog"
             aria-modal="true"
-            aria-label="Paleta de comandos"
+            aria-label={tr("Command palette")}
             onKeyDown={(e) => {
               e.stopPropagation();
               if (e.key === "Escape") {
@@ -192,8 +200,8 @@ export function CommandProvider({ children }: { children: React.ReactNode }) {
               <Search size={18} />
               <input
                 ref={input}
-                placeholder="Digite uma ação…"
-                aria-label="Buscar comando"
+                placeholder={tr("Type an action…")}
+                aria-label={tr("Search commands")}
                 role="combobox"
                 aria-expanded="true"
                 aria-controls="command-options"
@@ -207,7 +215,7 @@ export function CommandProvider({ children }: { children: React.ReactNode }) {
                 }}
               />
               <button
-                title="Fechar paleta (Esc)"
+                title={tr("Close palette (Esc)")}
                 onClick={() => closePalette()}
               >
                 <X size={18} />
@@ -236,11 +244,11 @@ export function CommandProvider({ children }: { children: React.ReactNode }) {
               ))}
               {!options.length && (
                 <p className="empty-small">
-                  Nenhuma ação disponível para essa busca.
+                  {tr("No actions match your search.")}
                 </p>
               )}
             </div>
-            <footer>↑ ↓ selecionar · Enter executar · Esc fechar</footer>
+            <footer>{tr("↑ ↓ select · Enter run · Esc close")}</footer>
           </section>
         </div>
       )}

@@ -1,0 +1,65 @@
+name: Bug report
+description: Report a reproducible problem in TinkerCraft.
+labels: [bug, "status: needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please use disposable examples. Remove credentials, server addresses, private code, and query results from logs and screenshots.
+        Security vulnerabilities belong in the private reporting flow described in SECURITY.md.
+  - type: input
+    id: version
+    attributes:
+      label: TinkerCraft version
+      placeholder: "0.2.0, or the commit when building from source"
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Operating system and PHP version
+      placeholder: Ubuntu 22.04, x86-64, PHP 8.4
+    validations:
+      required: true
+  - type: dropdown
+    id: execution
+    attributes:
+      label: Execution environment
+      options:
+        - Local PHP
+        - Local Docker
+        - SSH
+        - SSH + Docker
+        - Not related to execution
+    validations:
+      required: true
+  - type: input
+    id: framework
+    attributes:
+      label: Framework and bootstrap
+      placeholder: Laravel 12, Composer, plain PHP, or custom bootstrap
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Include a small snippet or disposable project when useful.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include redacted error messages or screenshots if available.
+    validations:
+      required: true
+  - type: textarea
+    id: completion
+    attributes:
+      label: Completion diagnostics, if relevant
+      description: Engine, cache status, and redacted messages from Completion diagnostics.

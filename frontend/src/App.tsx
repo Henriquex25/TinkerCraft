@@ -1,3 +1,11 @@
+import { translateStatus } from "./i18n";
+import { t as tr } from "./i18n";
+import {
+  setUILanguage,
+  uiLanguage,
+  normalizeLanguage,
+  formatLocale,
+} from "./i18n";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ArrowDownToLine,
@@ -57,13 +65,11 @@ import type {
   State,
   Tab,
 } from "./types";
-
 const blankCode = "";
 const timeAgo = (iso: string) => {
   const date = new Date(iso);
-  return `${date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })} · ${date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`;
+  return `${date.toLocaleDateString(formatLocale(), { day: "2-digit", month: "2-digit" })} · ${date.toLocaleTimeString(formatLocale(), { hour: "2-digit", minute: "2-digit" })}`;
 };
-
 export default function App() {
   const [state, setState] = useState<State>();
   const [fatal, setFatal] = useState("");
@@ -112,11 +118,17 @@ export default function App() {
     clearTimeout(toastTimer.current);
     toastTimer.current = setTimeout(() => setToast(""), 6000);
   }, []);
-
   useEffect(() => {
     api
       .Bootstrap()
       .then((data) => {
+        const language = normalizeLanguage(data.settings.language);
+        const reload = language !== uiLanguage();
+        setUILanguage(language);
+        if (reload) {
+          window.location.reload();
+          return;
+        }
         setState({
           ...data,
           tabs: data.tabs.map((t) => ({ ...t, code: snippetBody(t.code) })),
@@ -204,10 +216,12 @@ export default function App() {
         if (revision === saveRevision.current) setSaved(true);
         if (showNotice)
           notify(
-            "Abas salvas neste dispositivo. Elas serão restauradas ao reabrir o aplicativo.",
+            tr(
+              "Tabs saved on this device. They will be restored when you reopen the app.",
+            ),
           );
       } catch (error) {
-        notify(`Não foi possível salvar: ${errorText(error)}`);
+        notify(tr("Could not save: {0}", [errorText(error)]));
         throw error;
       }
     },
@@ -256,7 +270,6 @@ export default function App() {
     return () =>
       window.removeEventListener("tinkercraft:language-error", listener);
   }, []);
-
   const startLanguage = useCallback(async (refresh = false) => {
     const current = stateRef.current;
     const target = current?.tabs.find((t) => t.id === current.activeTab);
@@ -267,7 +280,7 @@ export default function App() {
         ...values,
         [target.id]: {
           mode: "none",
-          message: "Selecione uma conexão",
+          message: tr("Select a connection"),
           root: "",
           files: 0,
         },
@@ -279,7 +292,7 @@ export default function App() {
       ...values,
       [target.id]: {
         mode: "loading",
-        message: "Preparando autocomplete…",
+        message: tr("Preparing completion…"),
         root: "",
         files: 0,
       },
@@ -330,7 +343,6 @@ export default function App() {
     );
     return () => clearTimeout(timer);
   }, [tab?.id, tab?.code]);
-
   function updateTab(id: string, changes: Partial<Tab>) {
     setState(
       (previous) =>
@@ -373,16 +385,15 @@ export default function App() {
     }
   }
   runRef.current = run;
-
   function createTab(
     code = blankCode,
-    name = "Sem título",
+    name = tr("Untitled"),
     profileId?: string,
   ) {
     const current = stateRef.current;
     if (!current) return;
     if (current.tabs.length >= 20) {
-      notify("Limite de 20 abas. Feche uma aba para continuar.");
+      notify(tr("You can open up to 20 tabs. Close a tab to continue."));
       return;
     }
     const next: Tab = {
@@ -403,7 +414,7 @@ export default function App() {
   }
   function closeTab(id: string) {
     if (running[id]) {
-      notify("Cancele a execução antes de fechar esta aba.");
+      notify(tr("Cancel execution before closing this tab."));
       return;
     }
     const current = stateRef.current;
@@ -412,7 +423,7 @@ export default function App() {
     if (!tabs.length)
       tabs.push({
         id: uid(),
-        name: "Sem título",
+        name: tr("Untitled"),
         code: blankCode,
         profileId: tab?.profileId ?? "",
       });
@@ -443,7 +454,7 @@ export default function App() {
           ),
         },
     );
-    notify("Conexão salva.");
+    notify(tr("Connection saved."));
   }
   function deletedProfile(id: string) {
     setState(
@@ -457,7 +468,16 @@ export default function App() {
         },
     );
   }
-  function savedSettings(settings: Settings) {
+  async function savedSettings(settings: Settings) {
+    const language = normalizeLanguage(settings.language);
+    if (language !== uiLanguage()) {
+      await settleEditorInput();
+      await saveWorkspace();
+      if (window.go) await api.DisableCloseGuard();
+      setUILanguage(language);
+      window.location.reload();
+      return;
+    }
     setState((current) => current && { ...current, settings });
     api
       .Health()
@@ -487,13 +507,12 @@ export default function App() {
   function restore(item: History) {
     createTab(
       item.code,
-      "Do histórico",
+      tr("From history"),
       state?.profiles.some((p) => p.id === item.profileId)
         ? item.profileId
         : "",
     );
   }
-
   function renameTab(id = tab?.id) {
     const target = stateRef.current?.tabs.find((t) => t.id === id);
     if (!target) return;
@@ -503,7 +522,7 @@ export default function App() {
   }
   function finishRename(commit = true) {
     if (commit && renaming)
-      updateTab(renaming, { name: renameDraft.trim() || "Sem título" });
+      updateTab(renaming, { name: renameDraft.trim() || tr("Untitled") });
     setRenaming("");
     const generation = ++renameGeneration.current;
     requestAnimationFrame(() => {
@@ -535,7 +554,7 @@ export default function App() {
     if (!current) return;
     try {
       if (await api.SaveSnippet(current.name, current.code))
-        notify("Trecho salvo em arquivo PHP.");
+        notify(tr("Snippet saved as a PHP file."));
     } catch (error) {
       notify(errorText(error));
     }
@@ -576,12 +595,13 @@ export default function App() {
       editorAction("editor.action.triggerSuggest");
       const status = tab && language[tab.id];
       if (status?.mode === "error" || status?.mode === "loading")
-        notify(status.message);
+        notify(translateStatus(status.message));
     },
     refreshLanguage: () => startLanguage(true),
     languageDetails: () => setLanguageDetails(true),
     tabFocus: () => editorAction("editor.action.toggleTabFocusMode"),
     focusEditor: () => editorAction("focus"),
+    findEditor: () => editorAction("actions.find"),
     focusOutput,
     widenEditor: () => setSplit((value) => Math.min(70, value + 5)),
     narrowEditor: () => setSplit((value) => Math.max(32, value - 5)),
@@ -593,25 +613,24 @@ export default function App() {
       setSidebar("history");
       requestAnimationFrame(() =>
         document
-          .querySelector<HTMLInputElement>('[aria-label="Filtrar histórico"]')
+          .querySelector<HTMLInputElement>("[data-history-filter]")
           ?.focus(),
       );
     },
   });
-
   if (!state || !tab)
     return (
       <div className="boot-screen">
         <BrandIcon />
         {fatal ? (
           <>
-            <h1>Não foi possível abrir o workspace.</h1>
+            <h1>{tr("Could not open the workspace.")}</h1>
             <p>{fatal}</p>
           </>
         ) : (
           <>
             <span className="spinner" />
-            <p>Preparando seu espaço…</p>
+            <p>{tr("Preparing your workspace…")}</p>
           </>
         )}
       </div>
@@ -620,12 +639,12 @@ export default function App() {
   const isRunning = Boolean(running[tab.id]);
   return (
     <div className="app-shell">
-      <nav className="activity-bar" aria-label="Navegação">
+      <nav className="activity-bar" aria-label={tr("Navigation")}>
         <BrandIcon title="TinkerCraft" />
         <div className="activity-main">
           <button
             title={hints.title("connections")}
-            aria-label="Projetos e conexões"
+            aria-label={tr("Projects and connections")}
             className={sidebar === "projects" ? "active" : ""}
             onClick={() =>
               setSidebar(sidebar === "projects" ? null : "projects")
@@ -635,7 +654,7 @@ export default function App() {
           </button>
           <button
             title={hints.title("history")}
-            aria-label="Histórico"
+            aria-label={tr("History")}
             className={sidebar === "history" ? "active" : ""}
             onClick={() => setSidebar(sidebar === "history" ? null : "history")}
           >
@@ -643,7 +662,7 @@ export default function App() {
           </button>
           <button
             title={hints.title("openPHP")}
-            aria-label="Abrir trecho PHP"
+            aria-label={tr("Open PHP snippet")}
             onClick={openSnippet}
           >
             <FolderOpen size={21} />
@@ -652,14 +671,14 @@ export default function App() {
         <div className="activity-bottom">
           <button
             title={hints.title("preferences")}
-            aria-label="Preferências"
+            aria-label={tr("Preferences")}
             onClick={() => preferences()}
           >
             <Settings2 size={20} />
           </button>
           <button
             title={hints.title("commands")}
-            aria-label="Paleta de comandos"
+            aria-label={tr("Command palette")}
             onClick={commandSystem.openPalette}
           >
             <Command size={20} />
@@ -677,14 +696,14 @@ export default function App() {
           </div>
           <div className="sidebar-section-title">
             <span>
-              {sidebar === "projects" ? "SEU WORKSPACE" : "HISTÓRICO"}
+              {sidebar === "projects" ? tr("YOUR WORKSPACE") : tr("HISTORY")}
             </span>
             <button
               className="icon-button"
               title={
                 sidebar === "projects"
                   ? hints.title("newConnection")
-                  : hints.title("history", "Fechar histórico")
+                  : hints.title("history", tr("Close history"))
               }
               onClick={() =>
                 sidebar === "projects"
@@ -714,7 +733,7 @@ export default function App() {
                         <strong>{p.name}</strong>
                         <small>
                           {p.mode === "local"
-                            ? "Projeto local"
+                            ? tr("Local project")
                             : modeLabel(p.mode)}
                         </small>
                       </span>
@@ -724,7 +743,7 @@ export default function App() {
                     </button>
                     <button
                       className="project-edit icon-button"
-                      title={`Editar ${p.name}`}
+                      title={tr("Edit {0}", [p.name])}
                       onClick={() => setProfileModal(p)}
                     >
                       <Settings2 size={13} />
@@ -738,11 +757,12 @@ export default function App() {
                 onClick={() => setProfileModal("new")}
               >
                 <Plus size={14} />
-                Adicionar conexão <Shortcut id="newConnection" />
+                {tr("Add connection") + " "}
+                <Shortcut id="newConnection" />
               </button>
               <div className="sidebar-divider" />
               <div className="sidebar-section-title">
-                <span>ABAS ABERTAS</span>
+                <span>{tr("OPEN TABS")}</span>
                 <span>{state.tabs.length.toString().padStart(2, "0")}</span>
               </div>
               <div className="sidebar-tabs">
@@ -766,8 +786,9 @@ export default function App() {
               <label className="search-box history-search">
                 <Search size={14} />
                 <input
-                  aria-label="Filtrar histórico"
-                  placeholder="Buscar no histórico…"
+                  data-history-filter
+                  aria-label={tr("Filter history")}
+                  placeholder={tr("Search history…")}
                   value={historyFilter}
                   onChange={(e) => setHistoryFilter(e.target.value)}
                 />
@@ -803,7 +824,7 @@ export default function App() {
                   ))}
                 {state.history.length === 0 && (
                   <div className="empty-small">
-                    Suas execuções aparecerão aqui.
+                    {tr("Your executions will appear here.")}
                   </div>
                 )}
               </div>
@@ -822,14 +843,16 @@ export default function App() {
                       .catch((e) => notify(errorText(e)))
                   }
                 >
-                  Limpar histórico <Shortcut id="clearHistory" />
+                  {tr("Clear history") + " "}
+                  <Shortcut id="clearHistory" />
                 </button>
               )}
             </>
           )}
           <div className="sidebar-footer">
             <span className="small-status-dot" />
-            Seu laboratório pessoal<span>v{buildInfo?.version ?? "…"}</span>
+            {tr("Your personal playground")}
+            <span>v{buildInfo?.version ?? "…"}</span>
           </div>
         </aside>
       )}
@@ -839,13 +862,13 @@ export default function App() {
             <ModeIcon mode={profile?.mode ?? "local"} size={18} />
             <select
               className="connection-select"
-              aria-label="Ambiente de execução"
+              aria-label={tr("Execution environment")}
               title={`${hints.title("selectConnection")} — ${profile?.projectPath ?? ""}`}
               value={tab.profileId}
               onChange={(e) => selectProfile(e.target.value)}
             >
               <option value="" disabled>
-                Selecionar conexão
+                {tr("Select connection")}
               </option>
               {state.profiles.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -864,7 +887,7 @@ export default function App() {
             <button
               className="icon-button"
               title={hints.title("editConnection")}
-              aria-label="Configurar conexão"
+              aria-label={tr("Configure connection")}
               onClick={() => setProfileModal(profile ?? "new")}
             >
               <Settings2 size={18} />
@@ -872,7 +895,7 @@ export default function App() {
             <button
               className="icon-button"
               title={hints.title("newConnection")}
-              aria-label="Nova conexão"
+              aria-label={tr("New connection")}
               onClick={() => setProfileModal("new")}
             >
               <Plus size={18} />
@@ -888,7 +911,7 @@ export default function App() {
             ) : (
               <Play size={14} fill="currentColor" />
             )}
-            <span>{isRunning ? "Cancelar" : "Executar"}</span>
+            <span>{isRunning ? tr("Cancel") : tr("Run")}</span>
             <Shortcut id="run" />
           </button>
         </header>
@@ -904,7 +927,7 @@ export default function App() {
                     <span className="php-file-icon">php</span>
                     <input
                       autoFocus
-                      aria-label="Nome da aba"
+                      aria-label={tr("Tab name")}
                       maxLength={100}
                       value={renameDraft}
                       onFocus={(e) => e.target.select()}
@@ -929,7 +952,7 @@ export default function App() {
                     className="tab-select"
                     onClick={() => setState({ ...state, activeTab: t.id })}
                     onDoubleClick={() => renameTab(t.id)}
-                    title={hints.title("renameTab", `Renomear ${t.name}`)}
+                    title={hints.title("renameTab", tr("Rename {0}", [t.name]))}
                   >
                     <span className="php-file-icon">php</span>
                     <span>{t.name}</span>
@@ -940,8 +963,8 @@ export default function App() {
                 )}
                 <button
                   className="tab-close"
-                  title={hints.title("closeTab", `Fechar ${t.name}`)}
-                  aria-label={`Fechar ${t.name}`}
+                  title={hints.title("closeTab", tr("Close {0}", [t.name]))}
+                  aria-label={tr("Close {0}", [t.name])}
                   onClick={() => closeTab(t.id)}
                 >
                   <X size={12} />
@@ -952,7 +975,7 @@ export default function App() {
           <button
             className="new-tab icon-button"
             title={hints.title("newTab")}
-            aria-label="Nova aba"
+            aria-label={tr("New tab")}
             onClick={() => createTab()}
           >
             <Plus size={16} />
@@ -961,7 +984,7 @@ export default function App() {
           <button
             className="icon-button"
             title={hints.title("renameTab")}
-            aria-label="Renomear aba"
+            aria-label={tr("Rename tab")}
             onClick={() => renameTab()}
           >
             <Pencil size={14} />
@@ -970,18 +993,20 @@ export default function App() {
             className="autosave-status"
             title={
               saved
-                ? "Abas salvas neste dispositivo; serão restauradas ao reabrir"
-                : "Salvando alterações"
+                ? tr(
+                    "Tabs are saved on this device and restored when you reopen the app",
+                  )
+                : tr("Saving changes")
             }
             role="status"
-            aria-label={saved ? "Abas salvas" : "Salvando abas"}
+            aria-label={saved ? tr("Tabs saved") : tr("Saving tabs")}
           >
             {saved ? <Check size={14} /> : <span className="unsaved-dot" />}
           </span>
           <button
             className="icon-button"
             title={hints.title("exportPHP")}
-            aria-label="Salvar trecho como arquivo PHP"
+            aria-label={tr("Save snippet as PHP file")}
             onClick={exportPHP}
           >
             <ArrowDownToLine size={15} />
@@ -1002,7 +1027,7 @@ export default function App() {
           <div
             className="splitter"
             role="separator"
-            aria-label="Redimensionar editor e resultado"
+            aria-label={tr("Resize editor and output")}
             aria-orientation="vertical"
             onPointerDown={resize}
             tabIndex={0}
@@ -1039,17 +1064,18 @@ export default function App() {
           <div>
             <span className="status-connection">
               <ModeIcon mode={profile?.mode ?? "local"} size={12} />
-              {profile?.ssh.host || profile?.container || "Sua máquina"}
+              {profile?.ssh.host || profile?.container || tr("Your machine")}
             </span>
             {updateInfo?.available && (
               <button
                 className="update-badge"
-                aria-label="Atualização disponível"
+                aria-label={tr("Update available")}
                 onClick={() => setUpdatesOpen(true)}
                 title={hints.title("checkUpdates")}
               >
                 <ArrowUpCircle size={13} />
-                Atualização {updateInfo.latestVersion}
+                {tr("Update") + " "}
+                {updateInfo.latestVersion}
               </button>
             )}
             <span className="status-divider" />
@@ -1065,10 +1091,10 @@ export default function App() {
               className={`language-status ${status?.warning ? "warning" : ""} ${status?.mode === "basic" ? "basic" : status?.mode === "error" ? "error" : ""}`}
               aria-label={
                 status?.mode === "phpactor"
-                  ? "Autocomplete pronto"
-                  : (status?.message ?? "Preparando autocomplete")
+                  ? tr("Completion ready")
+                  : translateStatus(status?.message ?? "Preparing completion")
               }
-              title={`${hints.title("languageDetails")} — ${status?.warning || status?.message || "Preparando autocomplete"}`}
+              title={`${hints.title("languageDetails")} — ${translateStatus(status?.warning || status?.message || "Preparing completion")}`}
               onClick={() => setLanguageDetails(true)}
             >
               {status?.mode === "loading" ? (
@@ -1077,21 +1103,21 @@ export default function App() {
                 <span className="small-status-dot" />
               )}
               {status?.warning
-                ? "Autocomplete com aviso"
+                ? tr("Completion warning")
                 : status?.mode === "phpactor"
-                  ? "Autocomplete"
+                  ? tr("Completion")
                   : status?.mode === "basic"
-                    ? "Autocomplete básico"
+                    ? tr("Basic completion")
                     : status?.mode === "error"
-                      ? "Verificar autocomplete"
+                      ? tr("Check completion")
                       : status?.mode === "none"
-                        ? "Autocomplete desativado"
-                        : "Preparando autocomplete"}
+                        ? tr("Completion disabled")
+                        : tr("Preparing completion")}
             </button>
             <button
               className="status-refresh"
               title={hints.title("refreshLanguage")}
-              aria-label="Atualizar autocomplete"
+              aria-label={tr("Refresh completion")}
               onClick={() => startLanguage(true)}
             >
               <RefreshCw size={11} />
@@ -1134,45 +1160,51 @@ export default function App() {
       )}
       {languageDetails && (
         <Modal
-          title="Autocomplete"
-          eyebrow="DIAGNÓSTICO"
+          title={tr("Completion")}
+          eyebrow={tr("DIAGNOSTICS")}
           close={() => setLanguageDetails(false)}
           scope="language"
           className="language-modal"
         >
           <div className="language-details">
-            <p>{status?.message || "Aguardando preparação do editor."}</p>
+            <p>
+              {translateStatus(
+                status?.message || "Waiting for the editor to initialize.",
+              )}
+            </p>
             {status?.warning && (
               <div className="form-error">
                 <AlertCircle size={17} />
-                {status.warning}
+                {translateStatus(status.warning)}
               </div>
             )}
             <dl>
-              <dt>Servidor</dt>
+              <dt>{tr("Server")}</dt>
               <dd>
                 {status?.mode === "phpactor"
                   ? "Phpactor"
                   : status?.mode === "basic"
-                    ? "Indexador básico"
-                    : status?.mode || "Aguardando"}
+                    ? tr("Basic indexer")
+                    : status?.mode || tr("Waiting")}
               </dd>
-              <dt>Origem dos tipos</dt>
+              <dt>{tr("Type sources")}</dt>
               <dd>
                 {(
                   {
-                    cache: "Cache do projeto remoto",
-                    mount: "Montagem local do Docker",
-                    local: "Projeto local",
-                    fallback: "Tipos PHP, sem fontes do projeto",
+                    cache: tr("Remote project cache"),
+                    mount: tr("Local Docker mount"),
+                    local: tr("Local project"),
+                    fallback: tr("PHP types without project sources"),
                   } as Record<string, string>
-                )[status?.source || ""] || "Ainda não disponível"}
+                )[status?.source || ""] || tr("Not available yet")}
               </dd>
             </dl>
             <p>
-              Use <Shortcut id="complete" /> para abrir as sugestões. A primeira
-              indexação de um projeto grande pode levar algum tempo. Métodos
-              mágicos do Laravel podem precisar de arquivos IDE Helper.
+              Use <Shortcut id="complete" />{" "}
+              {" " +
+                tr(
+                  "to open suggestions. Initial indexing of a large project may take some time. Laravel magic methods may need IDE Helper files.",
+                )}
             </p>
             <div className="dialog-actions">
               <button
@@ -1182,7 +1214,8 @@ export default function App() {
                   preferences();
                 }}
               >
-                Preferências <Shortcut id="preferences" />
+                {tr("Preferences") + " "}
+                <Shortcut id="preferences" />
               </button>
               <button
                 className="primary-button"
@@ -1191,7 +1224,8 @@ export default function App() {
                   startLanguage(true);
                 }}
               >
-                Atualizar autocomplete <Shortcut id="refreshLanguage" />
+                {tr("Refresh completion") + " "}
+                <Shortcut id="refreshLanguage" />
               </button>
             </div>
           </div>
@@ -1200,8 +1234,11 @@ export default function App() {
       {toast && (
         <div className="toast" role="status">
           <Terminal size={15} />
-          <span>{toast}</span>
-          <button onClick={() => setToast("")} title="Fechar aviso">
+          <span>{tr(toast)}</span>
+          <button
+            onClick={() => setToast("")}
+            title={tr("Dismiss notification")}
+          >
             <X size={14} />
           </button>
         </div>

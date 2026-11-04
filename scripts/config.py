@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read this repository's build configuration as data, never as shell code."""
+
 import os
 from pathlib import Path
 import re

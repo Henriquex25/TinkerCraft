@@ -1,45 +1,42 @@
-# Dependências de terceiros
+# Third-party notices
 
-O código próprio do TinkerCraft é MIT. Cada dependência mantém sua licença original.
+TinkerCraft's own code is distributed under the MIT license. Dependencies retain their original licenses and copyright notices.
 
-## Monaco Editor
+## Editor and frontend
 
-- Projeto: <https://github.com/microsoft/monaco-editor>
-- Licença principal: MIT, Microsoft Corporation.
-- Bundle preservado em `frontend/public/vendor/monaco/vs`, sem alteração do código do editor.
-- Origem local do artefato: distribuição aberta de Monaco em `mongodb.mongodb-vscode` 1.16.0, diretório `dist/monaco-editor/vs`. O manifesto dessa extensão declara `monaco-editor: ^0.55.1`; a versão exata do bundle não foi deduzida do intervalo. Identidade dos arquivos registrada em `docs/vendor-sha256.txt`.
-- Só o diretório de distribuição do Monaco foi usado. Código funcional, assets e implementação da extensão MongoDB não foram copiados.
-- O worker `vs/assets/editor.worker-Be8ye1pW.js` também é copiado, sem alterações, em `frontend/src/vendor/editor-worker.js`, para importação como texto no build do TinkerCraft.
-- MIT em `frontend/public/vendor/monaco/LICENSE.txt`; comentários/arquivos `*.LICENSE.txt` preservados no bundle.
-- O bundle inclui DOMPurify 3.2.7 (Cure53 e colaboradores), sob Apache-2.0 ou MPL-2.0; os avisos originais estão em `vs/editor.api-CalNCsUg.js.LICENSE.txt`. Cópia de Apache-2.0 em `frontend/public/vendor/monaco/Apache-2.0.txt`, também aplicável aos componentes TypeScript ali distribuídos.
-- Outras gramáticas e avisos de licença permanecem nos arquivos distribuídos, incluindo os arquivos Swift/NLS.
-- Notices upstream: <https://github.com/microsoft/monaco-editor/blob/main/ThirdPartyNotices.txt>.
+| Component | Version | License | Upstream |
+| --- | --- | --- | --- |
+| Monaco Editor | 0.57.0 | MIT; bundled notices also apply | https://github.com/microsoft/monaco-editor |
+| DOMPurify | 3.4.17 | Apache-2.0 or MPL-2.0 | https://github.com/cure53/DOMPurify |
+| React / React DOM | 19.2.8 | MIT | https://github.com/facebook/react |
+| Lucide React | 1.42.0 | ISC and original icon notices | https://github.com/lucide-icons/lucide |
+| Vite | 7.3.7 | MIT; build tooling | https://github.com/vitejs/vite |
+| TypeScript | 5.9.3 | Apache-2.0; build tooling | https://github.com/microsoft/TypeScript |
+| Playwright Core | 1.58.2 | Apache-2.0; tests only | https://github.com/microsoft/playwright |
+| Prettier | 3.9.10 | MIT; formatting only | https://github.com/prettier/prettier |
 
-## nikic/php-parser
+Monaco now comes from the official npm package, with its identity and dependencies pinned by `frontend/package-lock.json`. Earlier development used an open Monaco bundle from another editor distribution; that bundle is no longer shipped. The editor's ESM API and selected contributions are bundled locally. No editor scripts or workers are fetched from a CDN at runtime.
 
-- Projeto: <https://github.com/nikic/PHP-Parser>
-- Licença BSD-3-Clause, Nikita Popov.
-- Código preservado em `runtime/vendor/php-parser`.
-- Origem: pacote Composer já disponível em cache; árvore `nikic-PHP-Parser-044a6a3`. O nome da árvore identifica o commit abreviado; não foi assumida uma versão a partir dele.
-- Licença original completa: `runtime/vendor/php-parser/LICENSE`.
+Monaco 0.57.0 also contains an inlined DOMPurify copy. The Vite resolver deliberately replaces that module with the pinned, patched DOMPurify package, and a build assertion rejects accidental use of the inlined copy. Both DOMPurify license alternatives and Monaco's complete third-party notices are included in the Debian package. Do not remove these notices when redistributing builds.
 
-## Bibliotecas gerenciadas pelos manifestos
+The Brazilian Portuguese editor messages are derived from Microsoft's MIT-licensed VS Code and vscode-loc sources at the commits recorded in `frontend/src/locales/monaco-sources.json`. The complete Microsoft license is in `docs/licenses/vscode-loc-LICENSE.txt` and is included in Debian packages. Fourteen reviewed overrides supplement the upstream translation. See `docs/translations.md` for reproduction instructions.
 
-| Componente | Projeto | Licença |
-| --- | --- | --- |
-| Wails 2.15.0 | <https://github.com/wailsapp/wails> | MIT |
-| React e React DOM 19.2.8 | <https://github.com/facebook/react> | MIT |
-| Lucide React 1.42.0 | <https://github.com/lucide-icons/lucide> | ISC; licenças dos ícones preservadas no pacote |
-| Vite 7.3.6 | <https://github.com/vitejs/vite> | MIT |
-| TypeScript 5.9.3 | <https://github.com/microsoft/TypeScript> | Apache-2.0 |
-| Playwright Core 1.58.2, somente testes | <https://github.com/microsoft/playwright> | Apache-2.0 |
+## Backend
 
-Versões transitivas estão em `go.mod`, `go.sum`, `frontend/package-lock.json` e `package-lock.json`. Pacotes do frontend foram copiados de instalações locais abertas disponíveis, preservando seu conteúdo, para permitir a compilação sem rede. A instalação reproduzível é feita com `npm ci` usando os lockfiles.
+Wails 2.15.0 is distributed under MIT: https://github.com/wailsapp/wails. Go module versions and checksums are recorded in `go.mod` and `go.sum`. The Debian packager includes available original license/notice files from the Go module dependencies and production npm dependencies in `/usr/share/doc/tinkercraft/licenses`.
+
+## PHP-Parser
+
+`runtime/vendor/php-parser` contains unmodified source from https://github.com/nikic/PHP-Parser under BSD-3-Clause, copyright Nikita Popov. The initial source tree was identified as `nikic-PHP-Parser-044a6a3`; no release version was inferred from that abbreviated commit. Its complete license is preserved in `runtime/vendor/php-parser/LICENSE`, and file identities are recorded in `docs/vendor-sha256.txt`.
 
 ## Phpactor
 
-<https://github.com/phpactor/phpactor>, MIT. O script de instalação baixa o release oficial 2026.10.07.0. O PHAR em `.tools/phpactor.phar` é ignorado pelo Git e não está incorporado ao binário Go. O pacote `.deb` padrão distribui uma cópia adjacente ao executável, em `/usr/lib/tinkercraft/phpactor.phar`, com sua licença e SHA-256 em `/usr/share/doc/tinkercraft`. O PHAR preserva as dependências e os avisos upstream. No checkout, a instalação é separada; `--without-phpactor` permite omiti-lo do pacote. Nenhum código de um servidor proprietário foi usado como substituto.
+https://github.com/phpactor/phpactor, MIT. The installer downloads release **2026.10.07.0** and checks its pinned SHA-256 before executing it. The PHAR preserves its bundled dependencies and upstream notices. It is ignored by Git and is not part of the Go executable. Standard Debian packages place it beside the executable in `/usr/lib/tinkercraft/phpactor.phar`, with the root license and digest under `/usr/share/doc/tinkercraft`. The packager also verifies the pin before using the PHAR. `--without-phpactor` omits it.
 
-## Referência funcional
+## Test fixtures
 
-Tinkerwell e Beyond Code são nomes de seus respectivos titulares. A consulta à documentação pública fundamenta os fluxos, sem copiar código, marca, screenshots, textos de interface ou assets proprietários. O TinkerCraft é uma implementação independente.
+The Laravel integration fixture uses Composer-managed open-source dependencies and their original licenses. Its manifest and lockfile are in `tests/fixtures/laravel`. Its vendor directory is excluded from Git and from the application package. The fixture does not redistribute a user's Laravel application.
+
+## Branding and functional inspiration
+
+The TinkerCraft logo was supplied by the project owner. It is independent of Tinkerwell's assets. Tinkerwell and Beyond Code are names of their respective owners. Public documentation and functionality informed an independent implementation; no proprietary code, extracted application resources, screenshots, documentation text, or branding from Tinkerwell is redistributed here.

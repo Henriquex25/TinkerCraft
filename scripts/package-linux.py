@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build a relocatable Debian package and release metadata without installing it."""
+
 import argparse
 import hashlib
 import json
@@ -64,13 +64,41 @@ def main():
             path.parent.mkdir(parents=True, exist_ok=True)
             icon.scale_simple(size, size, GdkPixbuf.InterpType.HYPER).savev(str(path), 'png', [], [])
         docs = tree / 'usr/share/doc/tinkercraft'
-        for source, target in [('LICENSE', 'copyright'), ('THIRD_PARTY_NOTICES.md', 'THIRD_PARTY_NOTICES.md'), ('README.md', 'README.md'), ('frontend/public/vendor/monaco/LICENSE.txt', 'Monaco-LICENSE.txt'), ('frontend/public/vendor/monaco/Apache-2.0.txt', 'Apache-2.0.txt'), ('runtime/vendor/php-parser/LICENSE', 'PHP-Parser-LICENSE')]:
+        for source, target in [('LICENSE', 'copyright'), ('THIRD_PARTY_NOTICES.md', 'THIRD_PARTY_NOTICES.md'), ('README.md', 'README.md'), ('SECURITY.md', 'SECURITY.md'), ('CONTRIBUTING.md', 'CONTRIBUTING.md'), ('frontend/node_modules/monaco-editor/LICENSE', 'Monaco-LICENSE.txt'), ('frontend/node_modules/monaco-editor/ThirdPartyNotices.txt', 'Monaco-ThirdPartyNotices.txt'), ('frontend/node_modules/dompurify/LICENSE', 'DOMPurify-LICENSE'), ('frontend/node_modules/dompurify/LICENSE-MPL', 'DOMPurify-LICENSE-MPL'), ('runtime/vendor/php-parser/LICENSE', 'PHP-Parser-LICENSE')]:
             copy(ROOT / source, docs / target)
         copy(ROOT / 'docs/releases.md', docs / 'docs/releases.md')
+        copy(ROOT / 'LICENSE', docs / 'LICENSE')
+        for doc_name in ['SUPPORT.md', 'CODE_OF_CONDUCT.md']:
+            copy(ROOT / doc_name, docs / doc_name)
+        copy(ROOT / 'build/appicon-small.png', docs / 'build/appicon-small.png')
+        for source in (ROOT / 'docs').glob('*.md'):
+            copy(source, docs / 'docs' / source.name)
+        copy(ROOT / 'docs/images/workspace.png', docs / 'docs/images/workspace.png')
+        for source in (ROOT / 'docs/licenses').glob('*'):
+            if source.is_file():
+                copy(source, docs / 'licenses' / source.name)
+        def licenses(directory, prefix):
+            for file in directory.iterdir():
+                if file.is_file() and file.name.lower().startswith(('license', 'copying', 'notice', 'thirdparty')):
+                    copy(file, docs / 'licenses' / prefix / file.name)
+        for folder in subprocess.check_output(['npm', 'ls', '--omit=dev', '--parseable', '--all'], cwd=ROOT / 'frontend', text=True).splitlines():
+            directory = Path(folder)
+            if directory != ROOT / 'frontend':
+                licenses(directory, 'npm-' + str(directory.relative_to(ROOT / 'frontend')).replace('/', '__'))
+        modules = subprocess.check_output(['go', 'list', '-m', '-json', 'all'], cwd=ROOT, text=True)
+        decoder = json.JSONDecoder()
+        while modules.strip():
+            module, end = decoder.raw_decode(modules.lstrip())
+            modules = modules.lstrip()[end:]
+            if module.get('Dir') and not module.get('Main'):
+                licenses(Path(module['Dir']), 'go-' + module['Path'].replace('/', '__'))
         if not args.without_phpactor:
             phar = ROOT / '.tools/phpactor.phar'
             if not phar.is_file():
                 raise SystemExit('Instale o Phpactor com ./scripts/install-phpactor.sh antes de empacotar, ou use --without-phpactor.')
+            expected_digest = (ROOT / 'scripts/phpactor.sha256').read_text().split()[0]
+            if hashlib.sha256(phar.read_bytes()).hexdigest() != expected_digest:
+                raise SystemExit('SHA-256 do Phpactor divergente; reinstale com ./scripts/install-phpactor.sh.')
             copy(phar, tree / 'usr/lib/tinkercraft/phpactor.phar')
             license_text = subprocess.check_output(['php', '-r', "echo file_get_contents('phar://' . $argv[1] . '/LICENSE');", str(phar)])
             (docs / 'Phpactor-LICENSE').write_bytes(license_text)
@@ -103,7 +131,7 @@ Description: Desktop scratchpad for PHP and Laravel
         for entry in tree.rglob('*'):
             entry.chmod(0o755 if entry.is_dir() or entry in [wrapper, tree / 'usr/lib/tinkercraft/tinkercraft'] else 0o644)
         tree.chmod(0o755)
-        # No maintainer scripts: installation does not run application code or touch home directories.
+
         subprocess.run(['dpkg-deb', '--root-owner-group', '-Zxz', '--build', str(tree), str(output / name)], check=True)
     package = output / name
     digest = hashlib.sha256(package.read_bytes()).hexdigest()

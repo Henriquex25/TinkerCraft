@@ -17,7 +17,6 @@ import (
 	"time"
 )
 
-// RPC is a Content-Length framed JSON-RPC client for stdio language servers.
 type RPC struct {
 	cmd          *exec.Cmd
 	writer       io.WriteCloser
@@ -57,7 +56,7 @@ func StartRPC(ctx context.Context, php, server, root string, notification func(s
 		in.Close()
 		return nil, err
 	}
-	// stderr must always drain: servers can log heavily during indexing.
+
 	cmd.Stderr = io.Discard
 	if err := cmd.Start(); err != nil {
 		in.Close()
@@ -109,25 +108,8 @@ func (r *RPC) read(reader io.Reader) {
 	defer close(r.done)
 	buffer := bufio.NewReader(reader)
 	for {
-		size := -1
-		for {
-			line, err := buffer.ReadString('\n')
-			if err != nil {
-				return
-			}
-			line = strings.TrimSpace(line)
-			if line == "" {
-				break
-			}
-			if key, val, ok := strings.Cut(line, ":"); ok && strings.EqualFold(key, "Content-Length") {
-				size, _ = strconv.Atoi(strings.TrimSpace(val))
-			}
-		}
-		if size < 0 || size > 16*1024*1024 {
-			return
-		}
-		payload := make([]byte, size)
-		if _, err := io.ReadFull(buffer, payload); err != nil {
+		payload, err := readFrame(buffer)
+		if err != nil {
 			return
 		}
 		var msg struct {
@@ -145,7 +127,7 @@ func (r *RPC) read(reader io.Reader) {
 		}
 		if msg.Method != "" {
 			if len(msg.ID) > 0 {
-				// Respond to server requests instead of deadlocking initialization.
+
 				var result any
 				if msg.Method == "workspace/configuration" {
 					var p struct {
@@ -193,4 +175,37 @@ func (r *RPC) Close() {
 			syscall.Kill(-r.cmd.Process.Pid, syscall.SIGKILL)
 		}
 	})
+}
+
+func readFrame(reader *bufio.Reader) ([]byte, error) {
+	size, headerBytes := -1, 0
+	for {
+		line, err := reader.ReadSlice('\n')
+		headerBytes += len(line)
+		if err != nil {
+			return nil, err
+		}
+		if headerBytes > 8192 {
+			return nil, errors.New("Cabeçalho LSP maior que 8 KiB")
+		}
+		text := strings.TrimSpace(string(line))
+		if text == "" {
+			break
+		}
+		if key, value, ok := strings.Cut(text, ":"); ok && strings.EqualFold(key, "Content-Length") {
+			if size != -1 {
+				return nil, errors.New("Content-Length LSP duplicado")
+			}
+			size, err = strconv.Atoi(strings.TrimSpace(value))
+			if err != nil || size < 0 || size > 16*1024*1024 {
+				return nil, errors.New("Tamanho LSP inválido")
+			}
+		}
+	}
+	if size < 0 {
+		return nil, errors.New("Content-Length LSP ausente")
+	}
+	payload := make([]byte, size)
+	_, err := io.ReadFull(reader, payload)
+	return payload, err
 }

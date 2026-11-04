@@ -1,7 +1,8 @@
 <?php
 declare(strict_types=1);
-// This file is streamed as php -r code, on every transport. No remote installation.
+
 namespace TinkerCraft\Runtime {
+final class BootstrapError extends \RuntimeException {}
 final class Inspector {
     private \SplObjectStorage $seen;
     private int $budget = 5000;
@@ -28,7 +29,7 @@ final class Inspector {
             if ($value instanceof \DateTimeInterface) { $this->seen->detach($value); return ['type' => 'datetime', 'class' => $class, 'value' => $value->format(DATE_ATOM)]; }
             if ($value instanceof \UnitEnum) { $this->seen->detach($value); return ['type' => 'enum', 'class' => $class, 'value' => $value instanceof \BackedEnum ? $value->value : $value->name]; }
             if ($value instanceof \Closure) { $this->seen->detach($value); return ['type' => 'closure', 'class' => $class]; }
-            // Avoid toArray()/jsonSerialize(): accessors, lazy collections and relations can run queries.
+
             if (is_a($value, 'Illuminate\\Database\\Eloquent\\Model')) {
                 $values = $value->getAttributes();
                 $hidden = array_flip($value->getHidden());
@@ -105,7 +106,7 @@ final class Execution {
         if ($partial(self::$result['value'])) { self::$result['truncated'] = true; }
         foreach (self::$result['dumps'] as $dump) { if ($partial($dump)) { self::$result['truncated'] = true; } }
         $json = json_encode(self::$result, JSON_INVALID_UTF8_SUBSTITUTE | JSON_PARTIAL_OUTPUT_ON_ERROR);
-        // A private per-run marker keeps ordinary stdout separate from the protocol.
+
         fwrite(STDOUT, "\n" . self::$marker . base64_encode($json) . "\n");
     }
 }
@@ -125,10 +126,10 @@ namespace {
         return true;
     });
     try {
-        if (!is_dir($tinkercraftPayload['projectPath']) || !chdir($tinkercraftPayload['projectPath'])) { throw new \RuntimeException('Diretório do projeto não encontrado: ' . $tinkercraftPayload['projectPath']); }
+        if (!is_dir($tinkercraftPayload['projectPath']) || !chdir($tinkercraftPayload['projectPath'])) { throw new \TinkerCraft\Runtime\BootstrapError('Diretório do projeto não encontrado: ' . $tinkercraftPayload['projectPath']); }
         $tinkercraftBootstrap = $tinkercraftPayload['bootstrap'];
         if ($tinkercraftBootstrap !== 'none' && is_file('vendor/autoload.php')) { require getcwd() . '/vendor/autoload.php'; \TinkerCraft\Runtime\Execution::$result['framework'] = 'Composer'; }
-        if ($tinkercraftBootstrap === 'composer' && !is_file('vendor/autoload.php')) { throw new \RuntimeException('vendor/autoload.php não encontrado. Execute composer install no projeto.'); }
+        if ($tinkercraftBootstrap === 'composer' && !is_file('vendor/autoload.php')) { throw new \TinkerCraft\Runtime\BootstrapError('vendor/autoload.php não encontrado. Execute composer install no projeto.'); }
         if ($tinkercraftBootstrap === 'laravel' || ($tinkercraftBootstrap === 'auto' && is_file('artisan') && is_file('bootstrap/app.php'))) {
             $tinkercraftApp = require getcwd() . '/bootstrap/app.php';
             $tinkercraftKernel = $tinkercraftApp->make(\Illuminate\Contracts\Console\Kernel::class);
@@ -138,7 +139,7 @@ namespace {
         }
         if ($tinkercraftBootstrap === 'custom') {
             $tinkercraftFile = $tinkercraftPayload['bootstrapFile'];
-            if (!is_file($tinkercraftFile)) { throw new \RuntimeException('Arquivo de bootstrap não encontrado: ' . $tinkercraftFile); }
+            if (!is_file($tinkercraftFile)) { throw new \TinkerCraft\Runtime\BootstrapError('Arquivo de bootstrap não encontrado: ' . $tinkercraftFile); }
             require $tinkercraftFile;
             \TinkerCraft\Runtime\Execution::$result['framework'] = 'Custom';
         }
@@ -147,7 +148,7 @@ namespace {
         }
         if (!function_exists('dump')) { function dump(...$values) { \TinkerCraft\Runtime\Execution::capture(...$values); return count($values) === 1 ? $values[0] : $values; } }
         if (!function_exists('dd')) { function dd(...$values) { \TinkerCraft\Runtime\Execution::capture(...$values); exit(0); } }
-        // Run in global scope, so imports, function/class declarations and app() work naturally.
+
         $tinkercraftValue = eval($tinkercraftPayload['code']);
         \TinkerCraft\Runtime\Execution::$result['value'] = (new \TinkerCraft\Runtime\Inspector())->node($tinkercraftValue);
     } catch (\Throwable $tinkercraftError) { \TinkerCraft\Runtime\Execution::fail($tinkercraftError); }

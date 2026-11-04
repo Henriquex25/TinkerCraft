@@ -133,7 +133,7 @@ func (m *Manager) start(id, root, code string, settings core.Settings, cacheHome
 		}, cacheHome)
 		if err == nil {
 			options := map[string]any{"language_server.enable_trust_check": false}
-			// Cached sources use PSR maps generated from JSON, never remote PHP loaders.
+
 			if cacheHome != "" {
 				options["composer.enable"] = true
 				options["composer.class_maps_only"] = true
@@ -276,7 +276,7 @@ func (m *Manager) Request(id, method, code string, line, character int) (any, er
 		return nil, nil
 	}
 	err = json.Unmarshal(response, &result)
-	// Monaco uses the actual snippet, while LSP may have an inserted opening tag.
+
 	if s.prefix > 0 {
 		shiftRanges(result, -s.prefix)
 	}
@@ -293,7 +293,7 @@ func shiftRanges(value any, offset int) {
 		for key, child := range x {
 			if key == "data" {
 				continue
-			} // Opaque completion data belongs to the server.
+			}
 			shiftRanges(child, offset)
 		}
 	case []any:
