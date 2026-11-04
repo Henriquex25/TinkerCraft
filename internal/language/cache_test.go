@@ -193,7 +193,8 @@ func TestRealPhpactorUsesCachedSourcesWithoutBootstrapping(t *testing.T) {
 	manager := NewManager("")
 	defer manager.Close()
 	code := "use App\\Person;\n$person = new Person();\n$person->"
-	status, err := manager.StartCached("cached", snapshot.Root, code, core.Settings{PHPBinary: "php", PhpactorPath: server})
+	manager.PhpactorPath = server
+	status, err := manager.StartCached("cached", snapshot.Root, code, core.Settings{PHPBinary: "php"})
 	if err != nil || status.Mode != "phpactor" {
 		t.Fatalf("%+v %v", status, err)
 	}

@@ -2,13 +2,12 @@ package buildinfo
 
 import (
 	"fmt"
-	"os"
 	"runtime"
 	"strings"
 )
 
 var Version = "0.2.0"
-var ReleaseSource = ""
+var ReleaseSource = "https://github.com/Henriquex25/TinkerCraft"
 var Distribution = "source"
 var Commit = "dev"
 var BuildDate = ""
@@ -26,11 +25,7 @@ type Info struct {
 }
 
 func Current() Info {
-	source := ReleaseSource
-	if override, ok := os.LookupEnv("TINKERCRAFT_RELEASE_SOURCE"); ok {
-		source = override
-	}
-	return Info{Version, source, Distribution, runtime.GOOS, runtime.GOARCH, WebKit, Variant(), Commit, BuildDate}
+	return Info{Version, ReleaseSource, Distribution, runtime.GOOS, runtime.GOARCH, WebKit, Variant(), Commit, BuildDate}
 }
 func Variant() string {
 	return fmt.Sprintf("%s-%s-webkit%s", runtime.GOOS, runtime.GOARCH, strings.ReplaceAll(WebKit, ".", ""))

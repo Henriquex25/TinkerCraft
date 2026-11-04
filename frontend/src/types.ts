@@ -1,3 +1,4 @@
+import type { FormattingRules } from "./formatting-rules";
 export interface SSH {
   host: string;
   user: string;
@@ -19,15 +20,14 @@ export interface Profile {
   timeout: number;
 }
 export interface Settings {
+  formatting?: FormattingRules;
   donationPromptDismissed?: boolean;
   starPromptDismissed?: boolean;
   language?: "en" | "pt-BR";
-  updateSource?: string;
   checkUpdatesOnStartup?: boolean;
   shortcuts?: Record<string, string>;
   cacheDays?: number;
   phpBinary: string;
-  phpactorPath: string;
 }
 export interface Tab {
   id: string;

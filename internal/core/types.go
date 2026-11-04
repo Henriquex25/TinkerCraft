@@ -109,15 +109,23 @@ func (p Profile) Validate() error {
 }
 
 type Settings struct {
+	Formatting              *FormattingRules  `json:"formatting,omitempty"`
 	DonationPromptDismissed bool              `json:"donationPromptDismissed,omitempty"`
 	StarPromptDismissed     bool              `json:"starPromptDismissed,omitempty"`
 	Language                string            `json:"language"`
-	UpdateSource            string            `json:"updateSource,omitempty"`
 	CheckUpdatesOnStartup   *bool             `json:"checkUpdatesOnStartup,omitempty"`
 	Shortcuts               map[string]string `json:"shortcuts,omitempty"`
 	CacheDays               int               `json:"cacheDays"`
 	PHPBinary               string            `json:"phpBinary"`
-	PhpactorPath            string            `json:"phpactorPath"`
+}
+
+type FormattingRules struct {
+	TabWidth         int    `json:"tabWidth"`
+	PrintWidth       int    `json:"printWidth"`
+	UseTabs          bool   `json:"useTabs"`
+	SingleQuote      bool   `json:"singleQuote"`
+	TrailingCommaPHP bool   `json:"trailingCommaPHP"`
+	BraceStyle       string `json:"braceStyle"`
 }
 type Tab struct {
 	ID        string `json:"id"`

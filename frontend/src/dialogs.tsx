@@ -7,7 +7,6 @@ import {
   Wand2,
   Check,
   ChevronRight,
-  Copy,
   Folder,
   FolderOpen,
   Globe,
@@ -22,6 +21,8 @@ import {
   X,
 } from "lucide-react";
 import { api, errorText } from "./api";
+import { FormattingSettings } from "./formatting-settings";
+import { defaultFormatting } from "./formatting-rules";
 import { Shortcut, useCommandActions, useCommandHints } from "./commands";
 import { Keybindings } from "./keybindings";
 import { bindingErrors } from "./shortcuts";
@@ -768,7 +769,7 @@ export function SettingsDialog({
   saved,
 }: {
   settings: Settings;
-  initialSection?: "general" | "shortcuts" | "updates";
+  initialSection?: "general" | "shortcuts" | "updates" | "formatting";
   build?: BuildInfo;
   checkUpdates: () => void;
   close: () => void;
@@ -778,13 +779,13 @@ export function SettingsDialog({
     ...settings,
     language: settings.language ?? "en",
     cacheDays: settings.cacheDays || 7,
+    formatting: settings.formatting ?? { ...defaultFormatting },
   });
   const [section, setSection] = useState(initialSection);
   const hints = useCommandHints();
   const [health, setHealth] = useState<Health>();
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [copied, setCopied] = useState(false);
   useEffect(() => {
     api
       .Health()
@@ -809,22 +810,16 @@ export function SettingsDialog({
       setBusy(false);
     }
   }
-  async function chooseTool(field: "phpBinary" | "phpactorPath") {
+  async function choosePHP() {
     try {
       const file = await api.ChooseFile();
-      if (file) setForm((previous) => ({ ...previous, [field]: file }));
+      if (file) setForm((previous) => ({ ...previous, phpBinary: file }));
     } catch (error) {
       setError(errorText(error));
     }
   }
-  function copyInstall() {
-    api
-      .Copy("./scripts/install-phpactor.sh")
-      .then(() => setCopied(true))
-      .catch((error) => setError(errorText(error)));
-  }
   useCommandActions({
-    "settings.php": () => chooseTool("phpBinary"),
+    "settings.php": choosePHP,
     "settings.language": () => {
       setSection("general");
       requestAnimationFrame(() =>
@@ -833,13 +828,12 @@ export function SettingsDialog({
           ?.focus(),
       );
     },
-    "settings.phpactor": () => chooseTool("phpactorPath"),
-    "settings.install": copyInstall,
     "settings.reset": () =>
       setForm((previous) => ({ ...previous, shortcuts: {} })),
     "settings.general": () => setSection("general"),
     "settings.shortcuts": () => setSection("shortcuts"),
     "settings.updates": () => setSection("updates"),
+    "settings.formatting": () => setSection("formatting"),
     "settings.checkUpdates": {
       enabled: section === "updates" && !busy,
       run: saveAndCheck,
@@ -905,6 +899,15 @@ export function SettingsDialog({
             {tr("Updates") + " "}
             <Shortcut id="settings.updates" />
           </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={section === "formatting"}
+            onClick={() => setSection("formatting")}
+          >
+            {tr("Formatting") + " "}
+            <Shortcut id="settings.formatting" />
+          </button>
         </div>
         {section === "updates" ? (
           <div className="updates-preferences">
@@ -917,25 +920,6 @@ export function SettingsDialog({
                 )}
               </p>
             </div>
-            <label className="field">
-              <span>{tr("GitHub release repository")}</span>
-              <input
-                aria-label={tr("Update source")}
-                placeholder={
-                  build?.releaseSource ||
-                  "https://github.com/seu-usuario/tinkercraft"
-                }
-                value={form.updateSource ?? ""}
-                onChange={(e) =>
-                  setForm({ ...form, updateSource: e.target.value })
-                }
-              />
-              <small>
-                {tr(
-                  "Enter the public repository URL. Leave empty to use the build configuration or development .env. A custom HTTPS manifest is also supported.",
-                )}
-              </small>
-            </label>
             <label className="checkbox-field">
               <input
                 type="checkbox"
@@ -962,6 +946,13 @@ export function SettingsDialog({
               <Shortcut id="settings.checkUpdates" />
             </button>
           </div>
+        ) : section === "formatting" ? (
+          <FormattingSettings
+            value={form.formatting}
+            change={(formatting) =>
+              setForm((previous) => ({ ...previous, formatting }))
+            }
+          />
         ) : section === "shortcuts" ? (
           <Keybindings
             value={form.shortcuts ?? {}}
@@ -1030,71 +1021,6 @@ export function SettingsDialog({
                 </button>
               </div>
             </label>
-            <div className="form-section-title">
-              {tr("EDITOR INTELLIGENCE")}
-            </div>
-            <label className="field">
-              <span>
-                Phpactor{" "}
-                <small>{tr("path to phpactor.phar or PHP script")}</small>
-              </span>
-              <div className="input-action">
-                <input
-                  placeholder={tr("Detect phpactor on PATH")}
-                  value={form.phpactorPath}
-                  onChange={(e) =>
-                    setForm({ ...form, phpactorPath: e.target.value })
-                  }
-                />
-                <button
-                  type="button"
-                  title={hints.title("settings.phpactor")}
-                  onClick={async () => {
-                    try {
-                      const file = await api.ChooseFile();
-                      if (file) setForm({ ...form, phpactorPath: file });
-                    } catch (e) {
-                      setError(errorText(e));
-                    }
-                  }}
-                >
-                  <FolderOpen size={15} />
-                </button>
-              </div>
-              <small>
-                {tr(
-                  "Type and chained method completion, imports, signatures, and documentation through LSP.",
-                )}
-              </small>
-            </label>
-            <div className="setup-note">
-              <strong>{tr("Initial setup")}</strong>
-              <p>
-                {tr(
-                  "Install Phpactor using the project script, then select the downloaded file above.",
-                )}
-              </p>
-              <button
-                type="button"
-                className="command-copy"
-                title={hints.title("settings.install")}
-                onClick={() => {
-                  api
-                    .Copy("./scripts/install-phpactor.sh")
-                    .then(() => setCopied(true))
-                    .catch((e) => setError(errorText(e)));
-                }}
-              >
-                <code>./scripts/install-phpactor.sh</code>
-                <Shortcut id="settings.install" />
-                {copied ? <Check size={14} /> : <Copy size={14} />}
-              </button>
-              <small>
-                {tr(
-                  "Without Phpactor, the basic indexer suggests functions, classes, and public members. For Laravel magic methods, use IDE Helper files generated in your project.",
-                )}
-              </small>
-            </div>
             <div className="form-section-title">{tr("COMPLETION CACHE")}</div>
             <label className="field">
               <span>{tr("Remove after days without use")}</span>

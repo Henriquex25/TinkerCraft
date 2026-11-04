@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/url"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -63,6 +62,7 @@ type Session struct {
 	capabilities map[string]any
 }
 type Manager struct {
+	PhpactorPath  string
 	mu            sync.Mutex
 	sessions      map[string]*Session
 	RuntimeDir    string
@@ -114,10 +114,7 @@ func (m *Manager) start(id, root, code string, settings core.Settings, cacheHome
 	if php == "" {
 		php = "php"
 	}
-	server := settings.PhpactorPath
-	if server == "" {
-		server, _ = exec.LookPath("phpactor")
-	}
+	server := m.PhpactorPath
 	var serverError error
 	if server != "" {
 		rpc, err := StartRPC(ctx, php, server, root, func(method string, params json.RawMessage) {
@@ -169,7 +166,7 @@ func (m *Manager) start(id, root, code string, settings core.Settings, cacheHome
 		m.remove(id, s)
 		return Status{}, fmt.Errorf("Falha ao indexar o projeto: %w", err)
 	}
-	message := "Autocomplete básico · configure Phpactor para inferência avançada"
+	message := "Advanced completion is unavailable · using the basic indexer"
 	if serverError != nil {
 		message = "Phpactor indisponível: " + serverError.Error() + " · usando indexador básico"
 	}

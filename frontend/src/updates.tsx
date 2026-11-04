@@ -160,7 +160,7 @@ export function UpdatesDialog({
                         )
                       : !info?.configured
                         ? tr(
-                            "Configure the GitHub repository URL in Preferences → Updates.",
+                            "Updates are unavailable in this development build.",
                           )
                         : tr(
                             "Your snippets, connections, and preferences remain in the local workspace.",

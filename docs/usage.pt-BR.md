@@ -14,7 +14,7 @@ sudo apt install ./build/dist/tinkercraft_0.2.0_linux_amd64_webkit40.deb
 
 Abra **TinkerCraft** pelo menu do Linux ou execute `/usr/bin/tinkercraft`. O pacote inclui Phpactor; PHP local 8.2+ continua necessário. Códigos e conexões permanecem no workspace ao atualizar ou remover o aplicativo.
 
-O app verifica novos releases ao iniciar quando há uma fonte configurada, mostra um indicador e permite baixar o pacote com verificação SHA-256 e abrir o instalador do sistema. Em **Preferências → Atualizações**, configure a URL do repositório e a consulta automática. O `.env` da raiz foi criado com fonte vazia para preencher quando o repositório público existir. Para gerar pacotes: `./scripts/package-linux.sh`. Consulte [instalação, configuração do `.env` e publicação de releases](releases.md) para o processo completo e as variantes WebKit.
+O app verifica novos releases ao iniciar quando há uma fonte configurada, mostra um indicador e permite baixar o pacote com verificação SHA-256 e abrir o instalador do sistema. Em **Preferências → Atualizações**, escolha se deseja consulta automática. O repositório oficial vem definido no build e não é editável na interface. O `.env` é apenas uma configuração do mantenedor para compilar. Para gerar pacotes: `./scripts/package-linux.sh`. Consulte [instalação, configuração do `.env` e publicação de releases](releases.md) para o processo completo e as variantes WebKit.
 
 ## Abrir pelo checkout
 
@@ -82,9 +82,30 @@ O Monaco é a interface do editor; a inteligência PHP avançada depende do Phpa
 ./scripts/install-phpactor.sh
 ```
 
-O script baixa `phpactor.phar` do release oficial **2026.10.07.0**, confere o SHA-256 fixado no repositório antes de iniciá-lo e registra a soma local. Ao reabrir o TinkerCraft pela pasta do projeto, o arquivo em `.tools/phpactor.phar` é detectado. Também é possível selecionar um PHAR ou script PHP existente em **Preferências → Phpactor**, ou usar `TINKERCRAFT_PHPACTOR=/caminho/phpactor.phar` na primeira configuração. Um `phpactor` instalado no PATH também funciona.
+O script baixa `phpactor.phar` do release oficial **2026.10.07.0**, confere o SHA-256 fixado no repositório antes de iniciá-lo e registra a soma local. Ao reabrir o TinkerCraft pela pasta do projeto, o arquivo em `.tools/phpactor.phar` é detectado. No pacote instalado, o Phpactor é gerenciado internamente e não pode ser substituído nas preferências, pelo PATH ou por variáveis de ambiente. Overrides de desenvolvimento `TINKERCRAFT_PHPACTOR`/`LUME_PHPACTOR` só são aceitos em builds de código-fonte, sem substituir o PHAR adjacente.
 
 O status diferencia **Autocomplete**, **Autocomplete básico**, preparação e erros; passe o mouse para ver o servidor, a origem dos arquivos e a data do cache. O botão **Atualizar autocomplete** refaz a preparação e reinicia a indexação.
+
+### Formatação do código
+
+Use **Alt+Shift+F**, o ícone de formatação na barra das abas ou a ação **Formatar código PHP** na paleta. O atalho pode ser remapeado. O código é formatado localmente, sem execução ou conexão ao projeto; Ctrl+Z desfaz. Código inválido permanece intacto.
+
+O padrão usa quatro espaços, largura preferida de 80 caracteres, aspas simples quando possível, vírgulas finais e chaves no estilo PER Coding Style. Cadeias longas de métodos recebem quebras de linha e alinhamento. A referência são as convenções [PHP-FIG](https://www.php-fig.org/per/coding-style/), implementadas pelo Prettier PHP; não equivale ao preset completo do Laravel Pint.
+
+Em **Preferências → Formatação** (**Alt+4**), ajuste o estilo ou importe um JSON. Exemplo:
+
+```json
+{
+  "tabWidth": 4,
+  "printWidth": 80,
+  "useTabs": false,
+  "singleQuote": true,
+  "trailingCommaPHP": true,
+  "braceStyle": "per-cs"
+}
+```
+
+Campos omitidos usam o padrão. As regras são copiadas para o app ao salvar; edite e importe novamente para atualizar. O arquivo original não é alterado nem acompanhado automaticamente. Arquivos do Pint/PHP-CS-Fixer, PHP, JavaScript e plugins externos não são compatíveis. O botão **Restaurar formatação padrão** desfaz a personalização; feche sem salvar para cancelar alterações nas preferências.
 
 ### Cache automático de projetos
 

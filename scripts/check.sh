@@ -14,5 +14,6 @@ if [[ "${TINKERCRAFT_WEBKIT:-auto}" == 4.1 ]] || { [[ "${TINKERCRAFT_WEBKIT:-aut
 go test "${go_tags[@]}" -race -coverprofile=coverage.out ./...
 go vet "${go_tags[@]}" ./...
 node tests/render.test.mjs
+node tests/formatter.test.mjs
 python3 tests/distribution.test.py
 python3 tests/community.test.py
