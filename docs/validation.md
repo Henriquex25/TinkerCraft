@@ -128,6 +128,14 @@ Uma repetição da suíte WebKit encontrou um timeout intermitente na sugestão 
 
 Não houve instalação no sistema, commit, push, mudança da versão `0.2.0` ou publicação. O rascunho já existente no GitHub contém o build anterior e precisa ser reconstruído com o novo commit antes de ser publicado. A variante WebKit 4.1 e a confirmação remota destas mudanças continuam pendentes.
 
+## Dependabot e auditoria da fixture Laravel — 4 de novembro de 2026
+
+O log ERESOLVE informado veio do PR Dependabot #6, run `41926723855`, que elevou `react-dom` para 19.3.1 e `@types/react-dom` para 19.3.0 mantendo `react` 19.2.8 e `@types/react` 19.2.18. O novo tipo DOM requer `@types/react ^19.3.0`; não se trata de falha de instalação no commit `797f921` da main. `npm ci` na raiz e no frontend passou localmente com os manifests/lockfiles atuais, sem force ou legacy-peer-deps. A configuração do Dependabot agora agrupa React, React DOM e ambos os tipos, separadamente para atualizações de versão e de segurança. Isso orienta futuras propostas, sem alterar ou corrigir automaticamente o PR #6 existente; nenhum PR foi fechado, comentado, atualizado ou mesclado nesta revisão.
+
+O run da main `41926345288` passou a instalação e os testes de backend, mas falhou em `composer audit`, com seis avisos publicados em 4 de novembro afetando `symfony/http-foundation`, `symfony/http-kernel` e `symfony/routing` da fixture. Apenas esses três pacotes foram atualizados no lockfile de 7.4.22 para 7.4.23, mantendo Laravel 12.71.0, o alvo PHP 8.2 e os demais pacotes. A fixture é uma dependência de testes; não foi alterado nenhum projeto Laravel do usuário, nem foram desabilitados avisos, auditorias ou verificações de peer dependencies.
+
+Passaram instalação Composer pelo lockfile sem scripts/plugins, `composer validate --strict`, auditoria Composer de pacotes instalados e do lockfile sem advisories, auditorias npm da raiz/frontend e `govulncheck` v1.9.0 sem vulnerabilidades conhecidas reportadas. O teste `TestRealLaravelBootstrapAndInspection` passou com race detector nas dependências atualizadas. Prettier do Dependabot, actionlint, testes de configuração comunitária e `git diff --check` também passaram. Não houve alteração de assets/backend desktop, rebuild do app, commit, push, nova execução remota ou publicação; a versão continua 0.2.0.
+
 ## Evidências anteriores por área
 
 | Área | Evidência |

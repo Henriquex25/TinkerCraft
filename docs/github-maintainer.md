@@ -90,6 +90,8 @@ Normal contribution flow:
 
 Use labels sparingly. Apply `good first issue` only when a task is small and has useful implementation guidance. There is no automatic stale-issue closer or promise of immediate support.
 
+Dependabot pull requests are update proposals, not required merges before a release. Check the branch, commit, and event on each Actions run: a failed dependency PR is separate from the push CI on `main`. The release gate requires successful push CI on the exact `main` commit being built. React, React DOM, and both type packages are grouped in `.github/dependabot.yml` so their peer requirements can be reviewed together. Grouping changes do not repair an already-open incompatible PR automatically; regenerate or correct that proposal before merging it. Keep `npm ci` strict and fix incompatible versions rather than using `--force` or `--legacy-peer-deps`.
+
 ## Publish a new version
 
 The release workflow is manual and creates a **draft**. It does not publish on every push and does not require you to push a tag first.
