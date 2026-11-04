@@ -102,6 +102,16 @@ O novo teste reproduziu a falha antes da correção tanto com contexto previamen
 
 Não houve commit, push, mudança de versão ou disparo de workflow remoto durante esta correção; essas etapas permanecem sob execução do mantenedor no aprendizado da publicação.
 
+## Foco e seleção no teste desktop nativo — 4 de novembro de 2026
+
+Foram inspecionadas as capturas do run GitHub `41825015503` no commit `b756e17`. Na etapa que deveria selecionar português, o inglês permanecia selecionado e o foco estava no botão de fechar Preferências; depois do atalho de salvar, o diálogo fechava sem alterar o idioma. A sequência anterior enviava teclas após pausas fixas, sem confirmar o foco do seletor.
+
+O app agora registra as ações e aplica o foco inicial de modais/paleta em `useLayoutEffect`. O modal usa uma referência ao próprio elemento, evitando selecionar outro diálogo presente na página. O teste observa foco, seleção, abertura e confirmação do popup nativo via AT-SPI antes de enviar a próxima ação e aguarda o fechamento dos diálogos. Ele continua usando teclas reais, display/workspace temporários e verificação de PID; os buses D-Bus de sessão/acessibilidade também são privados. Falhas guardam screenshot e diagnóstico de foco em JSON nos artefatos do CI, que recebeu as dependências AT-SPI.
+
+Passaram TypeScript/Vite, build Wails WebKit 4.0, renderização React, `npm run test:ui` completo, sintaxe Python, actionlint, Prettier dos arquivos alterados e `git diff --check`. A suíte nativa completa passou localmente: inglês → português → inglês → português, execução, atalhos, renomeação, última edição no fechamento, restauração sem executar o rascunho e dispensa persistente dos convites. A suíte completa também passou com a aplicação e seus processos limitados a um núcleo de CPU e prioridade reduzida. Nessa condição, o envio anterior de caracteres sintéticos mais rápido que o processamento do WebKit expôs uma fila de entrada no fechamento; o teste passou a usar 50 ms entre caracteres, mantendo o fechamento imediato após digitar e a verificação do código completo persistido, sem aguardar autosave.
+
+Não foi executado novo workflow remoto, nem houve commit, push, alteração da versão `0.2.0`, instalação ou publicação. A confirmação no runner do GitHub depende do envio destas alterações pelo mantenedor.
+
 ## Evidências anteriores por área
 
 | Área | Evidência |

@@ -1,5 +1,12 @@
 import { t as tr } from "./i18n";
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { Search, X } from "lucide-react";
 import {
   commands,
@@ -118,7 +125,7 @@ export function CommandProvider({ children }: { children: React.ReactNode }) {
     window.addEventListener("keydown", listener, true);
     return () => window.removeEventListener("keydown", listener, true);
   }, []);
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (palette) input.current?.focus();
   }, [palette]);
   const options = commands.filter(
@@ -263,7 +270,7 @@ export function useCommandActions(actions: Actions) {
   const registry = useRef(context.register);
   registry.current = context.register;
   const ids = Object.keys(actions).join("|");
-  useEffect(
+  useLayoutEffect(
     () =>
       registry.current({
         ids: ids.split("|"),

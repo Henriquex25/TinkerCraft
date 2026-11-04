@@ -1,6 +1,6 @@
 import { translateStatus } from "./i18n";
 import { t as tr } from "./i18n";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   Box,
   Braces,
@@ -78,6 +78,7 @@ export function Modal({
   className?: string;
   scope?: "profile" | "settings" | "dialog" | "language" | "updates";
 }) {
+  const dialogRef = useRef<HTMLElement>(null);
   const hints = useCommandHints();
   useCommandActions({
     "dialog.close": close,
@@ -92,9 +93,9 @@ export function Modal({
       },
     },
   });
-  useEffect(() => {
+  useLayoutEffect(() => {
     const previous = document.activeElement as HTMLElement;
-    const dialog = document.querySelector('[role="dialog"]') as HTMLElement;
+    const dialog = dialogRef.current;
     const input = dialog?.querySelector("input,button") as HTMLElement;
     input?.focus();
     const trap = (e: KeyboardEvent) => {
@@ -127,6 +128,7 @@ export function Modal({
       }}
     >
       <section
+        ref={dialogRef}
         className={`modal ${className}`}
         role="dialog"
         aria-modal="true"

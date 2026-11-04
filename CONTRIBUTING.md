@@ -38,7 +38,7 @@ TINKERCRAFT_NATIVE_TEST=1 xvfb-run -a -s '-screen 0 1440x1000x24' \
   /usr/bin/python3 tests/native.test.py
 ```
 
-Native tests require Xvfb, xauth, xdotool, Python GI, and Python Xlib. They enforce an isolated display and verify window ownership. Never automate an existing user's application window. WebKit tests use real Go/PHP/Phpactor and simulated Docker commands; they do not establish compatibility with a real Docker daemon or every SSH environment.
+Native tests require Xvfb, xauth, xdotool, Python GI, Python Xlib, D-Bus, and AT-SPI (`gir1.2-atspi-2.0` and `at-spi2-core` on Ubuntu). They create isolated display/session/accessibility buses, verify process ownership, and observe accessibility focus and selection before sending dependent keyboard actions. Never automate an existing user's application window. WebKit tests use real Go/PHP/Phpactor and simulated Docker commands; they do not establish compatibility with a real Docker daemon or every SSH environment.
 
 Add regression tests when fixing execution, persistence, transport, parsing, update, export, or security bugs. Do not make tests depend on your SSH credentials, a personal repository, a production database, or a specific home directory. If an integration test is skipped because a dependency is absent, state that explicitly in the PR.
 
