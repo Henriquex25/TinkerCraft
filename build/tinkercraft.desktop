@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=TinkerCraft
+GenericName=PHP scratchpad
+Comment=Seu laboratório pessoal de PHP e Laravel
+Exec=/usr/bin/tinkercraft
+TryExec=/usr/bin/tinkercraft
+Icon=tinkercraft
+Terminal=false
+Categories=Development;IDE;
+Keywords=PHP;Laravel;Tinker;Docker;SSH;
+StartupWMClass=tinkercraft

@@ -1,0 +1,15 @@
+{
+  "name": "tinkercraft",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "./scripts/build.sh",
+    "test": "go test ./...",
+    "test:ui": "node tests/ui.test.mjs",
+    "test:render": "node tests/render.test.mjs"
+  },
+  "devDependencies": {
+    "playwright-core": "1.58.2"
+  }
+}
