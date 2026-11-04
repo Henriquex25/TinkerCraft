@@ -1,0 +1,103 @@
+name: Build Linux release draft
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version (MAJOR.MINOR.PATCH)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ inputs.version }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            webkit_package: libwebkit2gtk-4.0-dev
+            variant: webkit40
+            webkit: "4.0"
+          - os: ubuntu-24.04
+            webkit_package: libwebkit2gtk-4.1-dev
+            variant: webkit41
+            webkit: "4.1"
+    runs-on: ${{ matrix.os }}
+    env:
+      TINKERCRAFT_VERSION: ${{ inputs.version }}
+      TINKERCRAFT_WEBKIT: ${{ matrix.webkit }}
+      TINKERCRAFT_RELEASE_SOURCE: https://github.com/${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: mbstring, dom, sqlite3, curl
+          coverage: none
+      - name: Install Linux build dependencies
+        env:
+          WEBKIT_PACKAGE: ${{ matrix.webkit_package }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config libgtk-3-dev "$WEBKIT_PACKAGE" dpkg-dev desktop-file-utils python3-gi gir1.2-gdkpixbuf-2.0 librsvg2-common
+      - run: npm --prefix frontend ci
+      - run: ./scripts/install-phpactor.sh
+      - run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.15.0
+      - name: Build Debian package
+        run: ./scripts/package-linux.sh
+      - name: Validate source and package
+        env:
+          TINKERCRAFT_PHPACTOR_REAL: ${{ github.workspace }}/.tools/phpactor.phar
+        run: |
+          if [[ "$TINKERCRAFT_WEBKIT" == "4.1" ]]; then
+            go test -tags webkit2_41 ./...
+            go vet -tags webkit2_41 ./...
+          else
+            go test ./...
+            go vet ./...
+          fi
+          node tests/render.test.mjs
+          python3 tests/distribution.test.py
+          cd build/dist
+          sha256sum -c checksums.txt
+      - uses: actions/upload-artifact@v7
+        with:
+          name: linux-amd64-${{ matrix.variant }}
+          path: build/dist/
+          if-no-files-found: error
+          retention-days: 14
+
+  draft:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    env:
+      RELEASE_VERSION: ${{ inputs.version }}
+      RELEASE_SOURCE: https://github.com/${{ github.repository }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          path: packages
+      - name: Prepare release files
+        run: python3 scripts/prepare-release.py "$RELEASE_VERSION" "$RELEASE_SOURCE" packages release-assets
+      - name: Create draft for review
+        run: gh release create "v$RELEASE_VERSION" release-assets/* --draft --title "TinkerCraft $RELEASE_VERSION" --generate-notes --target "$GITHUB_SHA"
