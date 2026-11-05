@@ -78,6 +78,8 @@ O fallback sugere funções, classes e membros públicos/herdados, mas não equi
 
 Ferramentas importadas diretamente pelos testes Node devem estar declaradas e fixadas nas devDependencies da raiz. `esbuild` e `php-parser` dos testes não podem depender da árvore interna do Vite/plugin PHP. Importar pelos nomes públicos dos pacotes. CI e release instalam ambos os lockfiles antes de executar os testes.
 
+Downloads no harness web: verificar exatamente o atributo `download` solicitado pelo app, incluindo Unicode e espaços, além do conteúdo exportado. O nome sugerido é calculado pelo navegador; WebKit 27.2 substitui espaços por underscores, enquanto WebKit 26 os preserva. Aceitar somente as normalizações observadas, sem normalizar ou relaxar o nome original pedido pela aplicação. Esse harness não substitui o teste do diálogo nativo de salvamento Wails.
+
 ```bash
 npm ci
 npm --prefix frontend ci
