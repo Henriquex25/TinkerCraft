@@ -1,4 +1,4 @@
-import { build } from "../frontend/node_modules/esbuild/lib/main.js";
+import { build } from "esbuild";
 import { pathToFileURL } from "node:url";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";

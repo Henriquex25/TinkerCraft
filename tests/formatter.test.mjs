@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
-import { build } from "../frontend/node_modules/esbuild/lib/main.js";
-import { createRequire } from "node:module";
+import { build } from "esbuild";
+import Parser from "php-parser";
 import { mkdtemp, rm, access } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -8,8 +8,6 @@ import { pathToFileURL } from "node:url";
 
 const root = path.resolve(import.meta.dirname, "..");
 const directory = await mkdtemp(path.join(tmpdir(), "tinkercraft-formatter-"));
-const require = createRequire(path.join(root, "frontend/package.json"));
-const Parser = require("php-parser");
 const parser = new Parser();
 function semantic(value) {
   if (Array.isArray(value)) return value.map(semantic);

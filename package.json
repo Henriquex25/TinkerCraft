@@ -12,6 +12,8 @@
     "format:check": "prettier --check \"frontend/src/**/*.{ts,tsx,css,json}\" frontend/vite.config.ts \"tests/*.mjs\" \".github/**/*.{yml,json}\" \"scripts/*.mjs\""
   },
   "devDependencies": {
+    "esbuild": "0.28.2",
+    "php-parser": "3.7.0",
     "playwright-core": "1.58.2",
     "prettier": "3.9.10"
   }
