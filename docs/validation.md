@@ -136,6 +136,14 @@ O run da main `41926345288` passou a instalação e os testes de backend, mas fa
 
 Passaram instalação Composer pelo lockfile sem scripts/plugins, `composer validate --strict`, auditoria Composer de pacotes instalados e do lockfile sem advisories, auditorias npm da raiz/frontend e `govulncheck` v1.9.0 sem vulnerabilidades conhecidas reportadas. O teste `TestRealLaravelBootstrapAndInspection` passou com race detector nas dependências atualizadas. Prettier do Dependabot, actionlint, testes de configuração comunitária e `git diff --check` também passaram. Não houve alteração de assets/backend desktop, rebuild do app, commit, push, nova execução remota ou publicação; a versão continua 0.2.0.
 
+## Dependências explícitas dos testes Node — 4 de novembro de 2026
+
+O erro de módulo esbuild ausente veio do PR Dependabot #10, run `41936214140`, que propõe Vite 8.3.5. Essa versão não declara mais esbuild como dependência; `render.test.mjs` e `formatter.test.mjs` usavam um caminho físico dentro de `frontend/node_modules`, dependendo indiretamente da implementação do Vite. O último push da main (`e4e1512`, run `41936003488`) terminou com sucesso. A atualização proposta do Vite não foi aplicada nesta revisão.
+
+As ferramentas de teste esbuild 0.28.2 e php-parser 3.7.0 foram declaradas explicitamente nas devDependencies da raiz, com lockfile e imports pelos nomes públicos dos pacotes. O teste de formatação também deixou de buscar o parser por meio da árvore transitiva do plugin PHP. O workflow de release agora instala o lockfile da raiz e o do frontend antes dos testes e inclui ambos no cache npm; o CI já instalava os dois.
+
+Passaram `npm ci` da raiz, testes de renderização/CSV e formatação, auditoria npm sem vulnerabilidades conhecidas reportadas, Prettier, actionlint e `git diff --check`. Uma reprodução em diretório temporário omitiu esbuild da árvore do frontend: ambos os testes anteriores falharam com o mesmo ERR_MODULE_NOT_FOUND; as versões corrigidas passaram nessa condição. Não foram alterados app, versões do frontend, assets ou PHP de projetos do usuário. Não houve commit, push, merge de PR, execução de workflow remoto ou publicação; a versão continua 0.2.0.
+
 ## Evidências anteriores por área
 
 | Área | Evidência |
