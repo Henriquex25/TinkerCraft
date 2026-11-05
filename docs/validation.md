@@ -144,6 +144,14 @@ As ferramentas de teste esbuild 0.28.2 e php-parser 3.7.0 foram declaradas expli
 
 Passaram `npm ci` da raiz, testes de renderização/CSV e formatação, auditoria npm sem vulnerabilidades conhecidas reportadas, Prettier, actionlint e `git diff --check`. Uma reprodução em diretório temporário omitiu esbuild da árvore do frontend: ambos os testes anteriores falharam com o mesmo ERR_MODULE_NOT_FOUND; as versões corrigidas passaram nessa condição. Não foram alterados app, versões do frontend, assets ou PHP de projetos do usuário. Não houve commit, push, merge de PR, execução de workflow remoto ou publicação; a versão continua 0.2.0.
 
+## Nome de arquivo exportado no WebKit novo — 4 de novembro de 2026
+
+Os dois logs enviados são execuções da mesma proposta de atualização Playwright 1.58.2 → 1.64.1. Uma reprodução mínima com um link Blob e atributo `download="Consulta de amanhã.php"` retornou `Consulta de amanhã.php` no WebKit 26.0 e `Consulta_de_amanhã.php` no WebKit 27.2. A aplicação solicitava o nome correto nas duas versões; a diferença ocorre no nome sugerido pelo navegador, comportamento cuja variação é documentada no Playwright.
+
+O harness agora observa o atributo `download` enviado ao clique real do link. O teste exige exatamente o nome original com espaços e acentos e mantém a verificação byte a byte do arquivo PHP exportado. Para o nome final sugerido, aceita somente o original ou a substituição de espaços por underscores observada no WebKit novo, preservando extensão e Unicode. Não foi alterado código de produção, nome de aba, diálogo Wails ou regra de exportação do app.
+
+As suítes completas de interface e convites foram executadas com a versão fixada 1.58.2/WebKit 26.0 e com 1.64.1/WebKit 27.2 instalada em diretório de ferramentas isolado. Os testes com a versão nova usam cópias temporárias dos scripts que alteram apenas o import do Playwright; manifests/lockfiles e a versão usada pelo projeto permanecem iguais. Não houve alteração de PR, commit, push ou publicação. O workflow de build `41954317455` foi confirmado como concluído com sucesso no commit `fae3aab`, antes desta correção restrita aos testes. Não foi necessário reconstruir o executável para validar esta mudança.
+
 ## Evidências anteriores por área
 
 | Área | Evidência |

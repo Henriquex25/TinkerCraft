@@ -105,7 +105,14 @@ try {
   page.on("pageerror", (error) => {
     errors.push(error.message);
   });
-  await page.addInitScript(() =>
+  await page.addInitScript(() => {
+    window.__downloadNames = [];
+    const click = HTMLAnchorElement.prototype.click;
+    HTMLAnchorElement.prototype.click = function () {
+      if (this.href.startsWith("blob:"))
+        window.__downloadNames.push(this.download);
+      return click.call(this);
+    };
     Object.defineProperty(navigator, "clipboard", {
       configurable: true,
       value: {
@@ -124,8 +131,8 @@ try {
         readText: async () => "",
         read: async () => [],
       },
-    }),
-  );
+    });
+  });
   await page.goto(address);
   assert.equal(await page.title(), "TinkerCraft · PHP workspace");
   await page.getByTitle("TinkerCraft", { exact: true }).waitFor();
@@ -540,8 +547,20 @@ try {
   const phpDownload = page.waitForEvent("download");
   await page.keyboard.press(`${modifier}+Shift+s`);
   const phpFile = await phpDownload;
-  assert.equal(phpFile.suggestedFilename(), "Consulta de amanhã.php");
+  const requestedPHPName = await page.evaluate(() =>
+    window.__downloadNames.at(-1),
+  );
+  assert.equal(requestedPHPName, "Consulta de amanhã.php");
+  assert(
+    [requestedPHPName, requestedPHPName.replaceAll(" ", "_")].includes(
+      phpFile.suggestedFilename(),
+    ),
+    "Unexpected browser download filename: " + phpFile.suggestedFilename(),
+  );
   assert.equal(await readFile(await phpFile.path(), "utf8"), "<?php\n" + draft);
+  console.log(
+    "PASS: PHP export preserves the requested Unicode filename and exact code; browser space normalization is accepted.",
+  );
   await page.keyboard.press(`${modifier}+Shift+p`);
   await page
     .getByRole("dialog", { name: "Paleta de comandos", exact: true })
