@@ -17,3 +17,5 @@ node tests/render.test.mjs
 node tests/formatter.test.mjs
 python3 tests/distribution.test.py
 python3 tests/community.test.py
+python3 tests/version.test.py
+python3 tests/release.test.py

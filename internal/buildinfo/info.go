@@ -2,15 +2,25 @@ package buildinfo
 
 import (
 	"fmt"
+	"regexp"
 	"runtime"
 	"strings"
 )
 
-var Version = "0.2.0"
+var Version = "dev"
 var ReleaseSource = "https://github.com/Henriquex25/TinkerCraft"
 var Distribution = "source"
 var Commit = "dev"
 var BuildDate = ""
+
+func SetVersion(value string) error {
+	value = strings.TrimSpace(value)
+	if len(value) > 64 || !regexp.MustCompile(`^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$`).MatchString(value) {
+		return fmt.Errorf("VERSION must contain MAJOR.MINOR.PATCH without a v prefix")
+	}
+	Version = value
+	return nil
+}
 
 type Info struct {
 	Version       string `json:"version"`

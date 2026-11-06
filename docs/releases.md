@@ -29,14 +29,13 @@ O `.env` foi criado na raiz e está ignorado pelo Git. Use uma URL pública de r
 
 ```dotenv
 TINKERCRAFT_RELEASE_SOURCE="https://github.com/SEU_USUARIO/SEU_REPOSITORIO"
-TINKERCRAFT_VERSION=""
 TINKERCRAFT_MAINTAINER="TinkerCraft <seu-email>"
 ```
 
 O destino padrão é o repositório oficial `https://github.com/Henriquex25/TinkerCraft`. O mantenedor pode definir outro destino ao compilar um fork. `.env.example` documenta os campos; para outro checkout, copie-o para `.env`. O parser lê esses campos como dados, sem executar comandos ou interpolar o shell. Variáveis exportadas no ambiente têm prioridade. Esse arquivo pertence ao TinkerCraft; ele não é o `.env` Laravel dos projetos.
 
 - `scripts/start.sh` abre o executável já compilado; não redefine a fonte ao iniciar.
-- `scripts/build.sh` embute a fonte no executável; `TINKERCRAFT_VERSION` vazio usa `VERSION`.
+- A versão do app vem exclusivamente do arquivo `VERSION`, embutido no desktop durante a compilação. Não há override por `.env`, ambiente ou campo do workflow. A chave antiga `TINKERCRAFT_VERSION` em `.env` é ignorada para compatibilidade.
 - A versão **instalada** usa exclusivamente a fonte embutida no build. Alterar o `.env` do checkout não reconfigura um pacote já instalado; alterações do mantenedor exigem recompilação.
 - Para desabilitar consultas automáticas, desmarque **Verificar atualizações ao iniciar**. Não há campo de URL nas preferências; valores antigos são ignorados e descartados no próximo salvamento.
 
@@ -78,16 +77,16 @@ Sem seleção explícita, o build prefere os headers WebKit 4.1 se disponíveis,
 
 ## GitHub Releases
 
-O repositório público é `https://github.com/Henriquex25/TinkerCraft`. O [guia do mantenedor](github-maintainer.md) explica o primeiro setup do GitHub, PRs e publicação passo a passo. Ainda não há releases publicados.
+O repositório público é `https://github.com/Henriquex25/TinkerCraft`. O [guia do mantenedor](github-maintainer.md) explica o primeiro setup do GitHub, PRs e publicação passo a passo. A versão 0.2.0 já foi publicada; as instruções abaixo descrevem o fluxo para versões seguintes.
 
 1. Preencha o `.env` para builds locais e envie o código ao repositório. O `.env`, arquivos de workspace, cache, ferramentas e pacotes gerados permanecem fora do Git.
-2. Faça o merge das alterações e da versão em `main`, aguarde o CI de push nesse mesmo commit passar e, em **Actions**, execute **Build Linux release draft** na branch **main**, informando, por exemplo, `0.2.0`, sem `v`. `VERSION`, manifests npm e lockfiles precisam ter essa versão.
-3. A automação verifica branch, consistência da versão e CI aprovado no SHA exato, compila em Ubuntu 22.04/24.04, testa Go/TypeScript/renderização, reúne os dois `.deb`, verifica hashes e cria um **release em rascunho** com `checksums.txt` e `manifest.json`. A URL do próprio repositório é embutida automaticamente; não precisa cadastrar segredo de URL.
+2. Altere somente `VERSION` para a nova versão, faça commit/push e, se aplicável, merge em `main`. Aguarde o CI de push desse mesmo commit passar, inclusive quando só a versão mudou. Em **Actions**, execute **Build Linux release draft** na branch **main**; não há campo de versão para preencher.
+3. A automação verifica branch, formato de `VERSION` e CI aprovado no SHA exato, compila em Ubuntu 22.04/24.04, testa Go/TypeScript/renderização, reúne os dois `.deb`, verifica hashes e cria um **release em rascunho** com `checksums.txt` e `manifest.json`. A URL do próprio repositório é embutida automaticamente; não precisa cadastrar segredo de URL.
 4. Revise as notas e os pacotes; publique o rascunho pelo GitHub. Só releases estáveis publicados entram na consulta `releases/latest`. Rascunhos e pré-releases ficam fora desse canal.
 
-O workflow está em `.github/workflows/release.yml`; usa o token temporário do GitHub, com permissão de escrita apenas no job que cria o rascunho. Ainda não foi executado na nuvem nesta revisão. O repositório público `Henriquex25/TinkerCraft` foi confirmado; faltam publicar esta revisão e validar o primeiro release. Ele não publica automaticamente.
+O workflow está em `.github/workflows/release.yml`; usa o token temporário do GitHub, com permissão de escrita apenas no job que cria o rascunho. Ainda não foi executado na nuvem nesta revisão. O repositório público `Henriquex25/TinkerCraft` já possui a primeira release. Esta revisão do fluxo ainda precisa ser enviada e validada na nuvem. Ele não publica automaticamente.
 
-Para versões seguintes, altere `VERSION`, as versões npm da raiz/frontend e seus lockfiles no código e informe a mesma versão ao workflow. O guia do mantenedor traz os comandos. Não reutilize um número já publicado para pacotes com código diferente; gere uma versão superior. O agregador rejeita artefatos com versões divergentes, variantes duplicadas ou hash/tamanho incorretos. Um release sem pacote compatível ainda pode ser anunciado, mas o botão de download não é habilitado.
+Para versões seguintes, altere apenas `VERSION`. Os pacotes npm privados não declaram a versão do aplicativo; o código Go e a interface recebem o valor do arquivo central. O guia do mantenedor traz os comandos. Não use `[skip ci]` ou `[skip actions]` no commit de versão: o workflow continua exigindo CI aprovado para o commit exato, sem reaproveitar resultados de commits anteriores. Não reutilize um número já publicado para pacotes com código diferente; gere uma versão superior. O agregador rejeita artefatos com versões divergentes, variantes duplicadas ou hash/tamanho incorretos. Um release sem pacote compatível ainda pode ser anunciado, mas o botão de download não é habilitado.
 
 O backend também aceita um manifesto HTTPS no formato gerado, caso a hospedagem mude no futuro. O caminho padrão desta implementação é GitHub Releases público, usando o digest SHA-256 da API ou o arquivo `checksums.txt` do release.
 

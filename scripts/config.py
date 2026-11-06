@@ -6,7 +6,7 @@ import re
 import sys
 
 ROOT = Path(__file__).resolve().parent.parent
-ALLOWED = {'TINKERCRAFT_RELEASE_SOURCE', 'TINKERCRAFT_VERSION', 'TINKERCRAFT_MAINTAINER'}
+ALLOWED = {'TINKERCRAFT_RELEASE_SOURCE', 'TINKERCRAFT_MAINTAINER'}
 
 def values():
     result = {}
@@ -21,6 +21,8 @@ def values():
         if not match:
             raise ValueError(f'.env: linha {number} inválida')
         key, value = match.groups()
+        if key == 'TINKERCRAFT_VERSION':
+            continue
         if key not in ALLOWED:
             raise ValueError(f'.env: variável não reconhecida na linha {number}')
         if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":

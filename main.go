@@ -20,7 +20,14 @@ var assets embed.FS
 //go:embed build/appicon-small.png
 var appIcon []byte
 
+//go:embed VERSION
+var appVersion string
+
 func main() {
+	if err := buildinfo.SetVersion(appVersion); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 	if len(os.Args) > 1 && os.Args[1] == "--version" {
 		fmt.Println(buildinfo.Version)
 		return

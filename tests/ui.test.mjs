@@ -5,6 +5,9 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { chromium, webkit } from "playwright-core";
 const root = path.resolve(import.meta.dirname, "..");
+const projectVersion = (
+  await readFile(path.join(root, "VERSION"), "utf8")
+).trim();
 const data = await mkdtemp(path.join(tmpdir(), "tinkercraft-ui-"));
 const token = "tinkercraft-test-" + Date.now();
 let server, browser;
@@ -147,7 +150,10 @@ try {
   await page.getByLabel("Search commands").fill("Dismiss GitHub invitation");
   await page.keyboard.press("Enter");
   await page.locator(".repository-prompt").waitFor({ state: "detached" });
-  assert.equal(await page.locator(".app-version").textContent(), "v0.2.0");
+  assert.equal(
+    await page.locator(".app-version").textContent(),
+    "v" + projectVersion,
+  );
   const initialWorkspace = JSON.parse(
     await readFile(path.join(data, "workspace.json"), "utf8"),
   );

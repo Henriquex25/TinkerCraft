@@ -2,8 +2,7 @@
 set -euo pipefail
 project_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$project_root"
-version="$(python3 scripts/config.py TINKERCRAFT_VERSION)"
-version="${version:-$(cat VERSION)}"
+version="$(python3 scripts/version.py)"
 release_source="$(python3 scripts/config.py TINKERCRAFT_RELEASE_SOURCE)"
 package_format="${TINKERCRAFT_PACKAGE_FORMAT:-source}"
 [[ "$version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || { echo 'Versão inválida; use MAJOR.MINOR.PATCH.' >&2; exit 1; }
@@ -13,7 +12,7 @@ source_pattern='^https://[a-zA-Z0-9._:/?=%&+-]+$'
 commit="$(git rev-parse --short HEAD 2>/dev/null || true)"
 commit="${commit:-dev}"
 build_date="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-ldflags="-X tinkercraft/internal/buildinfo.Version=$version -X tinkercraft/internal/buildinfo.Distribution=$package_format -X tinkercraft/internal/buildinfo.Commit=$commit -X tinkercraft/internal/buildinfo.BuildDate=$build_date"
+ldflags="-X tinkercraft/internal/buildinfo.Distribution=$package_format -X tinkercraft/internal/buildinfo.Commit=$commit -X tinkercraft/internal/buildinfo.BuildDate=$build_date"
 if [[ -n "$release_source" ]]; then ldflags+=" -X tinkercraft/internal/buildinfo.ReleaseSource=$release_source"; fi
 /usr/bin/python3 scripts/prepare-icons.py
 if [[ ! -d frontend/node_modules ]]; then npm --prefix frontend ci; fi

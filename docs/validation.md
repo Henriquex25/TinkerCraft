@@ -152,6 +152,18 @@ O harness agora observa o atributo `download` enviado ao clique real do link. O 
 
 As suítes completas de interface e convites foram executadas com a versão fixada 1.58.2/WebKit 26.0 e com 1.64.1/WebKit 27.2 instalada em diretório de ferramentas isolado. Os testes com a versão nova usam cópias temporárias dos scripts que alteram apenas o import do Playwright; manifests/lockfiles e a versão usada pelo projeto permanecem iguais. Não houve alteração de PR, commit, push ou publicação. O workflow de build `41954317455` foi confirmado como concluído com sucesso no commit `fae3aab`, antes desta correção restrita aos testes. Não foi necessário reconstruir o executável para validar esta mudança.
 
+## Versão centralizada e gate de release — 6 de novembro de 2026
+
+`VERSION` da raiz passou a ser a única fonte da versão do aplicativo. O desktop embute esse arquivo em tempo de compilação e o harness de desenvolvimento lê o mesmo arquivo. Foram removidos os campos de versão dos dois manifests npm privados e das suas entradas raiz nos lockfiles, o valor numérico padrão em Go e o override de versão no build. A variável/chave antiga `TINKERCRAFT_VERSION` não define mais a versão; a chave antiga em `.env` é ignorada por compatibilidade. A preparação 0.2.1 do mantenedor foi preservada no arquivo central.
+
+O workflow manual de release não tem campo de versão. `scripts/release_preflight.py` valida `VERSION` e exige uma execução CI concluída com sucesso, por push, na main, no SHA exato e no próprio repositório. A versão validada é propagada ao job que cria o draft; o job de build compila o arquivo central. Foram mantidos os testes completos por alteração, inclusive versões, e removido o filtro paths-ignore que havia sido adicionado à versão. A alternativa de reaproveitar CI de outro commit foi descartada nesta revisão para manter a política simples e estrita, conforme a prioridade do mantenedor.
+
+Passaram instalação limpa npm da raiz/frontend sem campos de versão, `./scripts/check.sh` com Laravel e Phpactor reais, race detector, vet, TypeScript/Vite, renderização, formatação PHP, distribuição e testes de comunidade. Novos testes cobrem versões inválidas, fontes npm redundantes, variável antiga, symlink, evidência de CI de outro SHA/branch/repositório, CI somente de PR/manual, execução incompleta/falha/skipped, ausência de CI e erro de API. A API real aceitou evidência do commit aprovado `f23b4f9` e rejeitou `1b53a15`, que não possuía push CI bem-sucedido. Nenhum workflow remoto foi disparado.
+
+Passaram as suítes WebKit completas com a versão central no rodapé e o pacote 0.2.1 WebKit 4.0 extraído, executado a partir de `/tmp` em Xvfb: Phpactor, idiomas, formatação, undo, execução, última edição, reabertura e convites. O executável reportou 0.2.1 mesmo com um arquivo VERSION diferente no diretório de trabalho e variável de ambiente 9.9.9. A versão do controle Debian e dos metadados de release correspondeu ao arquivo central. Passaram actionlint, Prettier, sintaxe Python/Bash, `git diff --check` e auditorias npm, Composer e Go sem vulnerabilidades conhecidas reportadas.
+
+Não houve instalação no sistema, commit, push ou publicação de 0.2.1. O novo fluxo precisa ser enviado sem instruções de skip, passar pelo CI na main e então ser executado manualmente pelo mantenedor. A variante WebKit 4.1 não foi construída localmente nesta revisão.
+
 ## Evidências anteriores por área
 
 | Área | Evidência |
