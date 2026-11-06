@@ -320,6 +320,87 @@ try {
   await page.locator(".output-panel").waitFor({ state: "hidden" });
   await page.getByRole("button", { name: "Run", exact: false }).first().click();
   await page.getByText("Execution completed", { exact: true }).waitFor();
+  const separator = page.getByRole("separator", {
+    name: "Resize editor and output",
+    exact: true,
+  });
+  for (const width of [1440, 1280, 1000]) {
+    await page.setViewportSize({ width, height: 950 });
+    for (const split of [52, 70]) {
+      await separator.focus();
+      while (Number(await separator.getAttribute("aria-valuenow")) !== split) {
+        await page.keyboard.press(
+          Number(await separator.getAttribute("aria-valuenow")) < split
+            ? "ArrowRight"
+            : "ArrowLeft",
+        );
+      }
+      for (const mode of ["Inspect", "Table", "JSON"]) {
+        await page
+          .locator(".output-tabs")
+          .getByRole("button", { name: mode, exact: true })
+          .click();
+        const layout = await page
+          .locator(".output-tabs")
+          .evaluate((toolbar) => {
+            const bounds = toolbar.getBoundingClientRect();
+            const content = toolbar.nextElementSibling.getBoundingClientRect();
+            const buttons = [...toolbar.querySelectorAll("button")].map(
+              (button) => {
+                const rect = button.getBoundingClientRect();
+                return {
+                  label: button.getAttribute("aria-label"),
+                  left: rect.left,
+                  right: rect.right,
+                  top: rect.top,
+                  bottom: rect.bottom,
+                };
+              },
+            );
+            const outside = buttons.filter(
+              (rect) =>
+                rect.left < bounds.left - 1 ||
+                rect.right > bounds.right + 1 ||
+                rect.top < bounds.top - 1 ||
+                rect.bottom > bounds.bottom + 1 ||
+                rect.bottom > content.top + 1,
+            );
+            const overlaps = buttons.flatMap((rect, i) =>
+              buttons
+                .slice(i + 1)
+                .filter(
+                  (other) =>
+                    Math.min(rect.right, other.right) -
+                      Math.max(rect.left, other.left) >
+                      1 &&
+                    Math.min(rect.bottom, other.bottom) -
+                      Math.max(rect.top, other.top) >
+                      1,
+                )
+                .map((other) => [rect.label, other.label]),
+            );
+            return { outside, overlaps };
+          });
+        assert.deepEqual(
+          layout,
+          { outside: [], overlaps: [] },
+          `Output controls must stay inside their header: viewport=${width}, editor=${split}%, mode=${mode}`,
+        );
+      }
+      if (width === 1000 && split === 70)
+        await page.screenshot({
+          path: path.join(root, "test-results/tinkercraft-output-narrow.png"),
+          fullPage: true,
+        });
+    }
+  }
+  await page.setViewportSize({ width: 1440, height: 950 });
+  await separator.focus();
+  while (Number(await separator.getAttribute("aria-valuenow")) > 52)
+    await page.keyboard.press("ArrowLeft");
+  console.log(
+    "PASS: output toolbar contains every control without overlaps at 1000/1280/1440px, both pane widths, and Inspect/Table/JSON modes.",
+  );
   await page.getByRole("button", { name: "Table", exact: true }).click();
   await page.getByRole("cell", { name: "Ana Silva", exact: true }).waitFor();
   await page.screenshot({
