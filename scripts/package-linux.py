@@ -121,7 +121,7 @@ Priority: optional
 Architecture: {arch}
 Maintainer: {maintainer}
 Installed-Size: {size}
-Depends: {depends}, xdg-utils
+Depends: {depends}, xdg-utils, apt, pkexec | policykit-1
 Recommends: php-cli (>= 2:8.2) | php8.2-cli | php8.3-cli | php8.4-cli | php8.5-cli, openssh-client
 Suggests: docker.io, php-mbstring, php-xml, php-sqlite3
 Description: Desktop scratchpad for PHP and Laravel

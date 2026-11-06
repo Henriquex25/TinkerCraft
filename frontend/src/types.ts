@@ -121,6 +121,9 @@ export interface BuildInfo {
   buildDate: string;
 }
 export interface UpdateInfo {
+  installedVersion: string;
+  restartRequired: boolean;
+  canInstall: boolean;
   build: BuildInfo;
   configured: boolean;
   source: string;
@@ -143,7 +146,8 @@ export interface API {
   BuildInfo(): Promise<BuildInfo>;
   CheckUpdates(): Promise<UpdateInfo>;
   DownloadUpdate(): Promise<UpdateDownload>;
-  OpenUpdateInstaller(): Promise<void>;
+  UpdateApp(): Promise<void>;
+  RestartUpdatedApp(): Promise<void>;
   OpenUpdateRelease(): Promise<void>;
   EnableCloseGuard(): Promise<void>;
   DisableCloseGuard(): Promise<void>;

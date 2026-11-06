@@ -47,7 +47,7 @@
   "Resize editor and output": "Redimensionar editor e resultado",
   "Your machine": "Sua máquina",
   "Update available": "Atualização disponível",
-  "Update": "Atualização",
+  "Update": "Atualizar",
   "Completion ready": "Autocomplete pronto",
   "Preparing completion": "Preparando autocomplete",
   "Completion warning": "Autocomplete com aviso",
@@ -329,5 +329,15 @@
   "Indentation must be between 1 and 8 spaces.": "A indentação deve ficar entre 1 e 8 espaços.",
   "Line width must be between 40 and 240 characters.": "A largura de linha deve ficar entre 40 e 240 caracteres.",
   "Formatting switches must be true or false.": "As opções de formatação devem ser true ou false.",
-  "Brace style must be per-cs or 1tbs.": "O estilo das chaves deve ser per-cs ou 1tbs."
+  "Brace style must be per-cs or 1tbs.": "O estilo das chaves deve ser per-cs ou 1tbs.",
+  "Restart to update": "Reiniciar para atualizar",
+  "Remind me later": "Lembrar mais tarde",
+  "Authorize the update in the Linux dialog. Installing…": "Autorize a atualização na janela do Linux. Instalando…",
+  "Saving your tabs and restarting TinkerCraft…": "Salvando suas abas e reiniciando o TinkerCraft…",
+  "The update is already installed. Restart to use the new version.": "A atualização já está instalada. Reinicie para usar a nova versão.",
+  "Update TinkerCraft and continue with your tabs restored. Linux may ask for administrator authorization.": "Atualize o TinkerCraft e continue com suas abas restauradas. O Linux pode solicitar autorização de administrador.",
+  "The package is {0} MiB. TinkerCraft will install it and restart after Linux authorization.": "O pacote tem {0} MiB. O TinkerCraft fará a instalação e reiniciará após a autorização do Linux.",
+  "Updates start only when you choose Update. If authorization or installation fails, the app stays open.": "As atualizações só começam quando você escolhe Atualizar. Se a autorização ou instalação falhar, o aplicativo permanece aberto.",
+  "Please wait for the update to finish.": "Aguarde a conclusão da atualização.",
+  "Automatic updates are available in the installed Debian app. Install the official .deb package first.": "As atualizações automáticas estão disponíveis no aplicativo instalado pelo pacote Debian. Instale primeiro o .deb oficial."
 }

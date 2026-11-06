@@ -12,6 +12,7 @@ import (
 	"tinkercraft/internal/buildinfo"
 	"tinkercraft/internal/service"
 	"tinkercraft/internal/storage"
+	"tinkercraft/internal/updates"
 )
 
 //go:embed all:frontend/dist
@@ -36,6 +37,12 @@ func main() {
 		json.NewEncoder(os.Stdout).Encode(buildinfo.Current())
 		return
 	}
+	if len(os.Args) > 1 && os.Args[1] == "--relaunch-after-update" {
+		if err := updates.RelaunchAfterUpdate(); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+	}
 
 	dir, err := storage.WorkspaceDirectory()
 	if err != nil {
@@ -48,7 +55,7 @@ func main() {
 		os.Exit(1)
 	}
 	defer svc.Close()
-	app := &App{svc: svc}
+	app := &App{svc: svc, installer: updates.NewInstaller(buildinfo.Current())}
 	windowTitle := "TinkerCraft · PHP workspace"
 	if svc.Store.Snapshot().Settings.Language == "pt-BR" {
 		windowTitle = "TinkerCraft · Workspace PHP"

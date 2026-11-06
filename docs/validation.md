@@ -230,3 +230,19 @@ Screenshots da aplicação: `test-results/tinkercraft-native-ux.png` e `test-res
 4. Percorrer seletores de arquivo, exportação e clipboard no shell Wails nativo; o teste HTTP de exportação não substitui esses diálogos.
 
 As integrações verificadas não estabelecem equivalência integral com o Tinkerwell nem cobertura de todos os ambientes.
+
+## Atualização integrada — 6 de novembro de 2026
+
+A investigação foi somente de leitura na instalação pessoal: dpkg e o executável no disco identificaram 0.2.1; `/proc/<pid>/exe --version-json` identificou 0.2.0 na janela ainda aberta. O pacote baixado também era 0.2.1. Essa diferença explica o aviso repetido e a ausência de Atualizar no Eddy. Nenhuma instalação administrativa nem fechamento da janela pessoal foi executado nesta revisão.
+
+O fluxo novo exibe convite ao iniciar e mantém o indicador no rodapé. Um único Update salva abas, baixa/verifica o pacote, solicita autorização gráfica via pkexec/APT, confirma a versão instalada e inicia o fechamento com persistência. Se o disco já contém a atualização, o mesmo botão apenas reinicia. O novo processo recebe um pipe: aguarda confirmação de salvamento e EOF real do anterior. O diálogo pode ser fechado/reaberto durante a tarefa sem liberar outra instalação. Markdown usa React sem HTML bruto, links ativos ou imagens remotas. O README agora separa a instalação do .deb das instruções recolhidas para contribuidores.
+
+Passaram `scripts/check.sh` (Go race, vet, build TypeScript/Vite, renderização, formatação e scripts de distribuição/comunidade/versão/release), testes adicionais Go do instalador, `npm run test:ui` completo em WebKit e auditoria npm de produção sem vulnerabilidades conhecidas. O teste WebKit usa fixtures de instalador: cobre convite, adiar, rodapé, Markdown hostil, autorização cancelada, ação única por teclado, fechamento/reabertura do diálogo durante instalação, rejeição de duplicatas e gravações antes do reinício. Os testes Go validam metadata de um .deb real isolado, argv fixo, bloqueio de downgrade/pacote incorreto, cancelamento/falha/não confirmação, falha de preparação do filho, limite de logs e protocolo do pipe; nenhum deles executa pkexec/APT no host.
+
+O teste nativo em Xvfb e buses D-Bus privados passou, incluindo edição final no fechamento, restauração de abas, idioma, formatação e convites. Uma nova instância real com `--relaunch-after-update` permaneceu sem janela antes da confirmação e antes de fechar o pipe; após EOF abriu o workspace preservado. Isso valida o mecanismo de reabertura com o binário desktop, sem comprovar instalação privilegiada.
+
+O pacote WebKit 4.0 foi gerado localmente para inspeção/extração. VERSION foi mantido em 0.2.1; esse artefato local com código modificado não substitui a release pública e não deve ser republicado com o número já existente. Nenhum commit, push ou publicação foi realizado. A CLI Wails local continua em 2.15.0 e emite aviso de diferença para a biblioteca 2.17.1; o build concluiu.
+
+Pendentes: transação APT e autorização gráfica reais a partir de uma nova release publicada, recuperação de erros específicos de outras distribuições e smoke test da variante WebKit 4.1. Instalações antigas precisam receber esta implementação pelo fluxo antigo uma vez; as atualizações posteriores usam o novo botão único. PHP local 8.2+ segue como dependência externa; ferramentas de compilação não são necessárias para instalar o .deb.
+
+A verificação nativa final também passou com o executável extraído do .deb reconstruído desta revisão, executado a partir de `/tmp`, sem instalação no host. Foram conferidos os campos Version/Depends do pacote: APT e `pkexec | policykit-1` constam nas dependências. Os testes Go race/vet e a checagem de formatação foram repetidos após os últimos ajustes e passaram.

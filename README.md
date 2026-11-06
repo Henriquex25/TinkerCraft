@@ -48,17 +48,22 @@ The initial distribution format is a Debian `.deb` package with a desktop entry 
 | `linux-amd64-webkit40` | Ubuntu / Pop!_OS 22.04, x86-64 |
 | `linux-amd64-webkit41` | Ubuntu 24.04, x86-64; release build configured, runtime validation pending |
 
-The public repository is [Henriquex25/TinkerCraft](https://github.com/Henriquex25/TinkerCraft). Download published installers from [Releases](https://github.com/Henriquex25/TinkerCraft/releases), or build a package locally using the instructions below. Published packages include their update repository automatically: **end users do not need an `.env` file**.
+1. Open [Releases](https://github.com/Henriquex25/TinkerCraft/releases) and download the `.deb` matching your system in the table above. The **Source code** archives are for contributors.
+2. Double-click the downloaded `.deb`, choose **Install** in your Linux package installer, and authorize installation. It resolves GTK/WebKit and updater dependencies from your distribution's repositories.
+3. Open **TinkerCraft** from the application menu.
 
-For a locally built WebKit 4.0 package:
+**You do not need Go, Node.js, npm, Wails, development headers, an `.env` file, or the build scripts to install a published package.** Phpactor and the update repository are already included. A local PHP 8.2+ CLI remains required for parsing and language support.
 
-```bash
-sudo apt install ./build/dist/tinkercraft_0.2.0_linux_amd64_webkit40.deb
-```
+If your desktop has no graphical package installer, install the downloaded file with `sudo apt install ./tinkercraft_<version>_<variant>.deb`, replacing the placeholders with its actual filename.
 
-Open **TinkerCraft** from your application menu. Configure an absolute PHP path in Preferences if your desktop session cannot find it. Updates download only after your action, are checked against the published SHA-256, and install through the operating system's package installer.
+Open **TinkerCraft** from your application menu. Configure an absolute PHP path in Preferences if your desktop session cannot find it. A startup invitation announces updates; choose **Update** to download, verify, authorize installation through Linux, and reopen with your tabs restored. **Remind me later** keeps the footer indicator. If the update is already installed on disk, the same **Update** button restarts directly without reinstalling it. Updates never install on startup or without your action.
 
-## Build from source
+## For contributors: build from source
+
+Skip this section if you installed a published `.deb`. These commands are for developing or compiling TinkerCraft yourself.
+
+<details>
+<summary>Show source build requirements and commands</summary>
 
 You need Go, Node.js 22.12+, PHP 8.2+, and GTK3 / WebKit2GTK development packages. Go 1.27.3 and PHP 8.4 are used in CI. On Ubuntu / Pop!_OS 22.04:
 
@@ -76,6 +81,8 @@ go install github.com/wailsapp/wails/v2/cmd/wails@v2.15.0
 On Ubuntu 24.04, use `libwebkit2gtk-4.1-dev` instead. The build selects the installed WebKit variant; `TINKERCRAFT_WEBKIT=4.0` or `4.1` overrides the selection. Build a `.deb` with `./scripts/package-linux.sh`. The application version comes only from the root `VERSION` file and is embedded in the desktop executable. Private npm manifests intentionally omit an application version.
 
 The Phpactor installer verifies the pinned checksum **before executing the download**. Settings, tabs, and history are stored locally in `~/.config/tinkercraft`, with compatibility for earlier Lume workspaces. Set `TINKERCRAFT_DATA_DIR` to use an isolated workspace.
+
+</details>
 
 Official installers manage Phpactor and the update repository internally. These components are not editable in Preferences; legacy overrides are ignored. You can configure the installed local PHP executable, cache retention, language, keyboard shortcuts, formatting, and startup update checks.
 

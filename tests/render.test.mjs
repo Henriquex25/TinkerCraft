@@ -16,6 +16,12 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import assert from 'node:assert/strict';
 import { Output, plain } from './src/output';
 import { snippetBody } from './src/php';
+import { ReleaseNotes } from './src/release-notes';
+const markdown = renderToStaticMarkup(<ReleaseNotes notes={'## Changes\\n\\n- **Fixed** '+String.fromCharCode(96)+'PHP'+String.fromCharCode(96)+'\\n\\n<script>alert(1)</script>\\n\\n![track](https://evil.example/x) [bad](javascript:alert(1))'} />);
+assert(markdown.includes('<h2>Changes</h2>'));
+assert(markdown.includes('<li><strong>Fixed</strong> <code>PHP</code></li>'));
+assert(!/<(script|img|a)[ >]/.test(markdown));
+
 import { csv } from './src/csv';
 import { setUILanguage, t, uiLanguage, translateStatus } from './src/i18n';
 import portuguese from './src/locales/pt-BR.json';

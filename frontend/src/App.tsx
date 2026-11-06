@@ -46,7 +46,7 @@ import {
   Modal,
 } from "./dialogs";
 import { Output } from "./output";
-import { UpdatesDialog } from "./updates";
+import { UpdatePrompt, UpdatesDialog, useAppUpdate } from "./updates";
 import { CommunityPrompt } from "./community";
 import { BrandIcon } from "./brand";
 import {
@@ -98,6 +98,7 @@ export default function App() {
   const [checkingUpdates, setCheckingUpdates] = useState(false);
   const [updatesOpen, setUpdatesOpen] = useState(false);
   const [updateError, setUpdateError] = useState("");
+  const [dismissedUpdate, setDismissedUpdate] = useState("");
   const checkingUpdateRef = useRef(false);
   const [toast, setToast] = useState("");
   const [historyFilter, setHistoryFilter] = useState("");
@@ -228,6 +229,17 @@ export default function App() {
         throw error;
       }
     },
+    [notify],
+  );
+  const updater = useAppUpdate(async () => {
+    await settleEditorInput();
+    await saveWorkspace();
+  });
+  useEffect(
+    () =>
+      window.runtime?.EventsOn("update:busy", () =>
+        notify(tr("Please wait for the update to finish.")),
+      ),
     [notify],
   );
   useEffect(() => {
@@ -1236,13 +1248,17 @@ export default function App() {
       )}
       {updatesOpen && (
         <UpdatesDialog
+          updater={updater}
           support={supportProject}
           info={updateInfo}
           build={buildInfo}
           checking={checkingUpdates}
           error={updateError}
           check={() => checkUpdates(true)}
-          close={() => setUpdatesOpen(false)}
+          close={() => {
+            setUpdatesOpen(false);
+            if (updateInfo) setDismissedUpdate(updateInfo.latestVersion);
+          }}
         />
       )}
       {languageDetails && (
@@ -1318,7 +1334,20 @@ export default function App() {
           </div>
         </Modal>
       )}
-      {!state.settings.starPromptDismissed && (
+      {updateInfo?.available &&
+        dismissedUpdate !== updateInfo.latestVersion &&
+        !updatesOpen &&
+        !settingsOpen &&
+        !profileModal &&
+        !languageDetails && (
+          <UpdatePrompt
+            info={updateInfo}
+            updater={updater}
+            dismiss={() => setDismissedUpdate(updateInfo.latestVersion)}
+            details={() => setUpdatesOpen(true)}
+          />
+        )}
+      {!updateInfo?.available && !state.settings.starPromptDismissed && (
         <CommunityPrompt
           dismissed={() =>
             setState(
@@ -1332,7 +1361,8 @@ export default function App() {
           notify={notify}
         />
       )}
-      {state.settings.starPromptDismissed &&
+      {!updateInfo?.available &&
+        state.settings.starPromptDismissed &&
         state.suggestSupport &&
         !state.settings.donationPromptDismissed && (
           <CommunityPrompt

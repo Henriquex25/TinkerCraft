@@ -2961,12 +2961,37 @@ button > .action-shortcut {
 .release-notes summary {
   cursor: pointer;
 }
-.release-notes pre {
+.release-markdown {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   font: inherit;
   font-size: 13px;
   line-height: 1.7;
+}
+.release-markdown h1,
+.release-markdown h2,
+.release-markdown h3,
+.release-markdown h4 {
+  font-size: 16px;
+  margin: 18px 0 10px;
+}
+.release-markdown li {
+  margin-bottom: 6px;
+}
+.release-markdown pre {
+  padding: 12px;
+  background: #181818;
+  overflow-x: auto;
+}
+.release-markdown code {
+  font-family: var(--font-mono, monospace);
+  font-size: 13px;
+}
+.update-prompt .text-button {
+  color: var(--accent);
+  padding: 0;
+  text-decoration: underline;
+  font-size: 14px;
 }
 .checkbox-field {
   display: flex;

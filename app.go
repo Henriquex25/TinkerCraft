@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"sync/atomic"
+	"time"
 	"tinkercraft/internal/buildinfo"
 	"tinkercraft/internal/core"
 	"tinkercraft/internal/execution"
@@ -19,18 +20,47 @@ import (
 )
 
 type App struct {
-	closeGuard   atomic.Bool
-	closePending atomic.Bool
-	closeAllowed atomic.Bool
-	ctx          context.Context
-	svc          *service.Service
+	closeGuard    atomic.Bool
+	closePending  atomic.Bool
+	closeAllowed  atomic.Bool
+	updateBusy    atomic.Bool
+	updateMu      sync.Mutex
+	updateVersion string
+	restartPipe   *os.File
+	installer     *updates.Installer
+	ctx           context.Context
+	svc           *service.Service
 }
 
 func (a *App) EnableCloseGuard()  { a.closeGuard.Store(true) }
 func (a *App) DisableCloseGuard() { a.closeGuard.Store(false) }
-func (a *App) ConfirmClose()      { a.closeAllowed.Store(true); runtime.Quit(a.ctx) }
-func (a *App) CancelClose()       { a.closePending.Store(false) }
+func (a *App) ConfirmClose() {
+	a.updateMu.Lock()
+	if a.restartPipe != nil {
+		if _, err := a.restartPipe.Write([]byte{'R'}); err != nil {
+			a.updateMu.Unlock()
+			a.CancelClose()
+			return
+		}
+	}
+	a.updateMu.Unlock()
+	a.closeAllowed.Store(true)
+	runtime.Quit(a.ctx)
+}
+func (a *App) CancelClose() {
+	a.updateMu.Lock()
+	if a.restartPipe != nil {
+		a.restartPipe.Close()
+		a.restartPipe = nil
+	}
+	a.updateMu.Unlock()
+	a.closePending.Store(false)
+}
 func (a *App) beforeClose(ctx context.Context) bool {
+	if a.updateBusy.Load() {
+		runtime.EventsEmit(ctx, "update:busy")
+		return true
+	}
 	if !a.closeGuard.Load() || a.closeAllowed.Load() {
 		return false
 	}
@@ -100,21 +130,72 @@ func (a *App) LanguageRequest(id, method, code string, line, character int) (any
 func (a *App) ResolveCompletion(id string, item json.RawMessage) (any, error) {
 	return a.svc.ResolveCompletion(id, item)
 }
-func (a *App) ClearHistory() error                       { return a.svc.ClearHistory() }
-func (a *App) BuildInfo() buildinfo.Info                 { return a.svc.BuildInfo() }
-func (a *App) CheckUpdates() (updates.Info, error)       { return a.svc.CheckUpdates() }
+func (a *App) ClearHistory() error       { return a.svc.ClearHistory() }
+func (a *App) BuildInfo() buildinfo.Info { return a.svc.BuildInfo() }
+func (a *App) CheckUpdates() (updates.Info, error) {
+	info, err := a.svc.CheckUpdates()
+	info.InstallStatus = a.installer.Status(a.ctx, info.LatestVersion)
+	return info, err
+}
 func (a *App) DownloadUpdate() (updates.Download, error) { return a.svc.DownloadUpdate() }
-func (a *App) OpenUpdateInstaller() error {
-	path, err := a.svc.InstallerPackage()
+func (a *App) UpdateApp() error {
+	if a.closePending.Load() {
+		return fmt.Errorf("The app is closing. Try updating after reopening it.")
+	}
+	if !a.updateBusy.CompareAndSwap(false, true) {
+		return fmt.Errorf("An update is already in progress.")
+	}
+	defer a.updateBusy.Store(false)
+	ctx, cancel := context.WithTimeout(a.ctx, 20*time.Minute)
+	defer cancel()
+	info, err := a.svc.CheckUpdates()
 	if err != nil {
 		return err
 	}
-
-	command := exec.Command("xdg-open", path)
-	if err = command.Start(); err != nil {
+	status := a.installer.Status(ctx, info.LatestVersion)
+	version := status.InstalledVersion
+	if !status.CanInstall {
+		return fmt.Errorf("Automatic updates are available in the installed Debian app. Install the official .deb package first.")
+	}
+	if !status.RestartRequired {
+		runtime.EventsEmit(a.ctx, "update:progress", "downloading")
+		download, err := a.svc.DownloadUpdate()
+		if err != nil {
+			return err
+		}
+		path, err := a.svc.InstallerPackage()
+		if err != nil {
+			return err
+		}
+		runtime.EventsEmit(a.ctx, "update:progress", "installing")
+		if err := a.installer.Install(ctx, path, download.Version); err != nil {
+			return err
+		}
+		version = download.Version
+	}
+	a.updateMu.Lock()
+	a.updateVersion = version
+	a.updateMu.Unlock()
+	return nil
+}
+func (a *App) RestartUpdatedApp() error {
+	if !a.closeGuard.Load() {
+		return fmt.Errorf("The editor is not ready to save and restart. Please try again.")
+	}
+	a.updateMu.Lock()
+	defer a.updateMu.Unlock()
+	if a.restartPipe != nil {
+		return fmt.Errorf("An update restart is already pending.")
+	}
+	if a.updateVersion == "" {
+		return fmt.Errorf("Verify the installed update before restarting.")
+	}
+	pipe, err := a.installer.PrepareRestart(a.ctx, a.updateVersion)
+	if err != nil {
 		return err
 	}
-	go command.Wait()
+	a.restartPipe = pipe
+	runtime.Quit(a.ctx)
 	return nil
 }
 func (a *App) OpenUpdateRelease() error {

@@ -44,3 +44,7 @@ The Laravel integration fixture uses Composer-managed open-source dependencies a
 ## Branding and functional inspiration
 
 The TinkerCraft logo was supplied by the project owner. It is independent of Tinkerwell's assets. Tinkerwell and Beyond Code are names of their respective owners. Public documentation and functionality informed an independent implementation; no proprietary code, extracted application resources, screenshots, documentation text, or branding from Tinkerwell is redistributed here.
+
+## Release notes
+
+https://github.com/remarkjs/react-markdown, MIT. react-markdown 10.1.0 renders release notes as React elements. Raw HTML, active links and remote images are disabled. The Debian package includes its license and production dependency licenses.
