@@ -807,24 +807,26 @@ a {
   gap: 3px;
 }
 .output-tabs {
-  height: 42px;
+  min-height: 42px;
   border-bottom: 1px solid #2f2f2f;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-shrink: 0;
   padding: 0 15px;
-  gap: 8px;
+  gap: 0 8px;
   background: #1a1a1a;
 }
 .output-tabs > div {
   display: flex;
   align-items: center;
-  height: 100%;
-  gap: 19px;
+  min-height: 42px;
+  gap: 0 19px;
 }
 .output-tabs > div > button {
-  height: 100%;
+  height: 42px;
+  flex-shrink: 0;
+  white-space: nowrap;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -2106,7 +2108,7 @@ tr:hover td {
     padding: 0 12px;
   }
   .output-tabs > div {
-    gap: 14px;
+    gap: 0 14px;
   }
   .output-tabs > button {
     display: none;
@@ -2281,7 +2283,6 @@ body {
   background: #191919;
 }
 .output-tabs {
-  height: 42px;
   padding: 0 16px;
   background: #202020;
 }
@@ -2297,6 +2298,8 @@ body {
   display: flex;
   align-items: center;
   gap: 4px;
+  flex-shrink: 0;
+  margin-left: auto;
 }
 .output-tools .icon-button {
   width: 29px;
@@ -2629,7 +2632,7 @@ button:focus-visible {
     padding: 0 12px;
   }
   .output-tabs > div {
-    gap: 13px;
+    gap: 0 13px;
   }
   .connections-list {
     width: 195px;
@@ -2666,6 +2669,8 @@ button > .action-shortcut {
 }
 .output-tabs > div:first-child {
   flex-wrap: wrap;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 .table-container {
   min-height: 0;
