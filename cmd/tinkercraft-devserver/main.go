@@ -9,8 +9,10 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
+	"tinkercraft/internal/buildinfo"
 	"tinkercraft/internal/execution"
 	"tinkercraft/internal/service"
 )
@@ -20,6 +22,13 @@ func main() {
 	assets := flag.String("assets", "frontend/dist", "Built frontend")
 	data := flag.String("data", ".data/devserver", "Isolated workspace")
 	flag.Parse()
+	version, err := os.ReadFile(filepath.Join(*assets, "..", "..", "VERSION"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err := buildinfo.SetVersion(strings.TrimSpace(string(version))); err != nil {
+		log.Fatal(err)
+	}
 	host, _, err := net.SplitHostPort(*addr)
 	if err != nil || net.ParseIP(host) == nil || !net.ParseIP(host).IsLoopback() {
 		log.Fatal("Use um IP de loopback explícito")

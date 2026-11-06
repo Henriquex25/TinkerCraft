@@ -48,7 +48,7 @@ The initial distribution format is a Debian `.deb` package with a desktop entry 
 | `linux-amd64-webkit40` | Ubuntu / Pop!_OS 22.04, x86-64 |
 | `linux-amd64-webkit41` | Ubuntu 24.04, x86-64; release build configured, runtime validation pending |
 
-The public repository is [Henriquex25/TinkerCraft](https://github.com/Henriquex25/TinkerCraft). No releases have been published yet; you can build a package locally using the instructions below. Future published packages will include their update repository automatically: **end users do not need an `.env` file**.
+The public repository is [Henriquex25/TinkerCraft](https://github.com/Henriquex25/TinkerCraft). Download published installers from [Releases](https://github.com/Henriquex25/TinkerCraft/releases), or build a package locally using the instructions below. Published packages include their update repository automatically: **end users do not need an `.env` file**.
 
 For a locally built WebKit 4.0 package:
 
@@ -73,7 +73,7 @@ go install github.com/wailsapp/wails/v2/cmd/wails@v2.15.0
 ./scripts/start.sh
 ```
 
-On Ubuntu 24.04, use `libwebkit2gtk-4.1-dev` instead. The build selects the installed WebKit variant; `TINKERCRAFT_WEBKIT=4.0` or `4.1` overrides the selection. Build a `.deb` with `./scripts/package-linux.sh`.
+On Ubuntu 24.04, use `libwebkit2gtk-4.1-dev` instead. The build selects the installed WebKit variant; `TINKERCRAFT_WEBKIT=4.0` or `4.1` overrides the selection. Build a `.deb` with `./scripts/package-linux.sh`. The application version comes only from the root `VERSION` file and is embedded in the desktop executable. Private npm manifests intentionally omit an application version.
 
 The Phpactor installer verifies the pinned checksum **before executing the download**. Settings, tabs, and history are stored locally in `~/.config/tinkercraft`, with compatibility for earlier Lume workspaces. Set `TINKERCRAFT_DATA_DIR` to use an isolated workspace.
 

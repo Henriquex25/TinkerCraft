@@ -96,25 +96,23 @@ Dependabot pull requests are update proposals, not required merges before a rele
 
 The release workflow is manual and creates a **draft**. It does not publish on every push and does not require you to push a tag first.
 
-1. Create a branch and update the version consistently. For example, after `0.2.0`, prepare `0.2.1` for fixes:
+1. Update **only the root `VERSION` file**, for example from `0.2.0` to `0.2.1`:
 
 ```bash
 git switch -c release/0.2.1
 printf '%s\n' 0.2.1 > VERSION
-npm version 0.2.1 --no-git-tag-version
-npm --prefix frontend version 0.2.1 --no-git-tag-version
 ```
 
-The npm commands update both manifests and their lockfiles. The workflow rejects a mismatch among `VERSION`, the workflow input, and the root/frontend npm versions. Use `0.3.0` for a larger feature release. Before `1.0`, call out compatibility changes explicitly in the notes.
+`VERSION` is the sole application version source. The private npm packages and their lockfile root entries intentionally have no application `version` field. Do not run `npm version` or edit Go constants, environment variables, or frontend code to change the app version. The desktop embeds `VERSION` at compile time; the development harness reads the same file. Values must use `MAJOR.MINOR.PATCH`, without `v` or a prerelease suffix.
 
-2. Commit the version change, push the branch, open a PR, wait for checks, and merge. Then wait for the **push CI run on the resulting `main` commit** to finish successfully; a green PR run alone does not satisfy the release gate.
-3. Open **Actions → Build Linux release draft → Run workflow**. Select branch **main** and enter **0.2.1**, without `v`. Alternatively:
+2. Commit and push the version change, open a PR if applicable, and merge after checks. Wait for successful **push CI on the exact resulting `main` commit**, including version-only commits. Do not use `[skip ci]`, `[skip actions]`, or path filters to bypass that requirement. A green PR run or an older green `main` commit does not authorize a release of a newer commit. This deliberately keeps the release gate simple and strict.
+3. Open **Actions → Build Linux release draft → Run workflow**, select **main**, and run it. There is **no version input**: the workflow reads `VERSION` automatically. The CLI equivalent is:
 
 ```bash
-gh workflow run release.yml --repo Henriquex25/TinkerCraft --ref main -f version=0.2.1
+gh workflow run release.yml --repo Henriquex25/TinkerCraft --ref main
 ```
 
-4. The workflow verifies version/branch/CI, builds Ubuntu 22.04 WebKit 4.0 and Ubuntu 24.04 WebKit 4.1 packages, validates them, and creates a draft titled **TinkerCraft 0.2.1**, targeting the exact build commit. Only the draft job has repository write permission. The GitHub URL is embedded automatically; no `.env` or custom secret is needed on runners or on users' machines.
+4. The workflow verifies the VERSION format, branch, and CI, builds Ubuntu 22.04 WebKit 4.0 and Ubuntu 24.04 WebKit 4.1 packages, validates them, and creates a draft titled **TinkerCraft 0.2.1**, targeting the exact build commit. Only the draft job has repository write permission. The GitHub URL is embedded automatically; no `.env` or custom secret is needed on runners or on users' machines.
 5. Open **Releases** and inspect the draft. It should contain:
 
 ```text

@@ -48,6 +48,14 @@ class DistributionTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     configuration.values()
 
+    def test_legacy_dotenv_version_is_ignored(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / '.env').write_text('TINKERCRAFT_VERSION="9.9.9"\nTINKERCRAFT_RELEASE_SOURCE="https://github.com/example/project"\n')
+            with mock.patch.object(configuration, 'ROOT', root):
+                self.assertNotIn('TINKERCRAFT_VERSION', configuration.values())
+                self.assertEqual(configuration.values()['TINKERCRAFT_RELEASE_SOURCE'], 'https://github.com/example/project')
+
     def test_release_assembly_checks_each_variant(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)

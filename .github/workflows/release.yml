@@ -2,18 +2,13 @@ name: Build Linux release draft
 
 on:
   workflow_dispatch:
-    inputs:
-      version:
-        description: Version (MAJOR.MINOR.PATCH)
-        required: true
-        type: string
 
 permissions:
   contents: read
   actions: read
 
 concurrency:
-  group: release-${{ inputs.version }}
+  group: release-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -21,36 +16,16 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     env:
-      RELEASE_VERSION: ${{ inputs.version }}
       GH_TOKEN: ${{ github.token }}
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - name: Validate main and version consistency
-        run: |
-          python3 - <<'PY'
-          import json, os, re
-          from pathlib import Path
-          version = os.environ['RELEASE_VERSION']
-          if os.environ['GITHUB_REF'] != 'refs/heads/main':
-              raise SystemExit('Run releases from main after merging a reviewed PR.')
-          if not re.fullmatch(r'(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)', version):
-              raise SystemExit('Use MAJOR.MINOR.PATCH without a v prefix.')
-          if Path('VERSION').read_text().strip() != version:
-              raise SystemExit('The release version must match VERSION in this commit.')
-          for filename in ['package.json', 'package-lock.json', 'frontend/package.json', 'frontend/package-lock.json']:
-              data = json.loads(Path(filename).read_text())
-              if data['version'] != version or ('packages' in data and data['packages']['']['version'] != version):
-                  raise SystemExit('Update the version in ' + filename + ' before releasing.')
-          PY
-      - name: Require successful CI for the exact commit
-        run: |
-          count="$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$GITHUB_SHA&branch=main&event=push&status=success&per_page=100" --jq '.workflow_runs | length')"
-          if [[ "$count" -eq 0 ]]; then
-            echo 'Wait for the CI push run on this exact main commit to succeed before releasing.' >&2
-            exit 1
-          fi
+      - name: Validate VERSION and require successful CI for this exact commit
+        id: version
+        run: python3 scripts/release_preflight.py
 
   build:
     needs: verify
@@ -69,7 +44,6 @@ jobs:
             webkit: "4.1"
     runs-on: ${{ matrix.os }}
     env:
-      TINKERCRAFT_VERSION: ${{ inputs.version }}
       TINKERCRAFT_WEBKIT: ${{ matrix.webkit }}
       TINKERCRAFT_RELEASE_SOURCE: https://github.com/${{ github.repository }}
     steps:
@@ -121,6 +95,8 @@ jobs:
           node tests/formatter.test.mjs
           python3 tests/distribution.test.py
           python3 tests/community.test.py
+          python3 tests/version.test.py
+          python3 tests/release.test.py
           cd build/dist
           sha256sum -c checksums.txt
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
@@ -131,13 +107,13 @@ jobs:
           retention-days: 14
 
   draft:
-    needs: build
+    needs: [verify, build]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: write
     env:
-      RELEASE_VERSION: ${{ inputs.version }}
+      RELEASE_VERSION: ${{ needs.verify.outputs.version }}
       RELEASE_SOURCE: https://github.com/${{ github.repository }}
       GH_TOKEN: ${{ github.token }}
     steps:
