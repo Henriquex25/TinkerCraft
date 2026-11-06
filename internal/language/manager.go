@@ -2,6 +2,7 @@ package language
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"net/url"
@@ -59,6 +60,8 @@ type Session struct {
 	prefix       int
 	cancel       context.CancelFunc
 	status       Status
+	home         string
+	touched      time.Time
 	capabilities map[string]any
 }
 type Manager struct {
@@ -81,20 +84,19 @@ func source(code string) (string, int) {
 }
 
 func (m *Manager) Start(id, root, code string, settings core.Settings) (Status, error) {
-	return m.start(id, root, code, settings, "")
+	hash := sha256.Sum256([]byte(root))
+	home := filepath.Join(filepath.Dir(m.RuntimeDir), "language-analysis", fmt.Sprintf("%x", hash[:]))
+	return m.start(id, root, code, settings, home)
 }
 func (m *Manager) StartCached(id, root, code string, settings core.Settings) (Status, error) {
 	home := filepath.Join(filepath.Dir(root), "analysis")
-	if err := os.MkdirAll(home, 0700); err != nil {
-		return Status{}, err
-	}
-	if err := prepareAnalysisAutoload(root, home); err != nil {
-		return Status{}, err
-	}
 	return m.start(id, root, code, settings, home)
 }
 func (m *Manager) start(id, root, code string, settings core.Settings, cacheHome string) (Status, error) {
 	m.Stop(id)
+	if err := m.cleanupAnalysis(settings.CacheDays); err != nil {
+		return Status{}, err
+	}
 	if root == "" {
 		return Status{Mode: "none", Message: "Selecione uma cópia local para o autocomplete"}, nil
 	}
@@ -105,7 +107,7 @@ func (m *Manager) start(id, root, code string, settings core.Settings, cacheHome
 		return Status{}, fmt.Errorf("Cópia local não encontrada: %s", root)
 	}
 	ctx, cancel := context.WithCancel(context.Background())
-	s := &Session{cancel: cancel, uri: fileURI(filepath.Join(root, ".tinkercraft-scratch-"+execution.ID()+".php")), version: 1, status: Status{Root: root}, capabilities: map[string]any{}}
+	s := &Session{cancel: cancel, home: cacheHome, uri: fileURI(filepath.Join(root, ".tinkercraft-scratch-"+execution.ID()+".php")), version: 1, status: Status{Root: root}, capabilities: map[string]any{}}
 	s.code, s.prefix = source(code)
 	m.mu.Lock()
 	m.sessions[id] = s
@@ -114,6 +116,16 @@ func (m *Manager) start(id, root, code string, settings core.Settings, cacheHome
 	if php == "" {
 		php = "php"
 	}
+	if err := prepareAnalysisAutoload(root, cacheHome); err != nil {
+		cancel()
+		m.remove(id, s)
+		return Status{}, err
+	}
+	index, analysisError := prepareProjectAnalysis(ctx, php, m.RuntimeDir, root, cacheHome)
+	s.mu.Lock()
+	s.index = index
+	s.touch()
+	s.mu.Unlock()
 	server := m.PhpactorPath
 	var serverError error
 	if server != "" {
@@ -150,6 +162,14 @@ func (m *Manager) start(id, root, code string, settings core.Settings, cacheHome
 				s.rpc = rpc
 				rpc.Notify("textDocument/didOpen", map[string]any{"textDocument": map[string]any{"uri": s.uri, "languageId": "php", "version": s.version, "text": s.code}})
 				s.status = Status{Mode: "phpactor", Message: "Phpactor conectado", Root: root}
+				if analysisError != nil {
+					s.status.Warning = "Could not prepare Laravel helpers: " + analysisError.Error()
+				} else if index != nil {
+					s.status.Files = index.Files
+					if index.Limited {
+						s.status.Warning = "Analysis is partial: the 2,000-file limit was reached."
+					}
+				}
 				status := s.status
 				s.mu.Unlock()
 				return status, nil
@@ -160,7 +180,10 @@ func (m *Manager) start(id, root, code string, settings core.Settings, cacheHome
 			serverError = err
 		}
 	}
-	index, err := BuildIndex(ctx, php, m.RuntimeDir, root)
+	var err error
+	if index == nil {
+		index, err = BuildIndex(ctx, php, m.RuntimeDir, root)
+	}
 	if err != nil {
 		cancel()
 		m.remove(id, s)
@@ -214,6 +237,7 @@ func (m *Manager) Close() {
 	}
 }
 func (s *Session) sync(code string) error {
+	s.touch()
 	code, prefix := source(code)
 	s.prefix = prefix
 	if code == s.code {
@@ -276,6 +300,9 @@ func (m *Manager) Request(id, method, code string, line, character int) (any, er
 
 	if s.prefix > 0 {
 		shiftRanges(result, -s.prefix)
+	}
+	if err == nil && method == "textDocument/completion" && s.index != nil {
+		result = mergeCompletions(result, s.index.Complete(code, line, character))
 	}
 	return result, err
 }

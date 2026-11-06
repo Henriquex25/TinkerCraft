@@ -25,9 +25,9 @@ foreach (['vendor', 'bootstrap/cache', 'storage/logs', 'storage/framework/views'
 $loader = "<?php\nrequire_once " . var_export($vendor . '/composer/ClassLoader.php', true) . ";\n\$loader = new Composer\\Autoload\\ClassLoader();\n";
 foreach ($maps as $prefix => $dirs) { $loader .= '\$loader->addPsr4(' . var_export($prefix, true) . ', ' . var_export($dirs, true) . ");\n"; }
 $loader = str_replace('\\$loader', '$loader', $loader);
-$loader .= "\$loader->register();\n";
+$loader .= "\$loader->addPsr4('App\\\\', " . var_export($target . '/app', true) . ");\n\$loader->register();\n";
 foreach ($files as $file) { $loader .= 'require_once ' . var_export($file, true) . ";\n"; }
-file_put_contents($target . '/vendor/autoload.php', $loader);
+file_put_contents($target . '/vendor/autoload.php', $loader . "return \$loader;\n");
 file_put_contents($target . '/artisan', "<?php // isolated test marker\n");
 file_put_contents($target . '/composer.json', '{"name":"tinkercraft/isolated-fixture"}');
 file_put_contents($target . '/config/app.php', "<?php return ['name' => 'TinkerCraft Fixture', 'env' => 'testing', 'debug' => true, 'key' => 'base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=', 'providers' => [], 'aliases' => []];");

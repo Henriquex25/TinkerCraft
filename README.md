@@ -16,7 +16,7 @@ Inspired by [Tinkerwell](https://tinkerwell.app), TinkerCraft is an independent 
 
 ## What you can do
 
-- **Write PHP comfortably.** Monaco editor, automatic completion, hover information, signature help, and diagnostics through Phpactor. PHP opening and closing tags are optional in the editor.
+- **Write PHP comfortably.** Monaco editor, namespace completion, hover information, signature help, and diagnostics through Phpactor. Local analysis helpers cover Eloquent query methods and model scopes without booting the application or querying its database. PHP opening and closing tags are optional in the editor.
 - **Format your snippets.** Press **Alt+Shift+F**, use the editor button, or find **Format PHP code** in the command palette. Formatting runs offline, supports undo, and never executes your PHP. Customize the style or import JSON rules in **Preferences → Formatting**.
 - **Work in your application's context.** Bootstrap Laravel or Composer, use plain PHP, or provide a custom bootstrap file.
 - **Run where your project lives.** Local PHP, local Docker containers, SSH servers, and Docker containers over SSH.
@@ -92,6 +92,19 @@ Official installers manage Phpactor and the update repository internally. These 
 2. Set the project path **inside the selected environment**. For Docker, choose the PHP container and use **Detect directory** if needed.
 3. Test and save the connection. Completion uses the local sources, an accessible bind mount, or an automatically prepared source cache.
 4. Write PHP and press **Ctrl+Enter**. Open the command palette with **Ctrl+Shift+P** or **F1**.
+
+With Laravel or automatic Laravel bootstrap, unique application classes can use their short names, just like Tinker:
+
+```php
+User::count();
+app(User::class)->newQuery()->count();
+```
+
+These are class aliases; Laravel's application container remains available through `app()` and `resolve()`. For ambiguous names, use the fully qualified name or an explicit `use App\Models\User;`. The runner honors Tinker's alias exclusions and never chooses silently between two application classes with the same short name.
+
+Completion helpers live in TinkerCraft's private workspace, including for local projects. Existing `_ide_helper.php` and `_ide_helper_models.php` are read as source; they are never executed or overwritten. No IDE Helper package is installed in your project or on your server. Generated metadata uses the available framework/model source: it covers query methods and conventional/attribute model scopes, while schema-derived properties and runtime-only macros can still need existing IDE Helper metadata.
+
+Source content changes invalidate generated metadata at the next analysis preparation. While the app is visible, it checks again after five minutes; remote source snapshots retain their 15-minute freshness window. Use **Refresh completion** to force collection and rebuild immediately. Analysis expires with the cache-retention preference (seven days by default), preserving active sessions.
 
 SSH uses your OpenSSH configuration, keys, and agent. Verify the server's host key from a terminal first. Password prompts are not supported; encrypted keys must be available through your SSH agent. Docker containers must already be running and contain PHP CLI.
 
