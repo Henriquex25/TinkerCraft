@@ -708,8 +708,21 @@ try {
   assert(
     (await page.locator(".view-lines").textContent()).includes("$tomorrow"),
   );
-  let updateDownloads = 0,
-    installerOpens = 0;
+  let updateAttempts = 0,
+    restarts = 0,
+    failUpdate = true;
+  let restartOnly = false;
+  const updateCalls = [];
+  let installationStarted, finishInstallation, observeRestart;
+  const startedInstallation = new Promise((resolve) => {
+    installationStarted = resolve;
+  });
+  const installationGate = new Promise((resolve) => {
+    finishInstallation = resolve;
+  });
+  const observedRestart = new Promise((resolve) => {
+    observeRestart = resolve;
+  });
   const releaseBuild = {
     version: "0.2.0",
     releaseSource: "https://github.com/Henriquex25/TinkerCraft",
@@ -732,7 +745,11 @@ try {
         source: "https://github.com/example/tinkercraft",
         available: true,
         latestVersion: "0.3.0",
-        notes: "Melhorias de produtividade",
+        notes:
+          "## Melhorias\n\n- **Produtividade** e `PHP`\n\n<script>window.releaseXSS=true</script>\n\n![tracking](https://example.com/track) [unsafe](javascript:alert(1))",
+        canInstall: true,
+        installedVersion: restartOnly ? "0.3.0" : "0.2.0",
+        restartRequired: restartOnly,
         releaseURL:
           "https://github.com/example/tinkercraft/releases/tag/v0.3.0",
         canDownload: true,
@@ -741,13 +758,31 @@ try {
         message: "Uma nova versão está disponível",
         checkedAt: new Date().toISOString(),
       };
-    else if (request.method === "DownloadUpdate") {
-      updateDownloads++;
-      result = { path: "/isolated/verified.deb", version: "0.3.0", size: 1024 };
-    } else if (request.method === "OpenUpdateInstaller") {
-      installerOpens++;
+    else if (request.method === "UpdateApp") {
+      updateAttempts++;
+      updateCalls.push("update");
+      if (failUpdate) {
+        await route.fulfill({
+          status: 422,
+          contentType: "application/json",
+          body: JSON.stringify({
+            error: "Update cancelled. Your current app remains open.",
+          }),
+        });
+        return;
+      }
+      installationStarted();
+      await installationGate;
       result = null;
-    } else return route.continue();
+    } else if (request.method === "RestartUpdatedApp") {
+      restarts++;
+      updateCalls.push("restart");
+      observeRestart();
+      result = null;
+    } else {
+      if (request.method === "SaveWorkspace") updateCalls.push("save");
+      return route.continue();
+    }
     await route.fulfill({
       status: 200,
       contentType: "application/json",
@@ -791,8 +826,19 @@ try {
     .getByRole("button", { name: "Atualização disponível", exact: true })
     .waitFor();
   assert.equal(await page.getByRole("dialog").count(), 0);
-  assert.equal(updateDownloads, 0);
-  assert.equal(installerOpens, 0);
+  assert.equal(updateAttempts, 0);
+  assert.equal(restarts, 0);
+  await page.locator(".update-prompt").waitFor();
+  await page.screenshot({
+    path: path.join(root, "test-results/tinkercraft-update-invitation.png"),
+    fullPage: true,
+  });
+  assert.equal(await page.locator(".repository-prompt[data-kind]").count(), 0);
+  await page
+    .locator(".update-prompt")
+    .getByRole("button", { name: "Lembrar mais tarde", exact: true })
+    .click();
+  await page.locator(".update-prompt").waitFor({ state: "hidden" });
   await page
     .getByRole("button", { name: "Atualização disponível", exact: true })
     .click();
@@ -804,22 +850,79 @@ try {
     path: path.join(root, "test-results/tinkercraft-update.png"),
     fullPage: true,
   });
+  await page.locator(".release-notes summary").click();
   await page
-    .getByRole("button", { name: "Baixar atualização", exact: true })
-    .click();
-  await page
-    .getByRole("button", { name: "Abrir instalador do sistema", exact: true })
+    .locator(".release-markdown h2")
+    .getByText("Melhorias", { exact: true })
     .waitFor();
-  assert.equal(updateDownloads, 1);
-  assert.equal(installerOpens, 0);
+  assert.equal(
+    await page.locator(".release-markdown strong").textContent(),
+    "Produtividade",
+  );
+  assert.equal(
+    await page
+      .locator(
+        ".release-markdown script, .release-markdown img, .release-markdown a",
+      )
+      .count(),
+    0,
+  );
+  assert.equal(await page.evaluate(() => window.releaseXSS), undefined);
+  await page.getByRole("button", { name: "Atualizar", exact: true }).click();
   await page
-    .getByRole("button", { name: "Abrir instalador do sistema", exact: true })
-    .click();
-  await page.getByText(/Conclua a instalação na janela do sistema/).waitFor();
-  assert.equal(installerOpens, 1);
+    .getByText(
+      "Atualização cancelada. Seu aplicativo atual permanece aberto.",
+      { exact: true },
+    )
+    .waitFor();
+  assert.equal(updateAttempts, 1);
+  assert.equal(restarts, 0);
+  failUpdate = false;
+  updateCalls.length = 0;
+  await page.keyboard.press(`${modifier}+Enter`);
+  await startedInstallation;
   await page.keyboard.press("Escape");
+  await page.getByRole("dialog").waitFor({ state: "hidden" });
+  await page
+    .getByRole("button", { name: "Atualização disponível", exact: true })
+    .click();
+  assert.equal(
+    await page
+      .getByRole("button", { name: "Atualizar", exact: true })
+      .isDisabled(),
+    true,
+  );
+  await page.keyboard.press(`${modifier}+Enter`);
+  assert.equal(updateAttempts, 2);
+  finishInstallation();
+  await observedRestart;
+  await page.waitForFunction(() =>
+    document
+      .querySelector(".update-summary")
+      ?.textContent.includes("reiniciando"),
+  );
+  assert.equal(updateAttempts, 2);
+  assert.equal(restarts, 1);
+  assert.deepEqual(
+    updateCalls.filter((x) => ["save", "update", "restart"].includes(x)),
+    ["save", "update", "save", "restart"],
+  );
+  await page.reload();
+  await page.locator(".update-prompt").waitFor();
+  restartOnly = true;
+  await page.reload();
+  await page
+    .locator(".update-prompt")
+    .getByRole("button", { name: "Atualizar", exact: true })
+    .waitFor();
+  assert.equal(updateAttempts, 2);
+  assert.equal(restarts, 1);
+  await page
+    .locator(".update-prompt")
+    .getByRole("button", { name: "Lembrar mais tarde", exact: true })
+    .click();
   console.log(
-    "PASS: update preferences, opt-out/persistence, startup badge, release dialog and explicit download/installer actions (isolated release and installer fixtures).",
+    "PASS: startup update invitation, later/badge, safe Markdown, cancelled authorization, one-action update with saves before restart, and already-installed restart (isolated installer fixtures).",
   );
   await page.keyboard.press(`${modifier}+,`);
   await page.keyboard.press("Alt+1");

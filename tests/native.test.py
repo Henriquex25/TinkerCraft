@@ -84,14 +84,31 @@ def state_at(directory):
 
 
 class App:
-    def __init__(self, directory):
+    def __init__(self, directory, restart=False):
         self.log = tempfile.TemporaryFile()
         binary = Path(os.environ.get('TINKERCRAFT_NATIVE_BINARY', ROOT / 'build/bin/tinkercraft'))
         if not (directory / 'workspace.json').exists():
             (directory / 'workspace.json').write_text(json.dumps({'version': 1, 'settings': {'phpBinary': 'php', 'checkUpdatesOnStartup': False}}))
-        self.process = subprocess.Popen([str(binary)], cwd=os.environ.get('TINKERCRAFT_NATIVE_CWD', ROOT),
+        command = [str(binary)]
+        inherited = ()
+        restart_read = restart_write = None
+        if restart:
+            restart_read, restart_write = os.pipe()
+            inherited = (restart_read,)
+            command = ['/usr/bin/python3', '-c', 'import os,sys; fd=int(sys.argv[1]); os.dup2(fd,3,inheritable=True); os.execv(sys.argv[2],[sys.argv[2],"--relaunch-after-update"])', str(restart_read), str(binary)]
+        self.process = subprocess.Popen(command, pass_fds=inherited, cwd=os.environ.get('TINKERCRAFT_NATIVE_CWD', ROOT),
             env={**os.environ, 'TINKERCRAFT_DATA_DIR': str(directory), 'LIBGL_ALWAYS_SOFTWARE': '1', 'XDG_CACHE_HOME': str(directory / 'os-cache'), 'XDG_DATA_HOME': str(directory / 'os-data'), 'XDG_CONFIG_HOME': str(directory / 'os-config'), 'TINKERCRAFT_RELEASE_SOURCE': '', 'TINKERCRAFT_PHPACTOR': '', 'LUME_PHPACTOR': ''}, stdout=self.log, stderr=self.log)
+        if restart_read is not None:
+            os.close(restart_read)
         try:
+            if restart:
+                time.sleep(.3)
+                assert self.process.poll() is None and window_for(self.process.pid) is None, 'Restart opened before save confirmation'
+                os.write(restart_write, b'R')
+                time.sleep(.2)
+                assert self.process.poll() is None and window_for(self.process.pid) is None, 'Restart opened before parent pipe closed'
+                os.close(restart_write)
+                restart_write = None
             self.window_id = wait_for(lambda: window_for(self.process.pid))
             assert 'phpactorPath' not in state_at(directory)['settings']
             assert 'updateSource' not in state_at(directory)['settings']
@@ -104,6 +121,9 @@ class App:
         except BaseException:
             self.cleanup()
             raise
+        finally:
+            if restart_write is not None:
+                os.close(restart_write)
 
     def accessible_app(self):
         desktop = Atspi.get_desktop(0)
@@ -330,12 +350,12 @@ with accessibility_session():
             support.close()
         finally:
             support.cleanup()
-        support_reopened = App(directory)
+        support_reopened = App(directory, restart=True)
         try:
             assert state_at(directory)['launchCount'] == 5
             assert state_at(directory)['settings']['donationPromptDismissed'] is True
             assert len(state_at(directory)['history']) == 1
             support_reopened.close()
-            print('PASS: delayed support invitation, keyboard dismissal, capped launch count and persistence after native restart.')
+            print('PASS: delayed support invitation, persistence, and real native update relaunch waits for saved confirmation and parent EOF before restoring the workspace.')
         finally:
             support_reopened.cleanup()

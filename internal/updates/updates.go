@@ -38,6 +38,7 @@ type Manifest struct {
 	Assets        map[string]Asset `json:"assets"`
 }
 type Info struct {
+	InstallStatus
 	Build         buildinfo.Info `json:"build"`
 	Configured    bool           `json:"configured"`
 	Source        string         `json:"source"`

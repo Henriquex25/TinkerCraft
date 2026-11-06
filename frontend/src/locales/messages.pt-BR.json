@@ -108,5 +108,19 @@
   "Project directory not found: {0}": "Diretório do projeto não encontrado: {0}",
   "vendor/autoload.php not found. Run composer install in the project.": "vendor/autoload.php não encontrado. Execute composer install no projeto.",
   "Bootstrap file not found: {0}": "Arquivo de bootstrap não encontrado: {0}",
-  "The snippet exceeds 1 MiB": "O trecho ultrapassa 1 MiB"
+  "The snippet exceeds 1 MiB": "O trecho ultrapassa 1 MiB",
+  "An update is already in progress.": "Uma atualização já está em andamento.",
+  "Could not verify the installed TinkerCraft version.": "Não foi possível verificar a versão instalada do TinkerCraft.",
+  "The installed package and executable versions do not match.": "As versões do pacote instalado e do executável não correspondem.",
+  "A newer version is already installed. Restart TinkerCraft.": "Uma versão mais recente já está instalada. Reinicie o TinkerCraft.",
+  "Invalid update package path.": "Caminho do pacote de atualização inválido.",
+  "The Debian package identity does not match this update.": "A identificação do pacote Debian não corresponde a esta atualização.",
+  "Automatic installation requires APT, pkexec and a graphical authentication agent.": "A instalação automática exige APT, pkexec e um agente gráfico de autenticação.",
+  "Update cancelled. Your current app remains open.": "Atualização cancelada. Seu aplicativo atual permanece aberto.",
+  "Installation could not be confirmed. Your app remains open.": "Não foi possível confirmar a instalação. Seu aplicativo permanece aberto.",
+  "Verify the installed update before restarting.": "Verifique a atualização instalada antes de reiniciar.",
+  "An update restart is already pending.": "Já há um reinício para atualização pendente.",
+  "Installation did not complete. Your app remains open. {0}": "A instalação não foi concluída. Seu aplicativo permanece aberto. {0}",
+  "The app is closing. Try updating after reopening it.": "O aplicativo está fechando. Tente atualizar depois de reabri-lo.",
+  "The editor is not ready to save and restart. Please try again.": "O editor ainda não está pronto para salvar e reiniciar. Tente novamente."
 }

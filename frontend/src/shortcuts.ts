@@ -95,20 +95,9 @@ export const commands: CommandDefinition[] = [
   ),
   command("checkUpdates", "About and updates", "Application", "", "workspace"),
   command("updates.check", "Check for updates", "Updates", "Ctrl+R", "updates"),
-  command(
-    "updates.download",
-    "Download update",
-    "Updates",
-    "Ctrl+D",
-    "updates",
-  ),
-  command(
-    "updates.install",
-    "Open system installer",
-    "Updates",
-    "Ctrl+Enter",
-    "updates",
-  ),
+  command("updates.install", "Update", "Updates", "Ctrl+Enter", "updates"),
+  command("updates.accept", "Update", "Updates"),
+  command("updates.dismiss", "Remind me later", "Updates"),
   command("updates.release", "Open release page", "Updates", "", "updates"),
   command(
     "settings.updates",
