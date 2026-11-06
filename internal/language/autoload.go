@@ -98,12 +98,19 @@ func prepareAnalysisAutoload(root, home string) error {
 			return err
 		}
 		source := fmt.Sprintf("<?php\nreturn json_decode(base64_decode('%s'), true, 512, JSON_THROW_ON_ERROR);\n", base64.StdEncoding.EncodeToString(data))
-		if err = os.WriteFile(filepath.Join(dir, name), []byte(source), 0600); err != nil {
+		if err = privateWrite(filepath.Join(dir, name), []byte(source)); err != nil {
 			return err
 		}
 	}
-	if err := os.WriteFile(filepath.Join(dir, "autoload_classmap.php"), []byte("<?php return [];\n"), 0600); err != nil {
+	classmap := filepath.Join(dir, "autoload_classmap.php")
+	if info, err := os.Lstat(classmap); os.IsNotExist(err) {
+		if err := privateWrite(classmap, []byte("<?php return [];\n")); err != nil {
+			return err
+		}
+	} else if err != nil {
 		return err
+	} else if !info.Mode().IsRegular() {
+		return fmt.Errorf("Invalid analysis classmap")
 	}
-	return os.WriteFile(filepath.Join(home, "autoload.php"), []byte("<?php return null;\n"), 0600)
+	return privateWrite(filepath.Join(home, "autoload.php"), []byte("<?php return null;\n"))
 }

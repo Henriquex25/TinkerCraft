@@ -122,5 +122,13 @@
   "An update restart is already pending.": "Já há um reinício para atualização pendente.",
   "Installation did not complete. Your app remains open. {0}": "A instalação não foi concluída. Seu aplicativo permanece aberto. {0}",
   "The app is closing. Try updating after reopening it.": "O aplicativo está fechando. Tente atualizar depois de reabri-lo.",
-  "The editor is not ready to save and restart. Please try again.": "O editor ainda não está pronto para salvar e reiniciar. Tente novamente."
+  "The editor is not ready to save and restart. Please try again.": "O editor ainda não está pronto para salvar e reiniciar. Tente novamente.",
+  "Could not prepare Laravel helpers: {0}": "Não foi possível preparar os helpers do Laravel: {0}",
+  "Analysis is partial: the 2,000-file limit was reached.": "A análise é parcial: o limite de 2.000 arquivos foi atingido.",
+  "Project sources changed during analysis; refresh completion": "Os fontes do projeto mudaram durante a análise; atualize o autocomplete",
+  "Analysis sources exceed 256 MiB": "Os fontes para análise excedem 256 MiB",
+  "Invalid or oversized analysis file": "Arquivo de análise inválido ou muito grande",
+  "Analysis file exceeds limit": "O arquivo de análise excede o limite",
+  "Invalid helper source range": "Posição de código inválida na geração dos helpers",
+  "Invalid analysis classmap": "Mapa de classes da análise inválido"
 }

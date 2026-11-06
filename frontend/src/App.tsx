@@ -292,7 +292,9 @@ export default function App() {
     return () =>
       window.removeEventListener("tinkercraft:language-error", listener);
   }, []);
+  const lastLanguageRefresh = useRef(0);
   const startLanguage = useCallback(async (refresh = false) => {
+    lastLanguageRefresh.current = Date.now();
     const current = stateRef.current;
     const target = current?.tabs.find((t) => t.id === current.activeTab);
     if (!target) return;
@@ -346,6 +348,21 @@ export default function App() {
     if (!tab) return;
     startLanguage();
   }, [tab?.id, profileKey, settingsKey, startLanguage]);
+  useEffect(() => {
+    const refreshIfDue = () => {
+      if (
+        document.visibilityState === "visible" &&
+        Date.now() - lastLanguageRefresh.current >= 5 * 60 * 1000
+      )
+        startLanguage();
+    };
+    const timer = setInterval(refreshIfDue, 60 * 1000);
+    window.addEventListener("focus", refreshIfDue);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener("focus", refreshIfDue);
+    };
+  }, [startLanguage]);
   useEffect(() => {
     if (!tab) return;
     const id = tab.id;

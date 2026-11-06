@@ -14,6 +14,9 @@ import (
 )
 
 type Method struct {
+	Owner         string   `json:"owner,omitempty"`
+	Visibility    string   `json:"visibility,omitempty"`
+	Scope         bool     `json:"scope,omitempty"`
 	Name          string   `json:"name"`
 	Detail        string   `json:"detail"`
 	ReturnType    string   `json:"returnType"`
@@ -23,11 +26,19 @@ type Method struct {
 	Line          int      `json:"line"`
 }
 type Class struct {
-	Name       string   `json:"name"`
-	Short      string   `json:"short"`
-	Extends    string   `json:"extends"`
-	Methods    []Method `json:"methods"`
-	Properties []struct {
+	Documentation string            `json:"documentation"`
+	DocStart      int               `json:"docStart"`
+	DocEnd        int               `json:"docEnd"`
+	Start         int               `json:"start"`
+	SourceHash    string            `json:"sourceHash"`
+	Imports       map[string]string `json:"imports"`
+	Traits        []string          `json:"traits"`
+	Kind          string            `json:"kind"`
+	Name          string            `json:"name"`
+	Short         string            `json:"short"`
+	Extends       string            `json:"extends"`
+	Methods       []Method          `json:"methods"`
+	Properties    []struct {
 		Name string `json:"name"`
 		Type string `json:"type"`
 	} `json:"properties"`
@@ -35,6 +46,8 @@ type Class struct {
 	Line int    `json:"line"`
 }
 type Index struct {
+	Aliases   []string `json:"aliases"`
+	DontAlias []string `json:"dontAlias"`
 	Classes   []Class  `json:"classes"`
 	Functions []Method `json:"functions"`
 	Files     int      `json:"files"`
@@ -42,6 +55,10 @@ type Index struct {
 }
 
 func BuildIndex(ctx context.Context, php, runtimeDir, root string) (*Index, error) {
+	return buildIndexFiles(ctx, php, runtimeDir, indexPaths(root))
+}
+
+func indexPaths(root string) []string {
 	paths := []string{}
 	seen := map[string]bool{}
 	add := func(path string) {
@@ -83,19 +100,13 @@ func BuildIndex(ctx context.Context, php, runtimeDir, root string) (*Index, erro
 		}
 	}
 
-	for _, base := range []string{"vendor/laravel/framework/src/Illuminate/Database/Eloquent", "vendor/laravel/framework/src/Illuminate/Database/Query", "vendor/laravel/framework/src/Illuminate/Collections", "vendor/laravel/framework/src/Illuminate/Support/Facades", "vendor/illuminate/database/Eloquent", "vendor/illuminate/collections"} {
+	for _, base := range []string{"vendor/laravel/framework/src/Illuminate/Database", "vendor/laravel/framework/src/Illuminate/Foundation/Auth", "vendor/laravel/framework/src/Illuminate/Collections", "vendor/laravel/framework/src/Illuminate/Support/Facades", "vendor/illuminate/database", "vendor/illuminate/collections"} {
 		roots = append(roots, filepath.Join(root, base))
 	}
 	for _, dir := range roots {
-		if ctx.Err() != nil {
-			return nil, ctx.Err()
-		}
 		filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
 			if err != nil {
 				return nil
-			}
-			if ctx.Err() != nil {
-				return ctx.Err()
 			}
 			if len(paths) >= 2000 {
 				return fs.SkipAll
@@ -115,6 +126,15 @@ func BuildIndex(ctx context.Context, php, runtimeDir, root string) (*Index, erro
 			return nil
 		})
 	}
+	for _, name := range []string{"_ide_helper.php", "_ide_helper_models.php", "config/tinker.php"} {
+		if info, err := os.Lstat(filepath.Join(root, name)); err == nil && info.Mode().IsRegular() {
+			add(filepath.Join(root, name))
+		}
+	}
+	return paths
+}
+
+func buildIndexFiles(ctx context.Context, php, runtimeDir string, paths []string) (*Index, error) {
 	input, _ := json.Marshal(map[string]any{"files": paths})
 	ctx, cancel := context.WithTimeout(ctx, 60*time.Second)
 	defer cancel()
@@ -132,13 +152,20 @@ func BuildIndex(ctx context.Context, php, runtimeDir, root string) (*Index, erro
 
 func (i *Index) find(name string) *Class {
 	name = strings.TrimLeft(name, "\\?")
+	if exact := i.findExact(name); exact != nil {
+		return exact
+	}
+	var found *Class
 	for n := range i.Classes {
 		c := &i.Classes[n]
-		if strings.EqualFold(c.Name, name) || strings.EqualFold(c.Short, name) {
-			return c
+		if strings.EqualFold(c.Short, name) {
+			if found != nil && found.Name != c.Name {
+				return nil
+			}
+			found = c
 		}
 	}
-	return nil
+	return found
 }
 func (i *Index) methods(class *Class, seen map[string]bool) []Method {
 	if class == nil || seen[class.Name] {
@@ -146,6 +173,9 @@ func (i *Index) methods(class *Class, seen map[string]bool) []Method {
 	}
 	seen[class.Name] = true
 	items := append([]Method{}, class.Methods...)
+	for _, trait := range class.Traits {
+		items = append(items, i.methods(i.find(trait), seen)...)
+	}
 	parent := i.find(class.Extends)
 	items = append(items, i.methods(parent, seen)...)
 	if class.Extends == "Illuminate\\Database\\Eloquent\\Model" || class.Name == "Illuminate\\Database\\Eloquent\\Model" {
@@ -193,13 +223,25 @@ func (i *Index) Complete(code string, line, character int) map[string]any {
 		class := i.find(name)
 		if class != nil {
 			for _, method := range i.methods(class, map[string]bool{}) {
+				if method.Visibility != "" && method.Visibility != "public" {
+					continue
+				}
+				if match[2] == "::" && !method.Static {
+					continue
+				}
 				add(method.Name, 2, method.Detail, method.Name, method.Documentation)
 			}
 			for _, prop := range class.Properties {
+				if match[2] == "::" {
+					continue
+				}
 				add(prop.Name, 10, prop.Type, prop.Name, "")
 			}
 		}
 	} else {
+		if result, ok := i.namespaceCompletions(code, line, character); ok {
+			return result
+		}
 		for _, class := range i.Classes {
 			add(class.Short, 7, class.Name, "\\"+class.Name, "")
 		}

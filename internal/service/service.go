@@ -374,7 +374,10 @@ func (s *Service) startLanguage(tabID, profileID, code string, refresh bool) (la
 		status.Message += " · diretório montado pelo Docker"
 	}
 	if project.Notice != "" {
-		status.Warning = project.Notice
+		if status.Warning != "" {
+			status.Warning += " · "
+		}
+		status.Warning += project.Notice
 		status.Message += " · " + project.Notice
 	}
 	return status, err

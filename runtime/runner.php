@@ -60,6 +60,63 @@ final class Inspector {
         return ['type' => $class ? 'object' : 'array', 'class' => $class, 'list' => $list, 'children' => $children, 'count' => count($values), 'truncated' => count($children) < count($values)];
     }
 }
+final class LaravelAliases {
+    public static function register(mixed $loader, string $root, array $included, array $excluded): void {
+        $aliases = null;
+        spl_autoload_register(static function (string $name) use ($loader, $root, $included, $excluded, &$aliases): void {
+            if (str_contains($name, '\\')) { return; }
+            if ($aliases === null) { $aliases = self::discover($loader, $root, $included, $excluded); }
+            $candidates = $aliases[strtolower($name)] ?? [];
+            if (count($candidates) > 1) {
+                throw new \RuntimeException('Ambiguous class alias "' . $name . '". Use a fully qualified class name or an explicit use statement: ' . implode(', ', $candidates));
+            }
+            if (count($candidates) === 1 && class_exists($candidates[0])) { class_alias($candidates[0], $name); }
+        });
+    }
+    private static function discover(mixed $loader, string $root, array $included, array $excluded): array {
+        $names = [];
+        $prefix = rtrim($root, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+        $matches = static function (string $name, array $patterns): bool {
+            foreach ($patterns as $pattern) { if (is_string($pattern) && $pattern !== '' && str_starts_with($name, $pattern)) { return true; } }
+            return false;
+        };
+        $add = static function (string $class, string $file, bool $explicit = false) use (&$names, $matches, $excluded, $prefix): void {
+            if (!str_contains($class, '\\') || !preg_match('/^(?:[A-Za-z_\x80-\xff][A-Za-z0-9_\x80-\xff]*\\\\)+[A-Za-z_\x80-\xff][A-Za-z0-9_\x80-\xff]*$/D', $class)) { return; }
+            if (!$explicit && ($matches($class, $excluded) || !str_starts_with($file, $prefix) || str_starts_with($file, $prefix . 'vendor' . DIRECTORY_SEPARATOR))) { return; }
+            $short = substr($class, strrpos($class, '\\') + 1);
+            $names[strtolower($short)][$class] = $class;
+        };
+        foreach ($included as $class) { if (is_string($class) && str_contains($class, '\\')) { $add($class, '', true); } }
+        $maps = is_object($loader) && method_exists($loader, 'getClassMap') ? $loader->getClassMap() : [];
+        foreach ($maps as $class => $file) { if (is_string($class) && is_string($file)) { $add($class, $file, $matches($class, $included)); } }
+        $psr4 = is_object($loader) && method_exists($loader, 'getPrefixesPsr4') ? $loader->getPrefixesPsr4() : [];
+        if (!$psr4 && is_file($root . '/composer.json')) {
+            $manifest = json_decode(file_get_contents($root . '/composer.json'), true);
+            $psr4 = $manifest['autoload']['psr-4'] ?? [];
+            foreach ($psr4 as &$dirs) { $dirs = array_map(static fn ($dir) => $root . '/' . $dir, (array)$dirs); }
+            unset($dirs);
+        }
+        $visited = 0;
+        foreach ($psr4 as $namespace => $dirs) {
+            if (!is_string($namespace)) { continue; }
+            foreach ((array)$dirs as $dir) {
+                $base = is_string($dir) ? realpath($dir) : false;
+                if (!$base || !is_dir($base) || !str_starts_with($base . DIRECTORY_SEPARATOR, $prefix) || str_starts_with($base, $prefix . 'vendor')) { continue; }
+                $filter = new \RecursiveCallbackFilterIterator(new \RecursiveDirectoryIterator($base, \FilesystemIterator::SKIP_DOTS), static fn ($file) => !$file->isLink() && !str_starts_with($file->getFilename(), '.') && !in_array($file->getFilename(), ['vendor', 'node_modules', 'storage'], true));
+                foreach (new \RecursiveIteratorIterator($filter, \RecursiveIteratorIterator::LEAVES_ONLY, \RecursiveIteratorIterator::CATCH_GET_CHILD) as $file) {
+                    if (++$visited > 10000) { throw new \RuntimeException('Class alias scan limit reached. Use a fully qualified class name.'); }
+                    if (!$file->isFile() || $file->getExtension() !== 'php') { continue; }
+                    $relative = substr($file->getPathname(), strlen($base) + 1, -4);
+                    $class = rtrim($namespace, '\\') . '\\' . str_replace(DIRECTORY_SEPARATOR, '\\', $relative);
+                    $add($class, $file->getPathname(), $matches($class, $included));
+                }
+            }
+        }
+        foreach ($names as &$candidates) { $candidates = array_values($candidates); sort($candidates); }
+        unset($candidates);
+        return $names;
+    }
+}
 final class Execution {
     public static array $result = ['success' => true, 'value' => null, 'dumps' => [], 'warnings' => [], 'stdout' => '', 'framework' => 'PHP', 'truncated' => false];
     public static string $marker = '';
@@ -128,13 +185,14 @@ namespace {
     try {
         if (!is_dir($tinkercraftPayload['projectPath']) || !chdir($tinkercraftPayload['projectPath'])) { throw new \TinkerCraft\Runtime\BootstrapError('Diretório do projeto não encontrado: ' . $tinkercraftPayload['projectPath']); }
         $tinkercraftBootstrap = $tinkercraftPayload['bootstrap'];
-        if ($tinkercraftBootstrap !== 'none' && is_file('vendor/autoload.php')) { require getcwd() . '/vendor/autoload.php'; \TinkerCraft\Runtime\Execution::$result['framework'] = 'Composer'; }
+        if ($tinkercraftBootstrap !== 'none' && is_file('vendor/autoload.php')) { $tinkercraftComposerLoader = require getcwd() . '/vendor/autoload.php'; \TinkerCraft\Runtime\Execution::$result['framework'] = 'Composer'; }
         if ($tinkercraftBootstrap === 'composer' && !is_file('vendor/autoload.php')) { throw new \TinkerCraft\Runtime\BootstrapError('vendor/autoload.php não encontrado. Execute composer install no projeto.'); }
         if ($tinkercraftBootstrap === 'laravel' || ($tinkercraftBootstrap === 'auto' && is_file('artisan') && is_file('bootstrap/app.php'))) {
             $tinkercraftApp = require getcwd() . '/bootstrap/app.php';
             $tinkercraftKernel = $tinkercraftApp->make(\Illuminate\Contracts\Console\Kernel::class);
             $tinkercraftKernel->bootstrap();
             if (class_exists(\Illuminate\Foundation\AliasLoader::class)) { \Illuminate\Foundation\AliasLoader::getInstance()->register(); }
+            \TinkerCraft\Runtime\LaravelAliases::register($tinkercraftComposerLoader ?? null, getcwd(), (array)$tinkercraftApp['config']->get('tinker.alias', []), (array)$tinkercraftApp['config']->get('tinker.dont_alias', []));
             \TinkerCraft\Runtime\Execution::$result['framework'] = 'Laravel ' . $tinkercraftApp->version();
         }
         if ($tinkercraftBootstrap === 'custom') {
