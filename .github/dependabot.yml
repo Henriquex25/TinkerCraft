@@ -26,6 +26,14 @@ updates:
     directory: /
     schedule:
       interval: weekly
+  - package-ecosystem: npm
+    directory: /website
+    schedule:
+      interval: weekly
+    groups:
+      documentation:
+        patterns:
+          - "*"
   - package-ecosystem: composer
     directory: /tests/fixtures/laravel
     schedule:

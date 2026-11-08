@@ -39,6 +39,12 @@ collect([
 
 TinkerCraft returns the last expression, so an explicit `return` is usually unnecessary. `dump()` and `dd()` also produce structured output. Database queries use the application's actual connection and permissions.
 
+## Documentation
+
+Read the [user guide](https://henriquex25.github.io/TinkerCraft/) in English or [Portuguese](https://henriquex25.github.io/TinkerCraft/pt-BR/) for installation, PHP setup, connections, snippets, output/CSV, completion, preferences, shortcuts, and updates.
+
+The guide's [Markdown source](https://github.com/Henriquex25/TinkerCraft/tree/main/website) lives in this repository, so documentation improvements can be included in pull requests alongside features.
+
 ## Install on Linux
 
 The initial distribution format is a Debian `.deb` package with a desktop entry and application icons. Packages include Phpactor; a **local PHP 8.2+ CLI** is still required for parsing and language support, even when execution happens remotely.
@@ -108,7 +114,7 @@ Source content changes invalidate generated metadata at the next analysis prepar
 
 SSH uses your OpenSSH configuration, keys, and agent. Verify the server's host key from a terminal first. Password prompts are not supported; encrypted keys must be available through your SSH agent. Docker containers must already be running and contain PHP CLI.
 
-English is the default interface language. Choose **Preferences → General → Language** to switch to Brazilian Portuguese. The choice persists across restarts and also translates the editor's built-in controls. Your code, connection names, and execution results retain their original content. See the [detailed usage guide](docs/usage.pt-BR.md) and [packaging and updates guide](docs/releases.md).
+English is the default interface language. Choose **Preferences → General → Language** to switch to Brazilian Portuguese. The choice persists across restarts and also translates the editor's built-in controls. Your code, connection names, and execution results retain their original content. See the [detailed usage guide](https://henriquex25.github.io/TinkerCraft/guide/getting-started) and [packaging and updates guide](docs/releases.md).
 
 ## Execution and security
 

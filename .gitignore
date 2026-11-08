@@ -17,3 +17,11 @@ __pycache__/
 tests/fixtures/laravel/vendor/
 /*.csv
 /coverage.out
+website/node_modules/
+website/.vitepress/cache/
+website/.vitepress/dist/
+website/public/logo.png
+website/public/favicon.png
+website/public/workspace.png
+website/public/license.txt
+website/public/third-party-notices.txt

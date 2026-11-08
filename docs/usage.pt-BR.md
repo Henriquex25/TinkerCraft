@@ -1,5 +1,7 @@
 # Guia de uso — TinkerCraft
 
+> **Referência legada.** O guia atual está em [website/pt-BR/guide](../website/pt-BR/guide/getting-started.md) e no [site de documentação](https://henriquex25.github.io/TinkerCraft/pt-BR/). Para instalação, autocomplete e atualizações, siga o guia novo; as instruções abaixo preservam etapas de versões anteriores.
+
 Um laboratório desktop pessoal para executar PHP no contexto dos seus projetos Laravel. Implementação independente, inspirada nas funcionalidades documentadas do Tinkerwell.
 
 **Stack:** Wails 2.15 + Go + React/TypeScript + Monaco. O editor vem do projeto aberto Monaco; a inferência avançada usa Phpactor via LSP. Não é necessário manter um fork do VS Code.

@@ -48,3 +48,7 @@ The TinkerCraft logo was supplied by the project owner. It is independent of Tin
 ## Release notes
 
 https://github.com/remarkjs/react-markdown, MIT. react-markdown 10.1.0 renders release notes as React elements. Raw HTML, active links and remote images are disabled. The Debian package includes its license and production dependency licenses.
+
+## Documentation website
+
+[VitePress](https://github.com/vuejs/vitepress), MIT, powers the separate documentation website. Its Vue-based default theme is extended with project colors. Website dependencies and their exact versions are recorded in `website/package-lock.json`; `website/scripts/prepare-assets.mjs` includes their available license/notice files in the published `third-party-notices.txt`, alongside the project MIT license. Website dependencies are separate from the desktop application package.
