@@ -8,6 +8,8 @@
 
 Write a snippet, run it in the context of your application, and explore the result. TinkerCraft brings a focused editor, PHP completion, local and remote execution, and structured output into one Linux desktop app.
 
+**[Read the documentation](https://henriquex25.github.io/TinkerCraft/)** · [Português (Brasil)](https://henriquex25.github.io/TinkerCraft/pt-BR/)
+
 Inspired by [Tinkerwell](https://tinkerwell.app), TinkerCraft is an independent open-source implementation. It is not affiliated with, endorsed by, or maintained by Beyond Code. No proprietary Tinkerwell source code or assets are included.
 
 > **Early-stage software.** Linux is the current target. Expect rough edges across different PHP runtimes, framework versions, and desktop environments.
