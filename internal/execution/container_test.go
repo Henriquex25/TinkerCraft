@@ -37,3 +37,23 @@ else:
 		t.Fatalf("got %q, %v; want %q", dir, err, project)
 	}
 }
+
+func TestContainerPathsUsePOSIXSemantics(t *testing.T) {
+	for _, test := range []struct {
+		destination, project, want string
+		valid                      bool
+	}{
+		{"/app", "/app/sub dir", "sub dir", true},
+		{"/", "/app/sub", "app/sub", true},
+		{"/app", "/app", ".", true},
+		{"/app", "/application", "", false},
+		{"/app", "/app/../other", "", false},
+		{"/app", "relative", "", false},
+		{"/App", "/app/sub", "", false},
+	} {
+		got, valid := containerRelativePath(test.destination, test.project)
+		if got != test.want || valid != test.valid {
+			t.Fatalf("%q / %q: %q %v", test.destination, test.project, got, valid)
+		}
+	}
+}

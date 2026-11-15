@@ -1,5 +1,7 @@
 # Configure local PHP
 
+On Windows, locate `php.exe` with `(Get-Command php.exe).Source` in PowerShell; on macOS, use `command -v php`. See [platform configuration](./platforms) for example paths, desktop PATH differences, and the connection PHP setting. On Windows, use native 64-bit PHP CLI; do not enter `wsl.exe` or commands with arguments. The `/home/...` examples below are Linux paths.
+
 TinkerCraft uses two PHP settings:
 
 | Setting                                             | Purpose                                                                   |

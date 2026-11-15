@@ -21,7 +21,7 @@ class DistributionTests(unittest.TestCase):
             (root / 'scripts').mkdir()
             (root / 'bin').mkdir()
             (root / '.tools').mkdir()
-            for file in ['install-phpactor.sh', 'phpactor.sha256']:
+            for file in ['install-phpactor.sh', 'phpactor.sha256', 'phpactor.version']:
                 shutil.copy2(ROOT / 'scripts' / file, root / 'scripts' / file)
             original = root / '.tools/phpactor.phar'
             original.write_bytes(b'previous installation')

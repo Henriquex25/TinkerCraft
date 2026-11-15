@@ -12,8 +12,8 @@ hero:
       text: Get started
       link: /guide/getting-started
     - theme: alt
-      text: Download for Linux
-      link: https://github.com/Henriquex25/TinkerCraft/releases/latest
+      text: Downloads and platforms
+      link: /guide/platforms
 features:
   - title: Write with context
     details: PHP completion, namespaces, Eloquent helpers, diagnostics, and code formatting in a focused editor.
@@ -25,10 +25,14 @@ features:
     details: Named tabs, saved drafts, connection profiles, and keyboard shortcuts that you can customize.
 ---
 
+::: warning Experimental Windows and macOS support
+**Windows and macOS are experimental and have not completed native validation.** Windows has a test ZIP; macOS packages still require a native build. Linux remains the established distribution target. See [each platform’s status](./guide/platforms).
+:::
+
 <div class="product-preview">
 
 ![TinkerCraft editor with an example PHP snippet and structured output](/workspace.png)
 
-<p>Linux desktop · PHP and Laravel · Open source</p>
+<p>Linux desktop · Experimental Windows and macOS builds · PHP and Laravel · Open source</p>
 
 </div>

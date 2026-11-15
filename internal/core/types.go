@@ -3,6 +3,7 @@ package core
 import (
 	"errors"
 	"fmt"
+	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -68,7 +69,11 @@ func (p Profile) Validate() error {
 	default:
 		return errors.New("Tipo de execução inválido")
 	}
-	if strings.TrimSpace(p.ProjectPath) == "" || !filepath.IsAbs(p.ProjectPath) || strings.ContainsAny(p.ProjectPath, "\x00\r\n") {
+	absoluteProject := filepath.IsAbs(p.ProjectPath)
+	if p.Mode != "local" {
+		absoluteProject = path.IsAbs(p.ProjectPath) && !strings.Contains(p.ProjectPath, "\\")
+	}
+	if strings.TrimSpace(p.ProjectPath) == "" || !absoluteProject || strings.ContainsAny(p.ProjectPath, "\x00\r\n") {
 		return errors.New("Informe um caminho absoluto para o projeto no ambiente de execução")
 	}
 	if p.LocalPath != "" && !filepath.IsAbs(p.LocalPath) {

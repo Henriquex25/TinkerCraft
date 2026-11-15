@@ -1,5 +1,7 @@
 # Autocomplete e cache
 
+**Windows experimental:** usa o fallback AST, sem Phpactor nativo nem ponte WSL. A inferência e os diagnósticos avançados descritos abaixo dependem do Phpactor no Linux/macOS. O status identifica qual mecanismo está ativo. Veja [limites por sistema](./platforms).
+
 O autocomplete combina Phpactor, um índice de fontes e helpers estáticos de Laravel. Oferece namespaces, membros, informações ao passar o mouse, assinaturas e diagnósticos.
 
 Use **Ctrl+Espaço** para solicitar sugestões manualmente. Separadores de namespace e operadores de membros também disparam sugestões.

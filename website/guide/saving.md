@@ -28,6 +28,6 @@ Connection profiles identify your projects and runtimes. There is no separate sn
 
 ## Your workspace
 
-The default workspace is `~/.config/tinkercraft`. Earlier installations may reuse `~/.config/lume`. Back up the active workspace with the application closed. It stores snippets, history, profiles, preferences, and source caches locally; these files are private but not encrypted. Secrets written into snippets may be saved there.
+The default workspace is `~/.config/tinkercraft` on Linux, `%APPDATA%\tinkercraft` on Windows, and `~/Library/Application Support/tinkercraft` on macOS. See [platform data and backups](./platforms#data-shortcuts-and-behavior-shared-across-platforms). Earlier installations may reuse the `lume` folder in the same OS configuration directory. Back up the active workspace with the application closed. It stores snippets, history, profiles, preferences, and source caches locally; these files are private but not encrypted. Secrets written into snippets may be saved there.
 
 Updating or removing the application package preserves this workspace.

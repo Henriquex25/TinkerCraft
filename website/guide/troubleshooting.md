@@ -42,6 +42,8 @@ An old window can keep running after its executable was updated on disk. Close a
 
 ## Get help
 
-Search [issues](https://github.com/Henriquex25/TinkerCraft/issues) and [discussions](https://github.com/Henriquex25/TinkerCraft/discussions). Include the app version from the footer, Linux version, connection mode, and a minimal example. Remove credentials, private source, and personal data before sharing logs or screenshots.
+Search [issues](https://github.com/Henriquex25/TinkerCraft/issues) and [discussions](https://github.com/Henriquex25/TinkerCraft/discussions). Include the app version from the footer, operating system and processor architecture, connection mode, and a minimal example. Remove credentials, private source, and personal data before sharing logs or screenshots.
 
 If the app helps you, you can [star the repository](https://github.com/Henriquex25/TinkerCraft) or [buy the maintainer a coffee](https://www.buymeacoffee.com/henriquemiranda). Support is optional; features are not donation-gated.
+
+For WebView2/SmartScreen, Gatekeeper, PHP outside PATH, or Windows completion limitations, see [operating systems](./platforms).

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"tinkercraft/internal/core"
 )
@@ -35,8 +36,11 @@ func TestPersistenceAndFailedTransaction(t *testing.T) {
 	if err != nil || other.Snapshot().Tabs[0].Code != "42;" {
 		t.Fatal(err)
 	}
+	if err = other.Update(func(s *core.State) error { s.Tabs[0].Code = "43;"; return nil }); err != nil {
+		t.Fatal("replace existing workspace:", err)
+	}
 	info, _ := os.Stat(filepath.Join(dir, "workspace.json"))
-	if info.Mode().Perm() != 0600 {
+	if runtime.GOOS != "windows" && info.Mode().Perm() != 0600 {
 		t.Fatalf("workspace permissions %v", info.Mode())
 	}
 }

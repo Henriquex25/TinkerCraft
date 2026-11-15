@@ -25,3 +25,6 @@ website/public/favicon.png
 website/public/workspace.png
 website/public/license.txt
 website/public/third-party-notices.txt
+
+build/windows/
+build/darwin/

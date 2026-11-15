@@ -126,4 +126,4 @@ jobs:
       - name: Prepare release files
         run: python3 scripts/prepare-release.py "$RELEASE_VERSION" "$RELEASE_SOURCE" packages release-assets
       - name: Create draft for review
-        run: gh release create "v$RELEASE_VERSION" release-assets/* --draft --title "TinkerCraft $RELEASE_VERSION" --generate-notes --target "$GITHUB_SHA"
+        run: gh release create "v$RELEASE_VERSION" release-assets/* --draft --title "v$RELEASE_VERSION" --generate-notes --target "$GITHUB_SHA"

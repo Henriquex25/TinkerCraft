@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -75,7 +76,17 @@ type Manager struct {
 func NewManager(dir string) *Manager {
 	return &Manager{sessions: map[string]*Session{}, RuntimeDir: dir}
 }
-func fileURI(path string) string { return (&url.URL{Scheme: "file", Path: path}).String() }
+func fileURI(path string) string {
+	path = filepath.ToSlash(path)
+	if strings.HasPrefix(path, "//") {
+		host, rest, _ := strings.Cut(strings.TrimPrefix(path, "//"), "/")
+		return (&url.URL{Scheme: "file", Host: host, Path: "/" + rest}).String()
+	}
+	if len(path) >= 3 && path[1] == ':' && path[2] == '/' {
+		path = "/" + path
+	}
+	return (&url.URL{Scheme: "file", Path: path}).String()
+}
 func source(code string) (string, int) {
 	if strings.HasPrefix(strings.TrimSpace(code), "<?php") {
 		return code, 0
@@ -128,6 +139,10 @@ func (m *Manager) start(id, root, code string, settings core.Settings, cacheHome
 	s.mu.Unlock()
 	server := m.PhpactorPath
 	var serverError error
+	if runtime.GOOS == "windows" {
+		server = ""
+		serverError = fmt.Errorf("Phpactor requires Linux/macOS or WSL; native Windows uses AST completion")
+	}
 	if server != "" {
 		rpc, err := StartRPC(ctx, php, server, root, func(method string, params json.RawMessage) {
 			if method == "textDocument/publishDiagnostics" && m.OnDiagnostics != nil {

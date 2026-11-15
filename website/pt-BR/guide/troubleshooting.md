@@ -42,6 +42,8 @@ Uma janela antiga pode continuar executando depois de seu executável ser atuali
 
 ## Pedir ajuda
 
-Consulte [issues](https://github.com/Henriquex25/TinkerCraft/issues) e [discussões](https://github.com/Henriquex25/TinkerCraft/discussions). Informe a versão do app no rodapé, o Linux, o modo de conexão e um exemplo mínimo. Remova credenciais, fontes privados e dados pessoais antes de compartilhar logs ou capturas.
+Consulte [issues](https://github.com/Henriquex25/TinkerCraft/issues) e [discussões](https://github.com/Henriquex25/TinkerCraft/discussions). Informe a versão do app no rodapé, o sistema operacional e a arquitetura do processador, o modo de conexão e um exemplo mínimo. Remova credenciais, fontes privados e dados pessoais antes de compartilhar logs ou capturas.
 
 Se o app ajudar, você pode [dar uma estrela ao repositório](https://github.com/Henriquex25/TinkerCraft) ou [pagar um café ao mantenedor](https://www.buymeacoffee.com/henriquemiranda). Apoio é opcional; recursos não dependem de doações.
+
+Para avisos de WebView2/SmartScreen, Gatekeeper, PHP fora do PATH ou limites do autocomplete Windows, consulte [sistemas operacionais](./platforms).

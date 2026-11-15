@@ -12,8 +12,8 @@ hero:
       text: Começar
       link: /pt-BR/guide/getting-started
     - theme: alt
-      text: Baixar para Linux
-      link: https://github.com/Henriquex25/TinkerCraft/releases/latest
+      text: Downloads e plataformas
+      link: /pt-BR/guide/platforms
 features:
   - title: Escreva com contexto
     details: Autocomplete PHP, namespaces, helpers Eloquent, diagnósticos e formatação em um editor focado.
@@ -25,10 +25,14 @@ features:
     details: Abas nomeadas, rascunhos salvos, perfis de conexão e atalhos de teclado personalizáveis.
 ---
 
+::: warning Windows e macOS experimentais
+**Windows e macOS são experimentais e ainda não têm validação nativa concluída.** O Windows tem um ZIP de teste; os pacotes macOS ainda dependem de compilação nativa. Linux continua sendo o alvo de distribuição estabelecido. Consulte [o status de cada plataforma](./guide/platforms).
+:::
+
 <div class="product-preview">
 
 ![Editor do TinkerCraft com um exemplo PHP e saída estruturada](/workspace.png)
 
-<p>Desktop Linux · PHP e Laravel · Código aberto</p>
+<p>Desktop Linux · Builds experimentais Windows e macOS · PHP e Laravel · Código aberto</p>
 
 </div>

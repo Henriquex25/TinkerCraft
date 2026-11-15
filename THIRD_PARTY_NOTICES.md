@@ -27,7 +27,7 @@ The Brazilian Portuguese editor messages are derived from Microsoft's MIT-licens
 
 ## Backend
 
-Wails 2.15.0 is distributed under MIT: https://github.com/wailsapp/wails. Go module versions and checksums are recorded in `go.mod` and `go.sum`. The Debian packager includes available original license/notice files from the Go module dependencies and production npm dependencies in `/usr/share/doc/tinkercraft/licenses`.
+Wails 2.17.1 is distributed under MIT: https://github.com/wailsapp/wails. Go module versions and checksums are recorded in `go.mod` and `go.sum`. The desktop packagers include available original license/notice files from the Go module dependencies and production npm dependencies in `/usr/share/doc/tinkercraft/licenses` on Debian, `TinkerCraft/licenses` in Windows ZIPs, and `TinkerCraft.app/Contents/Resources/licenses` on macOS. These include the Go standard-library license in the new native packages.
 
 ## PHP-Parser
 

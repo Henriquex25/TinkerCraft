@@ -1,5 +1,7 @@
 # Atualizar o TinkerCraft
 
+Este fluxo integrado de **Atualizar** é exclusivo do pacote Linux `.deb` instalado. Nas versões experimentais Windows/macOS, salve e feche o app, baixe e confira o novo pacote e substitua o executável ou o `.app` inteiro. Consulte [atualização no Windows](./platforms#windows) e [no macOS](./platforms#macos). Não há instalação automática nem reinício de atualização nessas plataformas.
+
 Por padrão, o TinkerCraft consulta o repositório oficial no GitHub após iniciar, procurando um release estável publicado. Uma atualização disponível aparece em um convite e no rodapé.
 
 ## Uma ação de atualização

@@ -1,6 +1,16 @@
 # Instalar e começar
 
-O TinkerCraft é um aplicativo desktop para Linux que permite escrever trechos PHP e executá-los no contexto do seu projeto. É um projeto open source independente, inspirado no Tinkerwell.
+O TinkerCraft é um aplicativo desktop para escrever trechos PHP e executá-los no contexto do seu projeto. Linux é o alvo de distribuição estabelecido; Windows e macOS têm suporte experimental de build. É um projeto open source independente, inspirado no Tinkerwell.
+
+::: warning Windows e macOS experimentais
+**O suporte a Windows e macOS é experimental e ainda não tem validação nativa concluída.** O ZIP Windows foi gerado por compilação cruzada no Linux, mas ainda não foi testado no Windows. No macOS, os scripts e jobs de CI estão preparados; a compilação nativa e a validação desktop continuam pendentes. Nenhuma dessas plataformas deve ser tratada como versão estável ou validada.
+:::
+
+## Windows e macOS
+
+Os builds experimentais usam ZIP portátil no Windows x64 e `.app` em ZIP no macOS 13+ (Intel/Apple Silicon). São artefatos de jobs nativos aprovados da CI; não são releases públicos automaticamente. Veja [sistemas operacionais](./platforms) para download, instalação, requisitos, configuração e atualização manual. A versão Windows usa autocomplete AST em vez de Phpactor. Assinatura de publicador e validação desktop nativa continuam pendentes.
+
+As instruções `.deb` desta página se aplicam ao Linux. No Mac, Command pode substituir Ctrl nos comandos do app; veja [atalhos por sistema](./platforms#dados-atalhos-e-comportamento-comum).
 
 ## Antes da instalação
 

@@ -1,5 +1,7 @@
 # Conectar um projeto
 
+O caminho local segue o sistema: `C:\Users\Ana\projects\shop` no Windows e `/Users/ana/projects/shop` no Mac. Caminhos dentro de containers Linux e servidores SSH POSIX continuam como `/var/www/html`, em qualquer sistema do desktop. Docker Desktop, OpenSSH, PATH e WSL têm [diferenças específicas](./platforms).
+
 O perfil de conexão define onde o PHP executa. Ele não cria um projeto novo nem instala as dependências dele.
 
 Abra **Nova conexão** pelos controles de conexão ou pela paleta de comandos. Dê um nome, escolha o modo, preencha os campos, teste e salve.

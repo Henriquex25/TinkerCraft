@@ -1,5 +1,7 @@
 # Atalhos de teclado
 
+No Windows, use Ctrl como no Linux. No macOS, os comandos do app aceitam Command no lugar de Ctrl e Option corresponde a Alt; a interface ainda mostra a notação Ctrl. Combinações interceptadas pelo sistema devem ser remapeadas. Veja [particularidades por plataforma](./platforms).
+
 Abra a paleta com **Ctrl+Shift+P** ou **F1**, busque uma ação e pressione Enter. Ela inclui ações do contexto atual sem combinação atribuída.
 
 Estes são os padrões no Linux. Remapeie em **Preferências → Atalhos de teclado**, ou abra essa seção com **Ctrl+Alt+K**.

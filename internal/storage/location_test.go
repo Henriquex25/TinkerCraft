@@ -3,6 +3,7 @@ package storage
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -19,7 +20,15 @@ func TestWorkspaceDirectoryPreservesExistingData(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			config := t.TempDir()
-			t.Setenv("XDG_CONFIG_HOME", config)
+			switch runtime.GOOS {
+			case "windows":
+				t.Setenv("AppData", config)
+			case "darwin":
+				t.Setenv("HOME", config)
+				config = filepath.Join(config, "Library", "Application Support")
+			default:
+				t.Setenv("XDG_CONFIG_HOME", config)
+			}
 			t.Setenv("TINKERCRAFT_DATA_DIR", test.currentEnv)
 			t.Setenv("LUME_DATA_DIR", test.legacyEnv)
 			for name, exists := range map[string]bool{"tinkercraft": test.current, "lume": test.legacy} {

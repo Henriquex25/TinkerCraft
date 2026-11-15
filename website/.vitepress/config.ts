@@ -4,6 +4,7 @@ const base = "/TinkerCraft/";
 const repository = "https://github.com/Henriquex25/TinkerCraft";
 const pages = [
   ["getting-started", "Installation", "Instalação"],
+  ["platforms", "Operating systems", "Sistemas operacionais"],
   ["local-php", "Configure local PHP", "Configurar o PHP local"],
   ["connections", "Connect a project", "Conectar um projeto"],
   ["running-code", "Run PHP and Laravel", "Executar PHP e Laravel"],
@@ -32,7 +33,7 @@ const sidebar = (prefix: string, language: number) => [
 export default defineConfig({
   title: "TinkerCraft",
   description:
-    "Write PHP, run it in your Laravel project, and explore the result. A focused Linux desktop workspace.",
+    "Write PHP, run it in your Laravel project, and explore the result. Linux desktop workspace with experimental Windows and macOS builds.",
   base,
   srcExclude: ["README.md"],
   cleanUrls: true,
@@ -99,7 +100,7 @@ export default defineConfig({
       link: "/pt-BR/",
       title: "TinkerCraft",
       description:
-        "Escreva PHP, execute no seu projeto Laravel e explore o resultado. Um workspace desktop para Linux.",
+        "Escreva PHP, execute no seu projeto Laravel e explore o resultado. Workspace Linux com builds experimentais para Windows e macOS.",
       themeConfig: {
         nav: [
           { text: "Guia", link: "/pt-BR/guide/getting-started" },

@@ -1,5 +1,7 @@
 # Keyboard shortcuts
 
+On Windows, use Ctrl as on Linux. On macOS, app commands accept Command in place of Ctrl, and Option corresponds to Alt; the interface still shows Ctrl notation. Remap combinations intercepted by the OS. See [platform details](./platforms).
+
 Open the command palette with **Ctrl+Shift+P** or **F1**, search for an action, and press Enter. It includes contextual actions without an assigned shortcut.
 
 These are the Linux defaults. Remap them under **Preferences → Keyboard shortcuts**, or open that section with **Ctrl+Alt+K**.

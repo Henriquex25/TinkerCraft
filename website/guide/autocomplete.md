@@ -1,5 +1,7 @@
 # Autocomplete and cache
 
+**Experimental Windows builds:** use the AST fallback, without native Phpactor or a WSL bridge. Advanced inference and diagnostics described below depend on Phpactor on Linux/macOS. The status identifies the active engine. See [platform limitations](./platforms).
+
 Completion combines Phpactor language support with a source index and static Laravel helpers. It supports namespace suggestions, member completion, hover information, signatures, and diagnostics.
 
 Use **Ctrl+Space** to request suggestions manually. Typing namespace separators and member operators also triggers completion.

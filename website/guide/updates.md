@@ -1,5 +1,7 @@
 # Update TinkerCraft
 
+The integrated **Update** flow below is exclusive to the installed Linux `.deb`. On experimental Windows/macOS builds, save and close the app, download and verify the new package, and replace the executable or the entire `.app`. See [Windows updates](./platforms#windows) and [macOS updates](./platforms#macos). These platforms have no in-app installation or update restart.
+
 By default, TinkerCraft checks the official GitHub repository for a published stable release after startup. An available update appears in an invitation and in the footer.
 
 ## One update action

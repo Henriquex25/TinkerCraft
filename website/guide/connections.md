@@ -1,5 +1,7 @@
 # Connect a project
 
+Local paths follow the host OS: `C:\Users\Ana\projects\shop` on Windows and `/Users/ana/projects/shop` on Mac. Paths inside Linux containers and POSIX SSH servers remain such as `/var/www/html`, regardless of the desktop OS. See [platform differences](./platforms) for Docker Desktop, OpenSSH, PATH, and WSL.
+
 A connection profile selects where your PHP runs. It does not create a new project or install its dependencies.
 
 Open **New connection** from the connection controls or command palette. Give it a recognizable name, choose a mode, fill in its fields, test it, and save.

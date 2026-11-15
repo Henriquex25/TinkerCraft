@@ -28,6 +28,6 @@ Os perfis de conexão identificam seus projetos e runtimes. Ainda não há bibli
 
 ## Seu workspace
 
-O diretório padrão é `~/.config/tinkercraft`. Instalações anteriores podem reutilizar `~/.config/lume`. Faça backup do workspace ativo com o aplicativo fechado. Ele guarda trechos, histórico, perfis, preferências e caches localmente; os arquivos são privados, mas não criptografados. Segredos escritos nos trechos podem ficar salvos ali.
+O diretório padrão é `~/.config/tinkercraft` no Linux, `%APPDATA%\tinkercraft` no Windows e `~/Library/Application Support/tinkercraft` no macOS. Consulte [dados e backups por sistema](./platforms#dados-atalhos-e-comportamento-comum). Instalações anteriores podem reutilizar a pasta `lume` no mesmo diretório de configuração do sistema. Faça backup do workspace ativo com o aplicativo fechado. Ele guarda trechos, histórico, perfis, preferências e caches localmente; os arquivos são privados, mas não criptografados. Segredos escritos nos trechos podem ficar salvos ali.
 
 Atualizar ou remover o pacote do aplicativo preserva esse workspace.

@@ -3,10 +3,14 @@ package service
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"tinkercraft/internal/buildinfo"
 )
 
 func bundledPhpactor() string {
+	if runtime.GOOS == "windows" {
+		return ""
+	}
 	executable, err := os.Executable()
 	candidates := []string{}
 	if err == nil {

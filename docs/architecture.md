@@ -15,6 +15,10 @@ Não foram feitos benchmarks comparativos de RAM, latência ou consumo de CPU en
 
 Wails 2.15 foi a versão disponível no cache e compilou com GTK3/WebKit2GTK 4.0 da máquina. A documentação atual do Wails 3 exige GTK4/WebKitGTK 6.0 por padrão; a opção GTK3 exige WebKit2GTK 4.1, também ausente aqui. A versão 2 recebe manutenção separada. Há releases 2.x posteriores à versão usada; a atualização deve ser feita com acesso de download e validada antes de distribuir o aplicativo. [Wails 2 build](https://v2.wails.io/docs/v2.15.0/gettingstarted/building/), [Wails 3 requisitos](https://wails.io/quick-start/installation/), [changelog Wails 2](https://v2.wails.io/changelog/).
 
+## Portabilidade Windows/macOS
+
+A base Wails 2/Go/React é mantida para os builds experimentais Windows x64 e macOS Intel/Apple Silicon. O módulo atual usa Wails 2.17.1; o relato acima descreve a avaliação inicial, não o pin atual. As diferenças de processos, caminhos, WebView, Phpactor, empacotamento e validação estão em [cross-platform.md](cross-platform.md). Linux continua no fluxo Debian; Windows usa fallback AST e Mac inclui o PHAR no bundle. Os jobs nativos e a validação gráfica ainda precisam de execução antes de declarar suporte público.
+
 ## Fronteiras
 
 ```mermaid

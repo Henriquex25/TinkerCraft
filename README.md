@@ -6,13 +6,15 @@
 
 **A desktop PHP playground for your Laravel projects.**
 
-Write a snippet, run it in the context of your application, and explore the result. TinkerCraft brings a focused editor, PHP completion, local and remote execution, and structured output into one Linux desktop app.
+Write a snippet, run it in the context of your application, and explore the result. TinkerCraft brings a focused editor, PHP completion, local and remote execution, and structured output into one desktop app. Linux is the established target; Windows and macOS build support is experimental.
 
 **[Read the documentation](https://henriquex25.github.io/TinkerCraft/)** · [Português (Brasil)](https://henriquex25.github.io/TinkerCraft/pt-BR/)
 
 Inspired by [Tinkerwell](https://tinkerwell.app), TinkerCraft is an independent open-source implementation. It is not affiliated with, endorsed by, or maintained by Beyond Code. No proprietary Tinkerwell source code or assets are included.
 
-> **Early-stage software.** Linux is the current target. Expect rough edges across different PHP runtimes, framework versions, and desktop environments.
+> **Early-stage software.** Linux is the established distribution target.
+>
+> **Windows and macOS are experimental.** The Windows x64 test ZIP has been cross-compiled on Linux but has not been tested on Windows. macOS build scripts and CI jobs are prepared; native Mac builds and desktop validation are still pending. Neither platform is a stable or validated release.
 
 ![TinkerCraft editor and structured output](docs/images/workspace.png)
 
@@ -66,9 +68,27 @@ If your desktop has no graphical package installer, install the downloaded file 
 
 Open **TinkerCraft** from your application menu. Configure an absolute PHP path in Preferences if your desktop session cannot find it. A startup invitation announces updates; choose **Update** to download, verify, authorize installation through Linux, and reopen with your tabs restored. **Remind me later** keeps the footer indicator. If the update is already installed on disk, the same **Update** button restarts directly without reinstalling it. Updates never install on startup or without your action.
 
+## Windows and macOS (experimental)
+
+The existing Wails/Go/React application now has experimental native build and packaging paths for Windows and macOS. The [platform guide](https://henriquex25.github.io/TinkerCraft/guide/platforms) covers installation, PHP configuration, Docker/SSH, shortcuts, workspace locations, manual updates, and limitations. The same instructions are available in [Portuguese](https://henriquex25.github.io/TinkerCraft/pt-BR/guide/platforms).
+
+| System | Experimental package | Validation status | Requirements and differences |
+| --- | --- | --- | --- |
+| Windows 10/11 x64 | Portable ZIP containing `tinkercraft.exe` | Experimental; Windows runtime validation pending | WebView2 and local 64-bit PHP 8.2+; AST completion, without native Phpactor |
+| macOS 13+ Intel | ZIP containing `TinkerCraft.app` (`amd64`) | Experimental; native build and desktop validation pending | System WKWebView; local PHP 8.2+; bundled Phpactor |
+| macOS 13+ Apple Silicon | ZIP containing `TinkerCraft.app` (`arm64`) | Experimental; native build and desktop validation pending | System WKWebView; local PHP 8.2+; bundled Phpactor |
+
+After a successful native CI job, download its `tinkercraft-preview-<platform>-<architecture>` artifact from GitHub Actions, extract it, verify the package SHA-256 against `checksums.txt`, then extract the package ZIP. On Windows, run the extracted executable; on Mac, move the complete `.app` into Applications. CI artifacts require a GitHub login and expire after 14 days. No Windows/Mac package is automatically published to Releases.
+
+Windows previews are unsigned; Mac previews use an ad hoc signature without Developer ID/notarization. OS protections may block downloaded test builds. Full native UI validation and signing are still required before public distribution. Windows ARM64, a WSL bridge, and a universal Mac bundle are not included.
+
+Updates on these platforms are **manual**: save tabs, quit normally, verify the new package for the same processor, and replace the application. The APT-based Update action remains exclusive to the installed Linux `.deb`. Application replacement preserves data in `%APPDATA%\tinkercraft` on Windows or `~/Library/Application Support/tinkercraft` on macOS; existing `lume` workspaces and data-directory overrides remain compatible. Configure absolute PHP executable paths when the desktop cannot find PHP on PATH.
+
+To compile the previews on their respective operating systems, follow [the contributor build instructions and validation checklist](docs/cross-platform.md).
+
 ## For contributors: build from source
 
-Skip this section if you installed a published `.deb`. These commands are for developing or compiling TinkerCraft yourself.
+Skip this section if you installed a package. The commands below build on Linux; see [Windows/macOS source builds](docs/cross-platform.md) for the native preview targets.
 
 <details>
 <summary>Show source build requirements and commands</summary>
