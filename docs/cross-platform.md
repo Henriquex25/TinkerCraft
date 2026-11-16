@@ -12,13 +12,13 @@ O caminho adotado é manter Wails 2, Go, React e Monaco e compilar nativamente e
 | macOS Intel | `.app` em ZIP | WKWebView do sistema | Phpactor adjacente ao binário dentro do bundle | Build experimental; validação nativa pendente |
 | macOS Apple Silicon | `.app` em ZIP | WKWebView do sistema | Mesmo PHAR fixado | Build experimental; validação nativa pendente |
 
-Windows ARM64 e bundle Mac universal ficam para uma etapa posterior. O mínimo Mac destes builds é macOS 13, devido ao Go 1.27.3 usado na CI. Não confundir o mínimo genérico do Wails com o mínimo do toolchain do aplicativo. O Windows requer PHP CLI local de 64 bits. Os transportes SSH pressupõem shell POSIX no servidor; Docker usa containers Linux.
+Windows ARM64 e bundle Mac universal ficam para uma etapa posterior. O mínimo Mac destes builds é macOS 13, devido ao Go 1.27.4 usado na CI. Não confundir o mínimo genérico do Wails com o mínimo do toolchain do aplicativo. O Windows requer PHP CLI local de 64 bits. Os transportes SSH pressupõem shell POSIX no servidor; Docker usa containers Linux.
 
 A restrição principal no Windows é o Phpactor: o projeto documenta Linux/macOS e indica WSL para Windows. O preview mantém o fallback AST explícito, sem tentar iniciar o PHAR nativamente. Uma ponte WSL exigirá tradução de caminhos, URIs, configuração privada de análise e isolamento dos autoloaders/configurações do projeto, além de testes próprios. Não basta trocar `php` por `wsl.exe php`, pois os campos atuais recebem executável e argv separados. Não distribuir outro LSP com licença ou comportamento diferente sem uma decisão específica.
 
 ## Build nativo
 
-Pré-requisitos comuns: Git, Go compatível com `go.mod` (CI: 1.27.3), Node.js 22.12+, npm, Python 3 e PHP CLI 8.2+. Use o Wails CLI da mesma versão declarada no módulo (atualmente 2.17.1). Os comandos de build precisam baixar dependências quando não estão em cache.
+Pré-requisitos comuns: Git, Go compatível com `go.mod` (CI: 1.27.4), Node.js 22.12+, npm, Python 3 e PHP CLI 8.2+. Use o Wails CLI da mesma versão declarada no módulo (atualmente 2.17.1). Os comandos de build precisam baixar dependências quando não estão em cache.
 
 ### Windows x64
 

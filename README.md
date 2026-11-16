@@ -93,7 +93,7 @@ Skip this section if you installed a package. The commands below build on Linux;
 <details>
 <summary>Show source build requirements and commands</summary>
 
-You need Go, Node.js 22.12+, PHP 8.2+, and GTK3 / WebKit2GTK development packages. Go 1.27.3 and PHP 8.4 are used in CI. On Ubuntu / Pop!_OS 22.04:
+You need Go, Node.js 22.12+, PHP 8.2+, and GTK3 / WebKit2GTK development packages. Go 1.27.4 and PHP 8.4 are used in CI. The module prefers Go 1.27.4; with automatic toolchain selection enabled, older installations download that toolchain when building. Use a patched Go toolchain for distribution builds. On Ubuntu / Pop!_OS 22.04:
 
 ```bash
 sudo apt install build-essential pkg-config libgtk-3-dev libwebkit2gtk-4.0-dev \

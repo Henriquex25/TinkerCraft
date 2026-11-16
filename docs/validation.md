@@ -325,3 +325,9 @@ Verificação proporcional à mudança documental: Prettier dos seis arquivos Ma
 A action `.github/workflows/release.yml` passou a usar `--title "v$RELEASE_VERSION"`, gerando títulos como `v0.3.0` sem o nome do aplicativo. A tag, o modo rascunho, o commit alvo e a validação prévia de CI permanecem preservados. O exemplo no guia do mantenedor foi atualizado para o mesmo formato.
 
 Prettier do workflow, os quatro testes existentes de release/preflight e `git diff --check` passaram. O workflow não foi disparado; nenhuma release existente foi renomeada ou publicada. VERSION não foi alterado. Não houve commit ou push.
+
+## Toolchain corrigido para GO-2026-6859 — 15 de novembro de 2026
+
+Os workflows de CI e release agora selecionam Go 1.27.4, correção publicada para GO-2026-6859 na biblioteca padrão `net/http`. `go.mod` mantém a linguagem mínima em Go 1.26.0 e declara Go 1.27.4 como toolchain preferido, para que builds com seleção automática usem a versão corrigida. README e roteiro multiplataforma foram atualizados.
+
+Com Go 1.27.4, `./scripts/check.sh` passou e `govulncheck` v1.9.0 em `./...` retornou “No vulnerabilities found.” A suíte incluiu testes Go com race detector, vet e as verificações existentes de frontend, runtime e distribuição. O workflow CI foi apenas formatado/verificado localmente; não houve execução remota, alteração de dependências, VERSION, commit ou push.
