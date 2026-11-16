@@ -14,7 +14,7 @@ func bundledPhpactor() string {
 	executable, err := os.Executable()
 	candidates := []string{}
 	if err == nil {
-		candidates = append(candidates, filepath.Join(filepath.Dir(executable), "phpactor.phar"))
+		candidates = append(candidates, packagedPhpactorCandidates(runtime.GOOS, executable)...)
 	}
 	if buildinfo.Current().Distribution == "source" {
 		candidates = append(candidates,
@@ -33,4 +33,13 @@ func bundledPhpactor() string {
 		}
 	}
 	return ""
+}
+
+func packagedPhpactorCandidates(goos, executable string) []string {
+	directory := filepath.Dir(executable)
+	candidates := []string{filepath.Join(directory, "phpactor.phar")}
+	if goos == "darwin" {
+		candidates = append([]string{filepath.Join(directory, "..", "Resources", "phpactor.phar")}, candidates...)
+	}
+	return candidates
 }

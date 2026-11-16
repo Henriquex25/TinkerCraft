@@ -9,7 +9,7 @@ O caminho adotado é manter Wails 2, Go, React e Monaco e compilar nativamente e
 | Alvo | Empacotamento inicial | WebView | Linguagem | Estado |
 | --- | --- | --- | --- | --- |
 | Windows x64 | ZIP portátil | WebView2 externo | AST, sem Phpactor | Build experimental; validação nativa pendente |
-| macOS Intel | `.app` em ZIP | WKWebView do sistema | Phpactor adjacente ao binário dentro do bundle | Build experimental; validação nativa pendente |
+| macOS Intel | `.app` em ZIP | WKWebView do sistema | Phpactor nos recursos do bundle | Build experimental; validação nativa pendente |
 | macOS Apple Silicon | `.app` em ZIP | WKWebView do sistema | Mesmo PHAR fixado | Build experimental; validação nativa pendente |
 
 Windows ARM64 e bundle Mac universal ficam para uma etapa posterior. O mínimo Mac destes builds é macOS 13, devido ao Go 1.27.4 usado na CI. Não confundir o mínimo genérico do Wails com o mínimo do toolchain do aplicativo. O Windows requer PHP CLI local de 64 bits. Os transportes SSH pressupõem shell POSIX no servidor; Docker usa containers Linux.
@@ -48,7 +48,7 @@ python3 scripts/build-desktop.py --arch arm64
 
 Use `--arch amd64` em um Mac Intel. Os jobs de CI compilam e executam os testes no processador correspondente, sem depender de Rosetta para validar o alvo.
 
-O script confere o PHAR em `.tools/phpactor.phar` contra `scripts/phpactor.sha256`; se necessário, baixa a versão de `scripts/phpactor.version` por HTTPS para um temporário e confere o hash antes de substituir a cópia anterior. Não executa um download não verificado. Copia o PHAR para `TinkerCraft.app/Contents/MacOS/phpactor.phar`, preservando a resolução adjacente ao executável. Inclui as licenças Go/npm/PHP-Parser/Monaco/DOMPurify/tradução e a licença/digest do Phpactor, refaz a assinatura ad hoc após a composição do bundle e verifica-a com `codesign`.
+O script confere o PHAR em `.tools/phpactor.phar` contra `scripts/phpactor.sha256`; se necessário, baixa a versão de `scripts/phpactor.version` por HTTPS para um temporário e confere o hash antes de substituir a cópia anterior. Não executa um download não verificado. Copia o PHAR para `TinkerCraft.app/Contents/Resources/phpactor.phar`, onde o macOS sela-o como recurso do bundle; o aplicativo resolve esse caminho no bundle. Inclui as licenças Go/npm/PHP-Parser/Monaco/DOMPurify/tradução e a licença/digest do Phpactor, refaz a assinatura ad hoc após a composição do bundle e verifica-a com `codesign`.
 
 Resultado: `build/dist/darwin-<arch>/tinkercraft_<VERSION>_darwin_<arch>_preview.zip` e `checksums.txt`. `ditto` preserva atributos e permissões do bundle. Developer ID, hardened runtime, notarização e stapling ainda não estão configurados.
 

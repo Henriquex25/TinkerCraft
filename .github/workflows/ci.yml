@@ -155,7 +155,7 @@ jobs:
           "$TINKERCRAFT_PYTHON" tests/desktop-distribution.test.py
       - name: Test actual bundled Phpactor on macOS
         if: runner.os == 'macOS'
-        run: TINKERCRAFT_PHPACTOR_REAL="$PWD/build/bin/TinkerCraft.app/Contents/MacOS/phpactor.phar" go test ./internal/language -run RealPhpactor -v
+        run: TINKERCRAFT_PHPACTOR_REAL="$PWD/build/bin/TinkerCraft.app/Contents/Resources/phpactor.phar" go test ./internal/language -run RealPhpactor -v
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: tinkercraft-preview-${{ matrix.platform }}

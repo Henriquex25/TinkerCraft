@@ -199,7 +199,7 @@ def build(target, architecture):
             package_windows(ROOT / 'build/bin/tinkercraft.exe', archive, version, licenses)
         else:
             bundle = ROOT / 'build/bin/TinkerCraft.app'
-            bundled_phar = bundle / 'Contents/MacOS/phpactor.phar'
+            bundled_phar = bundle / 'Contents/Resources/phpactor.phar'
             shutil.copy2(phar, bundled_phar)
             bundled_phar.chmod(0o644)
             for name in ['LICENSE', 'THIRD_PARTY_NOTICES.md']:

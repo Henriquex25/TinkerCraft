@@ -45,7 +45,7 @@ class DesktopDistributionTests(unittest.TestCase):
             for name in ['PHP-Parser-LICENSE', 'Monaco-ThirdPartyNotices.txt', 'DOMPurify-LICENSE-MPL', 'Go-LICENSE', 'vscode-loc-LICENSE.txt']:
                 self.assertTrue(package.read(license_prefix + name))
             if target == 'darwin':
-                phar = package.read('TinkerCraft.app/Contents/MacOS/phpactor.phar')
+                phar = package.read('TinkerCraft.app/Contents/Resources/phpactor.phar')
                 self.assertEqual(hashlib.sha256(phar).hexdigest(), (ROOT / 'scripts/phpactor.sha256').read_text().split()[0])
                 plist = plistlib.loads(package.read('TinkerCraft.app/Contents/Info.plist'))
                 self.assertEqual(plist['CFBundleShortVersionString'], version)
