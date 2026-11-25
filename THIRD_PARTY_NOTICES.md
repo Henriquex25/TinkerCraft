@@ -10,7 +10,7 @@ TinkerCraft's own code is distributed under the MIT license. Dependencies retain
 | DOMPurify | 3.4.17 | Apache-2.0 or MPL-2.0 | https://github.com/cure53/DOMPurify |
 | React / React DOM | 19.2.8 | MIT | https://github.com/facebook/react |
 | Lucide React | 1.42.0 | ISC and original icon notices | https://github.com/lucide-icons/lucide |
-| Vite | 7.3.7 | MIT; build tooling | https://github.com/vitejs/vite |
+| Vite | 8.3.8 | MIT; build tooling | https://github.com/vitejs/vite |
 | esbuild | 0.28.2 | MIT; tests only | https://github.com/evanw/esbuild |
 | TypeScript | 5.9.3 | Apache-2.0; build tooling | https://github.com/microsoft/TypeScript |
 | Playwright Core | 1.58.2 | Apache-2.0; tests only | https://github.com/microsoft/playwright |

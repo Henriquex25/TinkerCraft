@@ -5,6 +5,10 @@ updates:
     schedule:
       interval: weekly
     groups:
+      vite:
+        patterns:
+          - vite
+          - "@vitejs/plugin-react"
       react:
         patterns:
           - react
@@ -30,6 +34,10 @@ updates:
     directory: /website
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: vite
+        update-types:
+          - version-update:semver-major
     groups:
       documentation:
         patterns:
