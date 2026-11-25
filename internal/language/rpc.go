@@ -13,11 +13,12 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
-	"syscall"
 	"time"
+	"tinkercraft/internal/process"
 )
 
 type RPC struct {
+	cleanup      func()
 	cmd          *exec.Cmd
 	writer       io.WriteCloser
 	writeMu      sync.Mutex
@@ -39,13 +40,6 @@ func StartRPC(ctx context.Context, php, server, root string, notification func(s
 	if len(cacheHome) > 0 && cacheHome[0] != "" {
 		cmd.Env = append(os.Environ(), "XDG_CACHE_HOME="+cacheHome[0])
 	}
-	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
-	cmd.Cancel = func() error {
-		if cmd.Process == nil {
-			return nil
-		}
-		return syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
-	}
 	cmd.WaitDelay = time.Second
 	in, err := cmd.StdinPipe()
 	if err != nil {
@@ -58,11 +52,12 @@ func StartRPC(ctx context.Context, php, server, root string, notification func(s
 	}
 
 	cmd.Stderr = io.Discard
-	if err := cmd.Start(); err != nil {
+	cleanup, err := process.Start(cmd)
+	if err != nil {
 		in.Close()
 		return nil, err
 	}
-	rpc := &RPC{cmd: cmd, writer: in, pending: map[int64]chan response{}, done: make(chan struct{}), notification: notification}
+	rpc := &RPC{cleanup: cleanup, cmd: cmd, writer: in, pending: map[int64]chan response{}, done: make(chan struct{}), notification: notification}
 	go rpc.read(out)
 	return rpc, nil
 }
@@ -104,6 +99,7 @@ func (r *RPC) Call(ctx context.Context, method string, params any) (json.RawMess
 	}
 }
 func (r *RPC) read(reader io.Reader) {
+	defer r.cleanup()
 	defer r.cmd.Wait()
 	defer close(r.done)
 	buffer := bufio.NewReader(reader)
@@ -172,7 +168,7 @@ func (r *RPC) Close() {
 	r.closeOnce.Do(func() {
 		r.writer.Close()
 		if r.cmd.Process != nil {
-			syscall.Kill(-r.cmd.Process.Pid, syscall.SIGKILL)
+			r.cmd.Cancel()
 		}
 	})
 }

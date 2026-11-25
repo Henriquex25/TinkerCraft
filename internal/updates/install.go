@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -64,6 +65,9 @@ func NewInstaller(build buildinfo.Info) *Installer {
 }
 
 func startRestart(read *os.File) error {
+	if runtime.GOOS != "linux" {
+		return errors.New("Automatic update restart is only supported on Linux.")
+	}
 	command := exec.Command(InstalledExecutable, "--relaunch-after-update")
 	command.Dir = "/"
 	command.ExtraFiles = []*os.File{read}
@@ -77,7 +81,7 @@ func startRestart(read *os.File) error {
 func (i *Installer) installed(ctx context.Context) (buildinfo.Info, error) {
 	var info buildinfo.Info
 	path, err := i.executable()
-	if err != nil || i.build.Distribution != "deb" || path != InstalledExecutable {
+	if runtime.GOOS != "linux" || err != nil || i.build.Distribution != "deb" || path != InstalledExecutable {
 		return info, errors.New("Automatic updates are available in the installed Debian app. Install the official .deb package first.")
 	}
 	data, err := i.run(ctx, InstalledExecutable, "--version-json")
@@ -170,7 +174,7 @@ func (i *Installer) PrepareRestart(ctx context.Context, version string) (*os.Fil
 }
 
 func RelaunchAfterUpdate() error {
-	if len(os.Args) != 2 || os.Getuid() == 0 {
+	if runtime.GOOS != "linux" || len(os.Args) != 2 || os.Getuid() == 0 {
 		return errors.New("Invalid update restart.")
 	}
 	pipe := os.NewFile(3, "update-parent")

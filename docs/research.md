@@ -29,3 +29,12 @@ A documentação do Tinkerwell menciona cache de Phpactor ao tratar de autocompl
 - [Laravel framework](https://github.com/laravel/framework): API pública de bootstrap, Collections, Eloquent e AliasLoader.
 
 O TinkerCraft não reproduz integralmente o Tinkerwell e não anuncia compatibilidade com funcionalidades que não estão no escopo da primeira versão.
+
+
+## Laravel completion and short class names (2026-11-06)
+
+- [Laravel Tinker ClassAliasAutoloader](https://github.com/laravel/tinker/blob/2.x/src/ClassAliasAutoloader.php): short-name convenience comes from class aliases, independently of dependency injection. TinkerCraft implements a bounded application-source discovery with explicit ambiguity errors.
+- [Laravel IDE Helper](https://github.com/barryvdh/laravel-ide-helper) and [model generator](https://github.com/barryvdh/laravel-ide-helper/blob/master/src/Console/ModelsCommand.php): full model generation depends on a booted application and can inspect database schema. The safe automatic path here generates PHPDocs from cached AST data and reuses existing helper source without invoking that generator.
+- [Phpactor completion](https://phpactor.readthedocs.io/en/master/reference/completion.html) and [configuration](https://phpactor.readthedocs.io/en/master/reference/configuration.html): PHPDoc-supported reflection and Composer class-map-only analysis provide the integration points for private metadata overlays.
+
+Static helpers improve known Eloquent forwarding and scopes; they do not promise complete schema, dynamic macro or custom runtime-provider inference.

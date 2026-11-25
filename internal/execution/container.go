@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -95,7 +96,7 @@ func (e *Engine) ContainerWorkdir(ctx context.Context, p core.Profile, container
 		return "", fmt.Errorf("%s", strings.TrimSpace(r.Stderr))
 	}
 	dir := strings.TrimSpace(r.Stdout)
-	if !filepath.IsAbs(dir) {
+	if !path.IsAbs(dir) {
 		return "", fmt.Errorf("O container não informou um diretório válido")
 	}
 	return dir, nil
@@ -118,14 +119,29 @@ func (e *Engine) LocalMount(ctx context.Context, p core.Profile) (string, error)
 		if mount.Type != "bind" || !filepath.IsAbs(mount.Source) {
 			continue
 		}
-		rel, err := filepath.Rel(dest, p.ProjectPath)
-		if err != nil || !filepath.IsLocal(rel) {
+		rel, ok := containerRelativePath(dest, p.ProjectPath)
+		if !ok {
 			continue
 		}
-		local := filepath.Join(mount.Source, rel)
+		local := filepath.Join(mount.Source, filepath.FromSlash(rel))
 		if stat, err := os.Stat(local); err == nil && stat.IsDir() {
 			return local, nil
 		}
 	}
 	return "", nil
+}
+
+func containerRelativePath(destination, project string) (string, bool) {
+	if !path.IsAbs(destination) || !path.IsAbs(project) || strings.ContainsAny(destination+project, "\\\x00") {
+		return "", false
+	}
+	destination, project = path.Clean(destination), path.Clean(project)
+	if destination == project {
+		return ".", true
+	}
+	prefix := strings.TrimRight(destination, "/") + "/"
+	if !strings.HasPrefix(project, prefix) {
+		return "", false
+	}
+	return strings.TrimPrefix(project, prefix), true
 }

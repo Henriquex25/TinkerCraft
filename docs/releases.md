@@ -1,5 +1,7 @@
 # Instalação e atualizações no Linux
 
+Este documento cobre o fluxo Debian/Linux. Builds experimentais Windows e macOS, artefatos de CI, assinatura pendente e atualização manual estão em [cross-platform.md](cross-platform.md). As instruções APT/pkexec abaixo não se aplicam a essas plataformas.
+
 O formato inicial é **Debian `.deb`**, com entrada no menu de aplicativos, ícone e comando `tinkercraft`. O pacote inclui o frontend, o backend e o PHAR do Phpactor. Não depende da pasta do checkout depois de instalado. O PHP local 8.2+ continua sendo uma dependência externa, inclusive para analisar código executado remotamente. Em instalações via Herd ou fora do PATH gráfico, informe o caminho absoluto do PHP em Preferências.
 
 ## Instalar o pacote já gerado

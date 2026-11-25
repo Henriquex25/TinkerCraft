@@ -38,6 +38,9 @@ func Current() Info {
 	return Info{Version, ReleaseSource, Distribution, runtime.GOOS, runtime.GOARCH, WebKit, Variant(), Commit, BuildDate}
 }
 func Variant() string {
+	if runtime.GOOS != "linux" {
+		return runtime.GOOS + "-" + runtime.GOARCH
+	}
 	return fmt.Sprintf("%s-%s-webkit%s", runtime.GOOS, runtime.GOARCH, strings.ReplaceAll(WebKit, ".", ""))
 }
 func AssetName(version string) string {

@@ -4,7 +4,7 @@ TinkerCraft focuses on a productive PHP / Laravel scratchpad for Linux. Keep cha
 
 ## Development setup
 
-Start with the [build requirements](README.md#build-from-source), then install the test dependencies:
+Start with the [build requirements](README.md#for-contributors-build-from-source), then install the test dependencies:
 
 ```bash
 npm ci
@@ -79,3 +79,7 @@ The `CI` workflow runs on `pull_request`, `push`, manual dispatch, and a weekly 
 The [maintainer guide](docs/github-maintainer.md) explains repository setup, issue/discussion routing, PR review, protection, and releases. `scripts/configure-github.py` previews settings and can apply them through an authenticated GitHub CLI session. Enable branch rules requiring **Linux checks** after its first successful run, and enable private vulnerability reporting. With a single maintainer, require PRs and checks without requiring someone else to approve the maintainer's own PRs; manually review community PRs. These workflows have been validated locally; their first GitHub execution and repository settings still need confirmation after publishing this revision.
 
 Release builds are a separate, manually triggered workflow and create drafts for review. Only the draft-creation job has repository write permission. Configure the release source when building packages; installed users should not create an `.env` file. See [the release guide](docs/releases.md).
+
+## User documentation
+
+The public guide is in `website/`, with English as default and matching Portuguese routes under `pt-BR/`. Keep user-facing instructions consistent with the app and distinguish installation from source builds. Run `npm --prefix website ci` and `npm --prefix website run build`; see [website/README.md](website/README.md) for local preview and dependency policy. Documentation can ship independently of desktop releases.

@@ -11,3 +11,6 @@ build/dist/
 .tools/
 test-results/
 coverage.out
+website/node_modules/
+website/.vitepress/cache/
+website/.vitepress/dist/

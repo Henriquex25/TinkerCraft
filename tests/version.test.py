@@ -13,7 +13,7 @@ import version
 class VersionTests(unittest.TestCase):
     def test_version_is_the_only_application_version_source(self):
         self.assertRegex(version.current(), r'^\d+\.\d+\.\d+$')
-        for name in ['package.json', 'frontend/package.json', 'package-lock.json', 'frontend/package-lock.json']:
+        for name in ['package.json', 'frontend/package.json', 'package-lock.json', 'frontend/package-lock.json', 'website/package.json', 'website/package-lock.json']:
             data = json.loads((ROOT / name).read_text())
             self.assertNotIn('version', data, name)
             if 'packages' in data:

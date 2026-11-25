@@ -5,11 +5,10 @@ import (
 	"context"
 	"errors"
 	"io"
-	"os"
 	"os/exec"
 	"sync"
-	"syscall"
 	"time"
+	"tinkercraft/internal/process"
 )
 
 type Command struct {
@@ -59,15 +58,12 @@ func Stream(ctx context.Context, spec Command, input []byte, stdout io.Writer) (
 	errout := &boundedBuffer{limit: 262144}
 	cmd.Stdout = stdout
 	cmd.Stderr = errout
-	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
-	cmd.Cancel = func() error {
-		if cmd.Process == nil {
-			return os.ErrProcessDone
-		}
-		return syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
-	}
 	cmd.WaitDelay = time.Second
-	err := cmd.Run()
+	cleanup, err := process.Start(cmd)
+	if err == nil {
+		defer cleanup()
+		err = cmd.Wait()
+	}
 	result := ProcessResult{Stderr: errout.String(), Truncated: errout.truncated}
 	if cmd.ProcessState != nil {
 		result.ExitCode = cmd.ProcessState.ExitCode()

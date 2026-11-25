@@ -263,7 +263,11 @@ export function UpdatesDialog({
                     )
                   : info?.available && !info.canInstall
                     ? tr(
-                        "Automatic updates are available in the installed Debian app. Install the official .deb package first.",
+                        (build?.platform ?? info.build.platform) ===
+                          "windows" ||
+                          (build?.platform ?? info.build.platform) === "darwin"
+                          ? "Updates on Windows and macOS are manual. Download the package for your system from the release page."
+                          : "Automatic updates are available in the installed Debian app. Install the official .deb package first.",
                       )
                     : info?.canDownload
                       ? tr(

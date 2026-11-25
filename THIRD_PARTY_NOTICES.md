@@ -12,7 +12,7 @@ TinkerCraft's own code is distributed under the MIT license. Dependencies retain
 | Lucide React | 1.42.0 | ISC and original icon notices | https://github.com/lucide-icons/lucide |
 | Vite | 7.3.7 | MIT; build tooling | https://github.com/vitejs/vite |
 | esbuild | 0.28.2 | MIT; tests only | https://github.com/evanw/esbuild |
-| TypeScript | 5.9.3 | Apache-2.0; build tooling | https://github.com/microsoft/TypeScript |
+| TypeScript | 7.0.2 | Apache-2.0; build tooling | https://github.com/microsoft/TypeScript |
 | Playwright Core | 1.58.2 | Apache-2.0; tests only | https://github.com/microsoft/playwright |
 | Prettier | 3.9.10 | MIT; formatting only | https://github.com/prettier/prettier |
 | Prettier PHP plugin | 0.26.0 | MIT | https://github.com/prettier/plugin-php |
@@ -27,7 +27,7 @@ The Brazilian Portuguese editor messages are derived from Microsoft's MIT-licens
 
 ## Backend
 
-Wails 2.15.0 is distributed under MIT: https://github.com/wailsapp/wails. Go module versions and checksums are recorded in `go.mod` and `go.sum`. The Debian packager includes available original license/notice files from the Go module dependencies and production npm dependencies in `/usr/share/doc/tinkercraft/licenses`.
+Wails 2.17.1 is distributed under MIT: https://github.com/wailsapp/wails. Go module versions and checksums are recorded in `go.mod` and `go.sum`. The desktop packagers include available original license/notice files from the Go module dependencies and production npm dependencies in `/usr/share/doc/tinkercraft/licenses` on Debian, `TinkerCraft/licenses` in Windows ZIPs, and `TinkerCraft.app/Contents/Resources/licenses` on macOS. These include the Go standard-library license in the new native packages.
 
 ## PHP-Parser
 
@@ -48,3 +48,7 @@ The TinkerCraft logo was supplied by the project owner. It is independent of Tin
 ## Release notes
 
 https://github.com/remarkjs/react-markdown, MIT. react-markdown 10.1.0 renders release notes as React elements. Raw HTML, active links and remote images are disabled. The Debian package includes its license and production dependency licenses.
+
+## Documentation website
+
+[VitePress](https://github.com/vuejs/vitepress), MIT, powers the separate documentation website. Its Vue-based default theme is extended with project colors. Website dependencies and their exact versions are recorded in `website/package-lock.json`; `website/scripts/prepare-assets.mjs` includes their available license/notice files in the published `third-party-notices.txt`, alongside the project MIT license. Website dependencies are separate from the desktop application package.

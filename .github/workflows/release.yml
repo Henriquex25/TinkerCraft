@@ -52,7 +52,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
         with:
-          go-version: "1.27.3"
+          go-version: "1.27.4"
           cache-dependency-path: go.sum
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
@@ -64,7 +64,7 @@ jobs:
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962
         with:
           php-version: "8.4"
-          extensions: mbstring, dom, sqlite3, curl
+          extensions: mbstring, dom, sqlite3, pdo_sqlite, curl
           coverage: none
       - name: Install Linux build dependencies
         env:
@@ -126,4 +126,4 @@ jobs:
       - name: Prepare release files
         run: python3 scripts/prepare-release.py "$RELEASE_VERSION" "$RELEASE_SOURCE" packages release-assets
       - name: Create draft for review
-        run: gh release create "v$RELEASE_VERSION" release-assets/* --draft --title "TinkerCraft $RELEASE_VERSION" --generate-notes --target "$GITHUB_SHA"
+        run: gh release create "v$RELEASE_VERSION" release-assets/* --draft --title "v$RELEASE_VERSION" --generate-notes --target "$GITHUB_SHA"

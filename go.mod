@@ -2,6 +2,8 @@ module tinkercraft
 
 go 1.26.0
 
+toolchain go1.27.4
+
 require github.com/wailsapp/wails/v2 v2.17.1
 
 require (
@@ -31,6 +33,6 @@ require (
 	github.com/wailsapp/go-webview2 v1.0.22 // indirect
 	golang.org/x/crypto v0.57.0 // indirect
 	golang.org/x/net v0.60.0 // indirect
-	golang.org/x/sys v0.48.0 // indirect
+	golang.org/x/sys v0.48.0
 	golang.org/x/text v0.42.0 // indirect
 )

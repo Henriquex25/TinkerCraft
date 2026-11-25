@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 project_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-phpactor_release='2026.10.07.0'
+phpactor_release="$(cat "$project_root/scripts/phpactor.version")"
 tools_dir="$project_root/.tools"
 mkdir -p "$tools_dir"
 download_file="$(mktemp "$tools_dir/phpactor-download-XXXXXX.phar")"

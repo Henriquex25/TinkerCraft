@@ -112,7 +112,7 @@ printf '%s\n' 0.2.1 > VERSION
 gh workflow run release.yml --repo Henriquex25/TinkerCraft --ref main
 ```
 
-4. The workflow verifies the VERSION format, branch, and CI, builds Ubuntu 22.04 WebKit 4.0 and Ubuntu 24.04 WebKit 4.1 packages, validates them, and creates a draft titled **TinkerCraft 0.2.1**, targeting the exact build commit. Only the draft job has repository write permission. The GitHub URL is embedded automatically; no `.env` or custom secret is needed on runners or on users' machines.
+4. The workflow verifies the VERSION format, branch, and CI, builds Ubuntu 22.04 WebKit 4.0 and Ubuntu 24.04 WebKit 4.1 packages, validates them, and creates a draft titled **v0.2.1**, matching the tag and targeting the exact build commit. Only the draft job has repository write permission. The GitHub URL is embedded automatically; no `.env` or custom secret is needed on runners or on users' machines.
 5. Open **Releases** and inspect the draft. It should contain:
 
 ```text

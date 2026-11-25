@@ -24,6 +24,24 @@ await writeFile(
   path.join(fixtureProject, "app/Product.php"),
   "<?php namespace App; class Product { public function description(): string { return 'test'; } }",
 );
+const laravelSources = {
+  "app/Models/User.php":
+    "<?php namespace App\\Models; class User extends \\Illuminate\\Database\\Eloquent\\Model {}",
+  "vendor/laravel/framework/composer.json": JSON.stringify({
+    autoload: { "psr-4": { "Illuminate\\": "src/Illuminate/" } },
+  }),
+  "vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php":
+    "<?php namespace Illuminate\\Database\\Eloquent; abstract class Model {}",
+  "vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php":
+    "<?php namespace Illuminate\\Database\\Eloquent; class Builder { /** @return $this */ public function where($column, $value = null) {} }",
+  "vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php":
+    "<?php namespace Illuminate\\Database\\Query; class Builder { /** @return int */ public function count($columns = '*') {} }",
+};
+for (const [name, source] of Object.entries(laravelSources)) {
+  const target = path.join(fixtureProject, name);
+  await mkdir(path.dirname(target), { recursive: true });
+  await writeFile(target, source);
+}
 await writeFile(path.join(fixtureProject, ".env"), "TEST_SECRET=not-for-cache");
 await writeFile(
   path.join(fixtureBin, "docker"),
@@ -320,6 +338,87 @@ try {
   await page.locator(".output-panel").waitFor({ state: "hidden" });
   await page.getByRole("button", { name: "Run", exact: false }).first().click();
   await page.getByText("Execution completed", { exact: true }).waitFor();
+  const separator = page.getByRole("separator", {
+    name: "Resize editor and output",
+    exact: true,
+  });
+  for (const width of [1440, 1280, 1000]) {
+    await page.setViewportSize({ width, height: 950 });
+    for (const split of [52, 70]) {
+      await separator.focus();
+      while (Number(await separator.getAttribute("aria-valuenow")) !== split) {
+        await page.keyboard.press(
+          Number(await separator.getAttribute("aria-valuenow")) < split
+            ? "ArrowRight"
+            : "ArrowLeft",
+        );
+      }
+      for (const mode of ["Inspect", "Table", "JSON"]) {
+        await page
+          .locator(".output-tabs")
+          .getByRole("button", { name: mode, exact: true })
+          .click();
+        const layout = await page
+          .locator(".output-tabs")
+          .evaluate((toolbar) => {
+            const bounds = toolbar.getBoundingClientRect();
+            const content = toolbar.nextElementSibling.getBoundingClientRect();
+            const buttons = [...toolbar.querySelectorAll("button")].map(
+              (button) => {
+                const rect = button.getBoundingClientRect();
+                return {
+                  label: button.getAttribute("aria-label"),
+                  left: rect.left,
+                  right: rect.right,
+                  top: rect.top,
+                  bottom: rect.bottom,
+                };
+              },
+            );
+            const outside = buttons.filter(
+              (rect) =>
+                rect.left < bounds.left - 1 ||
+                rect.right > bounds.right + 1 ||
+                rect.top < bounds.top - 1 ||
+                rect.bottom > bounds.bottom + 1 ||
+                rect.bottom > content.top + 1,
+            );
+            const overlaps = buttons.flatMap((rect, i) =>
+              buttons
+                .slice(i + 1)
+                .filter(
+                  (other) =>
+                    Math.min(rect.right, other.right) -
+                      Math.max(rect.left, other.left) >
+                      1 &&
+                    Math.min(rect.bottom, other.bottom) -
+                      Math.max(rect.top, other.top) >
+                      1,
+                )
+                .map((other) => [rect.label, other.label]),
+            );
+            return { outside, overlaps };
+          });
+        assert.deepEqual(
+          layout,
+          { outside: [], overlaps: [] },
+          `Output controls must stay inside their header: viewport=${width}, editor=${split}%, mode=${mode}`,
+        );
+      }
+      if (width === 1000 && split === 70)
+        await page.screenshot({
+          path: path.join(root, "test-results/tinkercraft-output-narrow.png"),
+          fullPage: true,
+        });
+    }
+  }
+  await page.setViewportSize({ width: 1440, height: 950 });
+  await separator.focus();
+  while (Number(await separator.getAttribute("aria-valuenow")) > 52)
+    await page.keyboard.press("ArrowLeft");
+  console.log(
+    "PASS: output toolbar contains every control without overlaps at 1000/1280/1440px, both pane widths, and Inspect/Table/JSON modes.",
+  );
   await page.getByRole("button", { name: "Table", exact: true }).click();
   await page.getByRole("cell", { name: "Ana Silva", exact: true }).waitFor();
   await page.screenshot({
@@ -422,12 +521,25 @@ try {
   await page.getByText("Teste de erro estruturado", { exact: true }).waitFor();
   await page.locator(".monaco-editor").first().click();
   await page.keyboard.press(`${modifier}+a`);
-  await page.keyboard.insertText("sleep(10);\n42;");
+  const cancellationMarker = path.join(data, "execution-started");
+  await page.keyboard.insertText(
+    `file_put_contents(${JSON.stringify(cancellationMarker)}, 'ready'); sleep(10);\n42;`,
+  );
   await page.keyboard.press(`${modifier}+Enter`);
   await page
     .getByRole("button", { name: "Cancelar", exact: false })
     .first()
     .waitFor();
+  const cancellationDeadline = Date.now() + 15000;
+  while (true) {
+    const marker = await readFile(cancellationMarker, "utf8").catch(() => "");
+    if (marker === "ready") break;
+    assert(
+      Date.now() < cancellationDeadline,
+      "The PHP process did not start before cancellation",
+    );
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
   await page
     .getByRole("button", { name: "Cancelar", exact: false })
     .first()
@@ -515,6 +627,46 @@ try {
   }
   assert(cachedSuggestion, "Completion for the cached project did not appear");
   await page.keyboard.press("Escape");
+  await replaceCode("");
+  await page.keyboard.type("\\App", { delay: 80 });
+  await page
+    .locator(".suggest-widget.visible")
+    .getByText("App\\", { exact: true })
+    .first()
+    .waitFor();
+  await page.keyboard.press("Enter");
+  await savedCode("\\App\\");
+  await page.keyboard.press("Escape");
+  await page.keyboard.type("Models\\U", { delay: 80 });
+  await page.keyboard.press("Control+Space");
+  await page
+    .locator(".suggest-widget.visible")
+    .getByText("App\\Models\\User", { exact: true })
+    .first()
+    .click();
+  await savedCode("\\App\\Models\\User");
+  await page.keyboard.type("::", { delay: 80 });
+  await page
+    .locator(".suggest-widget.visible")
+    .getByText("count", { exact: true })
+    .first()
+    .waitFor();
+  await page.screenshot({
+    path: path.join(root, "test-results/tinkercraft-eloquent-completion.png"),
+    fullPage: true,
+  });
+  await page.keyboard.press("Escape");
+  await replaceCode("User::");
+  await page.keyboard.press("Control+Space");
+  await page
+    .locator(".suggest-widget.visible")
+    .getByText("count", { exact: true })
+    .first()
+    .waitFor();
+  await page.keyboard.press("Escape");
+  console.log(
+    "PASS: namespace suggestions insert the full name once; cached Eloquent methods and short model aliases complete in Monaco without executing the project.",
+  );
   await page.getByRole("button", { name: "Histórico", exact: true }).click();
   await page.locator(".history-item").first().waitFor();
   await page.waitForTimeout(600);

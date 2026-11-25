@@ -54,10 +54,16 @@ func Materialize(base string) (string, error) {
 
 func Runner() string {
 	b, _ := Assets.ReadFile("runner.php")
-	return strings.TrimPrefix(string(b), "<?php\n")
+	return stripPHPTag(b)
 }
 
 func Snapshot() string {
 	b, _ := Assets.ReadFile("snapshot.php")
-	return strings.TrimPrefix(string(b), "<?php\n")
+	return stripPHPTag(b)
+}
+
+func stripPHPTag(source []byte) string {
+	code := strings.TrimPrefix(string(source), "<?php")
+	code = strings.TrimPrefix(code, "\r\n")
+	return strings.TrimPrefix(code, "\n")
 }

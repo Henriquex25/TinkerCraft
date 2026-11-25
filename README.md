@@ -6,17 +6,21 @@
 
 **A desktop PHP playground for your Laravel projects.**
 
-Write a snippet, run it in the context of your application, and explore the result. TinkerCraft brings a focused editor, PHP completion, local and remote execution, and structured output into one Linux desktop app.
+Write a snippet, run it in the context of your application, and explore the result. TinkerCraft brings a focused editor, PHP completion, local and remote execution, and structured output into one desktop app. Linux is the established target; Windows and macOS build support is experimental.
+
+**[Read the documentation](https://henriquex25.github.io/TinkerCraft/)** · [Português (Brasil)](https://henriquex25.github.io/TinkerCraft/pt-BR/)
 
 Inspired by [Tinkerwell](https://tinkerwell.app), TinkerCraft is an independent open-source implementation. It is not affiliated with, endorsed by, or maintained by Beyond Code. No proprietary Tinkerwell source code or assets are included.
 
-> **Early-stage software.** Linux is the current target. Expect rough edges across different PHP runtimes, framework versions, and desktop environments.
+> **Early-stage software.** Linux is the established distribution target.
+>
+> **Windows and macOS are experimental.** The Windows x64 test ZIP has been cross-compiled on Linux but has not been tested on Windows. macOS build scripts and CI jobs are prepared; native Mac builds and desktop validation are still pending. Neither platform is a stable or validated release.
 
 ![TinkerCraft editor and structured output](docs/images/workspace.png)
 
 ## What you can do
 
-- **Write PHP comfortably.** Monaco editor, automatic completion, hover information, signature help, and diagnostics through Phpactor. PHP opening and closing tags are optional in the editor.
+- **Write PHP comfortably.** Monaco editor, namespace completion, hover information, signature help, and diagnostics through Phpactor. Local analysis helpers cover Eloquent query methods and model scopes without booting the application or querying its database. PHP opening and closing tags are optional in the editor.
 - **Format your snippets.** Press **Alt+Shift+F**, use the editor button, or find **Format PHP code** in the command palette. Formatting runs offline, supports undo, and never executes your PHP. Customize the style or import JSON rules in **Preferences → Formatting**.
 - **Work in your application's context.** Bootstrap Laravel or Composer, use plain PHP, or provide a custom bootstrap file.
 - **Run where your project lives.** Local PHP, local Docker containers, SSH servers, and Docker containers over SSH.
@@ -39,6 +43,12 @@ collect([
 
 TinkerCraft returns the last expression, so an explicit `return` is usually unnecessary. `dump()` and `dd()` also produce structured output. Database queries use the application's actual connection and permissions.
 
+## Documentation
+
+Read the [user guide](https://henriquex25.github.io/TinkerCraft/) in English or [Portuguese](https://henriquex25.github.io/TinkerCraft/pt-BR/) for installation, PHP setup, connections, snippets, output/CSV, completion, preferences, shortcuts, and updates.
+
+The guide's [Markdown source](https://github.com/Henriquex25/TinkerCraft/tree/main/website) lives in this repository, so documentation improvements can be included in pull requests alongside features.
+
 ## Install on Linux
 
 The initial distribution format is a Debian `.deb` package with a desktop entry and application icons. Packages include Phpactor; a **local PHP 8.2+ CLI** is still required for parsing and language support, even when execution happens remotely.
@@ -58,14 +68,32 @@ If your desktop has no graphical package installer, install the downloaded file 
 
 Open **TinkerCraft** from your application menu. Configure an absolute PHP path in Preferences if your desktop session cannot find it. A startup invitation announces updates; choose **Update** to download, verify, authorize installation through Linux, and reopen with your tabs restored. **Remind me later** keeps the footer indicator. If the update is already installed on disk, the same **Update** button restarts directly without reinstalling it. Updates never install on startup or without your action.
 
+## Windows and macOS (experimental)
+
+The existing Wails/Go/React application now has experimental native build and packaging paths for Windows and macOS. The [platform guide](https://henriquex25.github.io/TinkerCraft/guide/platforms) covers installation, PHP configuration, Docker/SSH, shortcuts, workspace locations, manual updates, and limitations. The same instructions are available in [Portuguese](https://henriquex25.github.io/TinkerCraft/pt-BR/guide/platforms).
+
+| System | Experimental package | Validation status | Requirements and differences |
+| --- | --- | --- | --- |
+| Windows 10/11 x64 | Portable ZIP containing `tinkercraft.exe` | Experimental; Windows runtime validation pending | WebView2 and local 64-bit PHP 8.2+; AST completion, without native Phpactor |
+| macOS 13+ Intel | ZIP containing `TinkerCraft.app` (`amd64`) | Experimental; native build and desktop validation pending | System WKWebView; local PHP 8.2+; bundled Phpactor |
+| macOS 13+ Apple Silicon | ZIP containing `TinkerCraft.app` (`arm64`) | Experimental; native build and desktop validation pending | System WKWebView; local PHP 8.2+; bundled Phpactor |
+
+After a successful native CI job, download its `tinkercraft-preview-<platform>-<architecture>` artifact from GitHub Actions, extract it, verify the package SHA-256 against `checksums.txt`, then extract the package ZIP. On Windows, run the extracted executable; on Mac, move the complete `.app` into Applications. CI artifacts require a GitHub login and expire after 14 days. No Windows/Mac package is automatically published to Releases.
+
+Windows previews are unsigned; Mac previews use an ad hoc signature without Developer ID/notarization. OS protections may block downloaded test builds. Full native UI validation and signing are still required before public distribution. Windows ARM64, a WSL bridge, and a universal Mac bundle are not included.
+
+Updates on these platforms are **manual**: save tabs, quit normally, verify the new package for the same processor, and replace the application. The APT-based Update action remains exclusive to the installed Linux `.deb`. Application replacement preserves data in `%APPDATA%\tinkercraft` on Windows or `~/Library/Application Support/tinkercraft` on macOS; existing `lume` workspaces and data-directory overrides remain compatible. Configure absolute PHP executable paths when the desktop cannot find PHP on PATH.
+
+To compile the previews on their respective operating systems, follow [the contributor build instructions and validation checklist](docs/cross-platform.md).
+
 ## For contributors: build from source
 
-Skip this section if you installed a published `.deb`. These commands are for developing or compiling TinkerCraft yourself.
+Skip this section if you installed a package. The commands below build on Linux; see [Windows/macOS source builds](docs/cross-platform.md) for the native preview targets.
 
 <details>
 <summary>Show source build requirements and commands</summary>
 
-You need Go, Node.js 22.12+, PHP 8.2+, and GTK3 / WebKit2GTK development packages. Go 1.27.3 and PHP 8.4 are used in CI. On Ubuntu / Pop!_OS 22.04:
+You need Go, Node.js 22.12+, PHP 8.2+, and GTK3 / WebKit2GTK development packages. Go 1.27.4 and PHP 8.4 are used in CI. The module prefers Go 1.27.4; with automatic toolchain selection enabled, older installations download that toolchain when building. Use a patched Go toolchain for distribution builds. On Ubuntu / Pop!_OS 22.04:
 
 ```bash
 sudo apt install build-essential pkg-config libgtk-3-dev libwebkit2gtk-4.0-dev \
@@ -93,9 +121,22 @@ Official installers manage Phpactor and the update repository internally. These 
 3. Test and save the connection. Completion uses the local sources, an accessible bind mount, or an automatically prepared source cache.
 4. Write PHP and press **Ctrl+Enter**. Open the command palette with **Ctrl+Shift+P** or **F1**.
 
+With Laravel or automatic Laravel bootstrap, unique application classes can use their short names, just like Tinker:
+
+```php
+User::count();
+app(User::class)->newQuery()->count();
+```
+
+These are class aliases; Laravel's application container remains available through `app()` and `resolve()`. For ambiguous names, use the fully qualified name or an explicit `use App\Models\User;`. The runner honors Tinker's alias exclusions and never chooses silently between two application classes with the same short name.
+
+Completion helpers live in TinkerCraft's private workspace, including for local projects. Existing `_ide_helper.php` and `_ide_helper_models.php` are read as source; they are never executed or overwritten. No IDE Helper package is installed in your project or on your server. Generated metadata uses the available framework/model source: it covers query methods and conventional/attribute model scopes, while schema-derived properties and runtime-only macros can still need existing IDE Helper metadata.
+
+Source content changes invalidate generated metadata at the next analysis preparation. While the app is visible, it checks again after five minutes; remote source snapshots retain their 15-minute freshness window. Use **Refresh completion** to force collection and rebuild immediately. Analysis expires with the cache-retention preference (seven days by default), preserving active sessions.
+
 SSH uses your OpenSSH configuration, keys, and agent. Verify the server's host key from a terminal first. Password prompts are not supported; encrypted keys must be available through your SSH agent. Docker containers must already be running and contain PHP CLI.
 
-English is the default interface language. Choose **Preferences → General → Language** to switch to Brazilian Portuguese. The choice persists across restarts and also translates the editor's built-in controls. Your code, connection names, and execution results retain their original content. See the [detailed usage guide](docs/usage.pt-BR.md) and [packaging and updates guide](docs/releases.md).
+English is the default interface language. Choose **Preferences → General → Language** to switch to Brazilian Portuguese. The choice persists across restarts and also translates the editor's built-in controls. Your code, connection names, and execution results retain their original content. See the [detailed usage guide](https://henriquex25.github.io/TinkerCraft/guide/getting-started) and [packaging and updates guide](docs/releases.md).
 
 ## Execution and security
 

@@ -916,7 +916,9 @@ export function SettingsDialog({
               <p>
                 TinkerCraft {build?.version ?? "…"}
                 {tr(
-                  ". Updates are downloaded on request and installed through Linux.",
+                  build?.platform === "windows" || build?.platform === "darwin"
+                    ? ". Updates on Windows and macOS are installed manually."
+                    : ". Updates are downloaded on request and installed through Linux.",
                 )}
               </p>
             </div>
